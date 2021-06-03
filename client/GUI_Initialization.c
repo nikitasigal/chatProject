@@ -14,14 +14,9 @@ GtkWidget *popupLabel;
 long long curChatIDGlobal;
 
 void GUIInit() {
-    //
-
-
-
-
     GtkBuilder *builder = gtk_builder_new_from_file("glade.glade");
 
-    GtkWidget *window = GTK_WIDGET(gtk_builder_get_object(builder, "registrationWindow"));
+    GtkWidget *window = GTK_WIDGET(gtk_builder_get_object(builder, "testWindow"));
     GtkWidget *registrationButton = GTK_WIDGET(gtk_builder_get_object(builder, "registrationButton"));
     GtkWidget *authorizationButton = GTK_WIDGET(gtk_builder_get_object(builder, "authorizationButton"));
     GtkWidget *dialogViewport = GTK_WIDGET(gtk_builder_get_object(builder, "dialogViewport"));
