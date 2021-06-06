@@ -3,6 +3,7 @@
 
 #include "definitions.h"
 
-void addFriend(int ID, char *firstName, char *lastName, char *login, GList **friendsList, GtkListBox *friendsListBox);
+void addFriend(int ID, char *firstName, char *lastName, char *login, GList **friendsList, GtkListBox *friendsListBox,
+               GtkListBox *friendRequestListBoxDialogs);
 
 #endif //TESTGTK_FRIENDS_H

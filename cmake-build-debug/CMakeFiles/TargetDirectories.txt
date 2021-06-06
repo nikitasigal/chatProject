@@ -1,0 +1,4 @@
+C:/Users/KOSTYA/CLionProjects/chatProject/cmake-build-debug/CMakeFiles/chatProject_server.dir
+C:/Users/KOSTYA/CLionProjects/chatProject/cmake-build-debug/CMakeFiles/chatProject_client.dir
+C:/Users/KOSTYA/CLionProjects/chatProject/cmake-build-debug/CMakeFiles/edit_cache.dir
+C:/Users/KOSTYA/CLionProjects/chatProject/cmake-build-debug/CMakeFiles/rebuild_cache.dir

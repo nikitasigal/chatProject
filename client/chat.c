@@ -1,4 +1,5 @@
 #include "chat.h"
+#include "clientCommand.h"
 
 gdouble lastAdj = 0;
 
@@ -30,10 +31,8 @@ G_MODULE_EXPORT void processMsgSelecting(GtkWidget *widget, GdkEvent *event, gpo
 
 void processMsgMenu(GtkWidget *widget, GdkEvent *event, gpointer user_data) {
     GtkWidget *row = gtk_widget_get_parent(widget);
-    if (event->button.button == GDK_BUTTON_SECONDARY && gtk_list_box_row_is_selected(GTK_LIST_BOX_ROW(row))) {
+    if (event->button.button == GDK_BUTTON_SECONDARY && gtk_list_box_row_is_selected(GTK_LIST_BOX_ROW(row)))
         gtk_menu_popup_at_pointer(GTK_MENU(msgMenu), event);
-        //gtk_menu_popdown(GTK_MENU(msgMenu));
-    }
 }
 
 void insertMessageInChat(char *name, char *date, char *message, GtkListBox *msgListBox) {
@@ -88,8 +87,11 @@ void insertMessageInChat(char *name, char *date, char *message, GtkListBox *msgL
 void sendMessage(GtkWidget *button, GList *data) {
     // Разархивируем
     Dialog *currentDialog = g_list_nth_data(data, 0);
-    GList *additionalInfo = g_list_nth_data(data, 1);
-    GtkWidget *dialogEntry = g_list_nth_data(additionalInfo, 0);
+    GList *additionalInfoTemp = g_list_nth_data(data, 1);
+    GList *additionalInfo = g_list_nth_data(additionalInfoTemp, 1);
+    SOCKET *serverDescriptor = g_list_nth_data(additionalInfo, SERVER_SOCKET);
+    GtkWidget *dialogEntry = g_list_nth_data(additionalInfo, CHAT_ENTRY);
+    FullUserInfo *currentUser = g_list_nth_data(additionalInfo, CURRENT_USER);
 
     gtk_widget_grab_focus(GTK_WIDGET(dialogEntry));
 
@@ -102,10 +104,15 @@ void sendMessage(GtkWidget *button, GList *data) {
         return;
     gtk_entry_set_text(GTK_ENTRY(dialogEntry), "");
 
-    // Time
-    GDateTime *time = g_date_time_new_now_local();
-    char timeFormat[TEXT_SIZE] = {0};
-    strcpy(timeFormat, g_date_time_format(time, "%H:%M:%S, %d %b %Y, %a"));
+    // Соберём инфу о сообщении TODO инфа о пользователе
+    FullMessageInfo messageInfo;
+    messageInfo.ID = currentDialog->ID;
+    strcpy(messageInfo.firstName, currentUser->firstName);
+    strcpy(messageInfo.lastName, currentUser->lastName);
+    strcpy(messageInfo.login, currentUser->login);
+    strcpy(messageInfo.text, message);
 
-    insertMessageInChat("Korostast", timeFormat, message, currentDialog->msgList);
+    clientRequest_SendMessage(*serverDescriptor, messageInfo);
+
+    //insertMessageInChat("Korostast", timeFormat, message, currentDialog->msgList);
 }

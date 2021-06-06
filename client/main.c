@@ -1,12 +1,11 @@
 #include "generalFunctions.h"
 #include "GUI_Initialization.h"
+#include "clientCommand.h"
 #include <winsock2.h>
 #include <ws2tcpip.h>
 
-#define DEFAULT_SERVER_IP "25.46.4.30"
+#define DEFAULT_SERVER_IP "127.0.0.1"
 #define DEFAULT_PORT "27015"
-
-#define MESSAGE_LENGTH 256
 
 SOCKET connectToServer() {
     WSADATA wsaData;    // Хранит информацию об определении сокетов Windows (версия библиотеки, и т.п.)
@@ -89,9 +88,25 @@ int main(int argc, char *argv[]) {
     closesocket(serverSocket);
     WSACleanup();*/
 
+    SOCKET serverSocket = INVALID_SOCKET;
+    serverSocket = connectToServer();
+    if (serverSocket == INVALID_SOCKET) {
+        printf("Can't connect to server\n");
+    }
+    //int size = 100;
+    //FullUserInfo users[size];
+
+    //unsigned long long bytes = recv(serverSocket, (void *) users, 10000, 0);
+    //unsigned long long sizeOfStruct = sizeof(FullUserInfo);
+    //unsigned long long number = bytes / sizeOfStruct; // Прислали два объекта
+
+    //for (int i = 0; i < number; ++i)
+    //    printf("%d\n", users[i].ID);
+    
+
     gtk_init(&argc, &argv);
 
-    GUIInit();
+    GUIInit(serverSocket);
 
     gtk_main();
 

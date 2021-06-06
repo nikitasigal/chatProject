@@ -1,4 +1,5 @@
 #include "login.h"
+#include "clientCommand.h"
 
 extern GtkWidget *popupLabel;
 gboolean isPopupShowed = FALSE;
@@ -41,7 +42,7 @@ gboolean checkName(const gchar *field) {
     if (strlen(field) == 0)
         return FALSE;
     for (int i = 0; i < strlen(field); ++i) {
-        if (field[i] == -47 || field[i] == -48) {
+        if (field[i] == -47 || field[i] == -48) {   // Russian letters
             ++i;
             continue;
         }
@@ -69,7 +70,7 @@ void popupNotification(char *string) {
     gdk_threads_add_timeout(20, G_SOURCE_FUNC(fadeOutAnimation), popupWindow);
 }
 
-void registrationButtonClicked(GtkWidget *button, gpointer user_data) {
+void registrationButtonClicked(GtkWidget *button, GList *user_data) {
     if (!checkName(gtk_entry_get_text(g_list_nth_data(user_data, 0)))) {
         printf("Incorrect firstname. Only Latin and Russian letters are allowed.\n");
         popupNotification("Incorrect firstname. Only Latin and Russian letters are allowed.");
@@ -101,11 +102,23 @@ void registrationButtonClicked(GtkWidget *button, gpointer user_data) {
         return;
     }
 
-    printf("Registration success!\n");
+    // TODO Other checks are server-side
+
     popupNotification("Registration success!");
+
+    // Create new user
+    FullUserInfo newUser;
+    strcpy(newUser.firstName, gtk_entry_get_text(g_list_nth_data(user_data, 0)));
+    strcpy(newUser.lastName, gtk_entry_get_text(g_list_nth_data(user_data, 1)));
+    strcpy(newUser.login, gtk_entry_get_text(g_list_nth_data(user_data, 2)));
+    strcpy(newUser.password, gtk_entry_get_text(g_list_nth_data(user_data, 3)));
+
+    // Send information to server
+    SOCKET *serverSocket = g_list_nth_data(user_data, 5);
+    clientRequest_Registration(*serverSocket, newUser);
 }
 
-void authorizationButtonClicked(GtkWidget *button, gpointer user_data) {
+void authorizationButtonClicked(GtkWidget *button, GList *user_data) {
     if (!checkLoginAndPasswordCorrectness(gtk_entry_get_text(g_list_nth_data(user_data, 0)))) {
         printf("Incorrect login. Only Latin letters and numbers are allowed.\n");
         popupNotification("Incorrect login. Only Latin letters and numbers are allowed.");
@@ -118,6 +131,16 @@ void authorizationButtonClicked(GtkWidget *button, gpointer user_data) {
         return;
     }
 
-    printf("Authorization success!\n");
     popupNotification("Authorization success!");
+
+    // TODO Other checks are server-side
+
+    // Fill user information
+    FullUserInfo newUser;
+    strcpy(newUser.login, gtk_entry_get_text(g_list_nth_data(user_data, 0)));
+    strcpy(newUser.password, gtk_entry_get_text(g_list_nth_data(user_data, 1)));
+
+    // Send information to server
+    SOCKET *serverSocket = g_list_nth_data(user_data, 2);
+    clientRequest_Authorization(*serverSocket, newUser);
 }

@@ -5,8 +5,8 @@
 
 void popupNotification(char *string);
 
-void registrationButtonClicked(GtkWidget *button, gpointer user_data);
+void registrationButtonClicked(GtkWidget *button, GList *user_data);
 
-void authorizationButtonClicked(GtkWidget *button, gpointer user_data);
+void authorizationButtonClicked(GtkWidget *button, GList *user_data);
 
 #endif //TESTGTK_LOGIN_H

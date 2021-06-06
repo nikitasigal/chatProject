@@ -17,5 +17,5 @@ add_executable(chatProject_client ${src_client})
 
 include_directories(${SQLite3_INCLUDE_DIRS} ${GTK3_INCLUDE_DIRS})
 
-target_link_libraries(chatProject_server ${SQLite3_LIBRARIES})
+target_link_libraries(chatProject_server ${SQLite3_LIBRARIES} ${GTK3_LIBRARIES})
 target_link_libraries(chatProject_client ${GTK3_LIBRARIES})
