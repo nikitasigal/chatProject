@@ -26,12 +26,10 @@ void removeFriend(GtkMenuItem *menuitem, GList *data) {
 
     gtk_widget_destroy(GTK_WIDGET(row));
 
-
-
-    /*gtk_widget_hide(row);
-    gtk_widget_hide(row2);
-    gtk_widget_set_no_show_all(row, TRUE);
-    gtk_widget_set_no_show_all(row2, TRUE);*/
+    // Отправим запрос на сервер
+    SOCKET *serverDescriptor = g_list_nth_data(data, SERVER_SOCKET);
+    FullUserInfo *user = g_list_nth_data(data, CURRENT_USER);
+    clientRequest_RemoveFriend(*serverDescriptor, *user);
 }
 
 void processFriendMenu(GtkWidget *widget, GdkEvent *event, GtkMenu *friendMenu) {
@@ -106,7 +104,6 @@ void addFriend(FullUserInfo *user, GList *additionalInfo) {
     GtkListBox *friendsListBox = g_list_nth_data(additionalInfo, FRIENDS_LIST_BOX);
     GtkListBox *createDialogFriendsListBox = g_list_nth_data(additionalInfo, CREATE_DIALOG_FRIENDS_LIST_BOX);
     GtkMenu *friendMenu = g_list_nth_data(additionalInfo, FRIEND_MENU);
-    GtkMenu *friendMenuRemoveFriend = g_list_nth_data(additionalInfo, FRIEND_MENU_REMOVE_FRIEND);
 
     // Добавим в список друзей во вкладке создания диалога и друзей
     GString *fullName = g_string_new("");
@@ -122,11 +119,16 @@ void addFriend(FullUserInfo *user, GList *additionalInfo) {
     gtk_container_add(GTK_CONTAINER(friendsEventBox), friendLabel);
 
     //
+    FullUserInfo *tempUser = malloc(sizeof(FullUserInfo));
+    tempUser->ID = user->ID;
+    strcpy(tempUser->firstName, user->firstName);
+    strcpy(tempUser->lastName, user->lastName);
+    strcpy(tempUser->login, user->login);
     GtkWidget *createDialogEventBox = gtk_event_box_new();
     gtk_list_box_insert(createDialogFriendsListBox, createDialogEventBox, -1);
     gtk_container_add(GTK_CONTAINER(createDialogEventBox), friendLabel2);
-    g_object_set_data(G_OBJECT(friendLabel), "Data", user);
-    g_object_set_data(G_OBJECT(friendLabel2), "Data", user);
+    g_object_set_data(G_OBJECT(friendLabel), "Data", tempUser);
+    g_object_set_data(G_OBJECT(friendLabel2), "Data", tempUser);
 
     g_string_free(fullName, TRUE);
 
@@ -136,26 +138,4 @@ void addFriend(FullUserInfo *user, GList *additionalInfo) {
 
     gtk_widget_show_all(GTK_WIDGET(friendsListBox));
     gtk_widget_show_all(createDialogEventBox);
-}
-
-void addFriendOld(int ID, char *firstName, char *lastName, char *login, GList **friendsList, GtkListBox *friendsListBox,
-                  GtkListBox *friendRequestListBoxDialogs) {
-    FullUserInfo *friend = g_malloc(sizeof(User));
-    friend->ID = ID;
-    strcpy(friend->firstName, firstName);
-    strcpy(friend->lastName, lastName);
-    strcpy(friend->login, login);
-    *friendsList = g_list_append(*friendsList, friend);
-
-    // Отобразим в friendsListBox
-    GString *fullName = g_string_new("");
-    g_string_append_printf(fullName, "%s %s (%s)", firstName, lastName, login);
-    GtkWidget *friendLabel = gtk_label_new(fullName->str);
-    GtkWidget *friendLabel2 = gtk_label_new(fullName->str);
-    gtk_list_box_insert(friendsListBox, friendLabel, -1);
-    gtk_list_box_insert(friendRequestListBoxDialogs, friendLabel2, -1);
-    g_object_set_data(G_OBJECT(friendLabel), "Data", friend);
-    g_object_set_data(G_OBJECT(friendLabel2), "Data", friend);
-
-    g_string_free(fullName, TRUE);
 }

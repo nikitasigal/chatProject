@@ -7,6 +7,13 @@
 
 extern gdouble lastAdj;
 
+void clientRequest_LoadMessages(SOCKET serverSocket, FullDialogInfo dialogInfo) {
+    dialogInfo.request = LOAD_MESSAGES;
+    int bytes = send(serverSocket, (void *) &dialogInfo, sizeof(FullDialogInfo), 0);
+    if (bytes < 0)
+        printf("ERROR, file - 'clientCommand.c', foo - 'clientRequest_LoadMessages': Can't send request for loading messages. Sent 0 bytes of information\n");
+}
+
 void clientRequest_CreateDialog(SOCKET serverSocket, FullDialogInfo dialogInfo) {
     // Хотим отправить запрос на создание диалога
     dialogInfo.request = CREATE_DIALOG;
@@ -58,7 +65,12 @@ void clientRequest_FriendRequestDeclined(SOCKET serverSocket, FullUserInfo userI
         printf("ERROR, file - 'clientCommand.c', foo - 'clientRequest_FriendRequestDeclined': Can't decline a friend request. Sent 0 bytes of information\n");
 }
 
-
+void clientRequest_RemoveFriend(SOCKET serverSocket, FullUserInfo userInfo) {
+    userInfo.request = REMOVE_FRIEND;
+    int bytes = send(serverSocket, (void *) &userInfo, sizeof(FullUserInfo), 0);
+    if (bytes < 0)
+        printf("ERROR, file - 'clientCommand.c', foo - 'clientRequest_RemoveFriend': Can't remove friend. Sent 0 bytes of information\n");
+}
 
 void serverRequest_CreateDialog(FullDialogInfo dialogInfo, GList *additionalInfo) {
     // Распакуем нужную дополнительную информацию
@@ -69,6 +81,7 @@ void serverRequest_CreateDialog(FullDialogInfo dialogInfo, GList *additionalInfo
     newDialog->ID = dialogInfo.ID;
     newDialog->userList = GTK_LIST_BOX(gtk_list_box_new());
     newDialog->msgList = GTK_LIST_BOX(gtk_list_box_new());
+    newDialog->isOpened = FALSE;
     strcpy(newDialog->name, dialogInfo.dialogName);
 
     gtk_list_box_set_selection_mode(newDialog->msgList, GTK_SELECTION_MULTIPLE);
@@ -82,21 +95,12 @@ void serverRequest_CreateDialog(FullDialogInfo dialogInfo, GList *additionalInfo
     for (int i = 0; i < dialogInfo.usersNumber; ++i)
         gtk_list_box_insert(newDialog->userList, gtk_label_new(dialogInfo.users[i].login), -1);
 
-    // Преобразуем ID в строку
-    char IDString[TEXT_SIZE] = {0};
-    sprintf(IDString, "%d", dialogInfo.ID);
-
-    // Создаём окно с кнопкой беседы, ID и ссылку на чат
-    GtkWidget *dialogBox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
-
-    GtkWidget *dialogLabelWithID = gtk_label_new(IDString);
+    // Создаём окно с кнопкой беседы и ссылку на чат
     GtkWidget *dialogButton = gtk_button_new_with_label(dialogInfo.dialogName);
     g_object_set_data(G_OBJECT(dialogButton), "Data", newDialog);
-    gtk_container_add(GTK_CONTAINER(dialogBox), dialogLabelWithID);
-    gtk_container_add(GTK_CONTAINER(dialogBox), dialogButton);
 
     // Добавим созданный диалог в список диалогов
-    gtk_list_box_insert(dialogsListBox, dialogBox, -1);
+    gtk_list_box_insert(dialogsListBox, dialogButton, -1);
 
     GList *dialogList = g_list_nth(additionalInfo, DIALOGS_LIST);
     dialogList->data = g_list_append(dialogList->data, newDialog);
@@ -105,13 +109,10 @@ void serverRequest_CreateDialog(FullDialogInfo dialogInfo, GList *additionalInfo
     GList *data = NULL;
     data = g_list_append(data, newDialog);
     data = g_list_append(data, additionalInfo); // entry and send-button
-    g_signal_connect(dialogButton, "clicked", (GCallback) newOpenDialog, data);
+    g_signal_connect(dialogButton, "clicked", (GCallback) openDialog, data);
     g_signal_connect(newDialog->msgList, "size-allocate", (GCallback) sizeAllocate, g_list_nth_data(additionalInfo, DIALOG_IS_JUST_OPENED));
 
-    // Сделаем ID невидимым
-    gtk_widget_set_no_show_all(dialogLabelWithID, TRUE);
-
-    gtk_widget_show_all(dialogBox);
+    gtk_widget_show_all(dialogButton);
 }
 
 void serverRequest_SendMessage(FullMessageInfo messageInfo, GList *additionalInfo) {
@@ -133,6 +134,12 @@ void serverRequest_SendMessage(FullMessageInfo messageInfo, GList *additionalInf
     // Диалог не найден
     if (currentDialog == NULL) {
         printf("WARNING, file - 'clientCommand.c', foo - 'serverRequest_SendMessage': Dialog with ID '%d' was not found\n", messageInfo.ID);
+        return;
+    }
+
+    // Если диалог ещё не был открыт, то не будем загружать сообщение
+    if (!currentDialog->isOpened) {
+        printf("LOG INFO: received message, but dialog wasn't opened\n");
         return;
     }
 
@@ -245,19 +252,32 @@ void serverRequest_SendFriendRequest(FullUserInfo userInfo, GList *additionalInf
     gtk_widget_show_all(mainBox);
 }
 
-void serverRequest_RemoveFriend(FullUserInfo userInfo) {
+void serverRequest_RemoveFriend(FullUserInfo userInfo, GList *additionalInfo) {
+    GtkListBox *friendsListBox = g_list_nth_data(additionalInfo, FRIENDS_LIST_BOX);
+    GList *friends = gtk_container_get_children(GTK_CONTAINER(friendsListBox));
+    GList *temp = friends;
+    while (temp != NULL) {
+        FullUserInfo *user = g_object_get_data(G_OBJECT(gtk_bin_get_child(GTK_BIN(gtk_bin_get_child(GTK_BIN(temp->data))))), "Data");
+        if (!strcmp(user->login, userInfo.login)) {
+            gtk_list_box_select_row(friendsListBox, temp->data);
+            removeFriend(NULL, additionalInfo);
+            break;
+        }
 
-}
-
-void serverRequest_FriendIsOnline(FullUserInfo userInfo) {
-
+        temp = temp->next;
+    }
+    printf("that's all\n");
 }
 
 void serverRequest_UserLeaveDialog(FullUserInfo userInfo, FullDialogInfo dialogInfo) {
 
 }
 
-void serverRequest_FriendDisconnect(FullUserInfo userInfo, char *date) { // Change userInfo (date), maybe
+void serverRequest_FriendIsOnline(FullUserInfo userInfo, GList *additionalInfo) {
+
+}
+
+void serverRequest_FriendDisconnect(FullUserInfo userInfo, GList *additionalInfo) {
 
 }
 
@@ -386,6 +406,13 @@ void serverRequestProcess(GList *additionalServerData) {
                 FullUserInfo *userInfo = (FullUserInfo *) data;
                 addFriend(userInfo, additionalServerData);
                 printf("LOG INFO, file - 'clientCommand.c', foo - 'serverRequestProcess': Accepted a friend request with login '%s'\n", userInfo->login);
+
+                break;
+            }
+            case REMOVE_FRIEND: {
+                FullUserInfo *userInfo = (FullUserInfo *) data;
+                serverRequest_RemoveFriend(*userInfo, additionalServerData);
+                printf("LOG INFO, file - 'clientCommand.c', foo - 'serverRequestProcess': You was removed from friend-list of '%s'\n", userInfo->login);
 
                 break;
             }

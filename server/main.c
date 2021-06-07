@@ -124,6 +124,14 @@ void clientRequestReceiving(void *clientSocket) {
 
                 break;
             }
+            case REMOVE_FRIEND: {
+                printf("Processing removing friend..\n");
+                FullUserInfo *userInfo = userData;
+                int bytesSent = send(socket, (void *) userInfo, sizeof(FullUserInfo), 0);
+                if (bytesSent < 0)
+                    printf("Warning: sent < 0 bytes\n");
+                break;
+            }
             default:
                 printf("Warning in 'clientRequestReceiving': unknown request type\n");
 

@@ -122,6 +122,4 @@ void sendMessage(GtkWidget *button, GList *data) {
     strcpy(messageInfo.text, message);
 
     clientRequest_SendMessage(*serverDescriptor, messageInfo);
-
-    //insertMessageInChat("Korostast", timeFormat, message, currentDialog->msgList);
 }

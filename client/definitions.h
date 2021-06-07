@@ -18,7 +18,9 @@ typedef enum {
     SEND_MESSAGE,
     SEND_FRIEND_REQUEST,
     FRIEND_REQUEST_ACCEPTED,
-    FRIEND_REQUEST_DECLINED
+    FRIEND_REQUEST_DECLINED,
+    REMOVE_FRIEND,
+    LOAD_MESSAGES
 } Request;
 
 typedef enum {
@@ -51,16 +53,10 @@ typedef enum {
 
 typedef struct {
     int ID;
-    char firstName[NAME_SIZE];
-    char lastName[NAME_SIZE];
-    char login[NAME_SIZE];
-} User;
-
-typedef struct {
-    int ID;
     char name[NAME_SIZE];
     GtkListBox *userList;
     GtkListBox *msgList;
+    gboolean isOpened;
 } Dialog;
 
 typedef struct {
