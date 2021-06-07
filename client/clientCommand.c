@@ -5,8 +5,6 @@
 #include "login.h"
 #include <windows.h>
 
-extern gdouble lastAdj;
-
 void clientRequest_LoadMessages(SOCKET serverSocket, FullDialogInfo dialogInfo) {
     dialogInfo.request = LOAD_MESSAGES;
     int bytes = send(serverSocket, (void *) &dialogInfo, sizeof(FullDialogInfo), 0);
@@ -15,7 +13,6 @@ void clientRequest_LoadMessages(SOCKET serverSocket, FullDialogInfo dialogInfo) 
 }
 
 void clientRequest_CreateDialog(SOCKET serverSocket, FullDialogInfo dialogInfo) {
-    // Хотим отправить запрос на создание диалога
     dialogInfo.request = CREATE_DIALOG;
     int bytes = send(serverSocket, (void *) &dialogInfo, sizeof(FullDialogInfo), 0);
     if (bytes < 0)
@@ -23,7 +20,6 @@ void clientRequest_CreateDialog(SOCKET serverSocket, FullDialogInfo dialogInfo) 
 }
 
 void clientRequest_SendMessage(SOCKET serverSocket, FullMessageInfo messageInfo) {
-    // Хотим отправить запрос на отправку сообщения
     messageInfo.request = SEND_MESSAGE;
     int bytes = send(serverSocket, (void *) &messageInfo, sizeof(FullMessageInfo), 0);
     if (bytes < 0)
@@ -186,6 +182,7 @@ void serverRequest_SendMessage(FullMessageInfo messageInfo, GList *additionalInf
     gtk_box_pack_start(GTK_BOX(msgMainBox), msgTextLabel, TRUE, TRUE, 0);
 
     // Append new message into a chat
+    extern gdouble lastAdj;
     if (*currentDialogID == messageInfo.ID && *currentDialogID != -1)
         lastAdj = gtk_adjustment_get_upper(gtk_list_box_get_adjustment(currentDialog->msgList));
 
@@ -193,7 +190,7 @@ void serverRequest_SendMessage(FullMessageInfo messageInfo, GList *additionalInf
     gtk_list_box_insert(currentDialog->msgList, eventBox, -1);
 
     g_signal_connect(eventBox, "button-press-event", (GCallback) processMsgSelecting, currentDialog->msgList);
-    g_signal_connect(eventBox, "button-release-event", (GCallback) processMsgMenu, NULL);
+    g_signal_connect(eventBox, "button-release-event", (GCallback) processMsgMenu, g_list_nth_data(additionalInfo, MSG_MENU));
 
     gtk_widget_show_all(eventBox);
 }
@@ -202,17 +199,17 @@ void serverRequest_SendFriendRequest(FullUserInfo userInfo, GList *additionalInf
     GtkListBox *friendRequestListBox = g_list_nth_data(additionalInfo, FRIEND_REQUEST_LIST_BOX);
 
     if (userInfo.ID == -1) {
-        popupNotification("Request already exists");
+        popupNotification("Request already exists", g_list_nth_data(additionalInfo, POPUP_LABEL));
         return;
     }
     if (userInfo.ID == -2) {
-        popupNotification("User with this login doesn't exist");
+        popupNotification("User with this login doesn't exist", g_list_nth_data(additionalInfo, POPUP_LABEL));
         return;
     }
 
     // I'm a messenger of this request. All is alright
     if (userInfo.ID == -3) {
-        popupNotification("Request has been sent");
+        popupNotification("Request has been sent", g_list_nth_data(additionalInfo, POPUP_LABEL));
         return;
     }
 
@@ -243,7 +240,7 @@ void serverRequest_SendFriendRequest(FullUserInfo userInfo, GList *additionalInf
     gtk_list_box_unselect_all(friendRequestListBox);
 
     // Output notification
-    popupNotification("Friend request received");
+    popupNotification("Friend request received", g_list_nth_data(additionalInfo, POPUP_LABEL));
 
     // Signals
     g_signal_connect(acceptButton, "clicked", (GCallback) acceptFriendRequest, additionalInfo);
@@ -266,7 +263,6 @@ void serverRequest_RemoveFriend(FullUserInfo userInfo, GList *additionalInfo) {
 
         temp = temp->next;
     }
-    printf("that's all\n");
 }
 
 void serverRequest_UserLeaveDialog(FullUserInfo userInfo, FullDialogInfo dialogInfo) {

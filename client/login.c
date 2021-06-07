@@ -1,7 +1,6 @@
 #include "login.h"
 #include "clientCommand.h"
 
-extern GtkWidget *popupLabel;
 gboolean isPopupShowed = FALSE;
 
 gboolean fadeOutAnimation(gpointer caller) {
@@ -19,7 +18,6 @@ gboolean fadeOutAnimation(gpointer caller) {
         gtk_widget_hide(caller);
         isPopupShowed = FALSE;
         isShowed = FALSE;
-        counter = 1;
         return FALSE;
     }
     return TRUE;
@@ -52,7 +50,7 @@ gboolean checkName(const gchar *field) {
     return TRUE;
 }
 
-void popupNotification(char *string) {
+void popupNotification(char *string, GtkWidget *popupLabel) {
     if (isPopupShowed)
         return;
 
@@ -70,77 +68,79 @@ void popupNotification(char *string) {
     gdk_threads_add_timeout(20, G_SOURCE_FUNC(fadeOutAnimation), popupWindow);
 }
 
-void registrationButtonClicked(GtkWidget *button, GList *user_data) {
-    if (!checkName(gtk_entry_get_text(g_list_nth_data(user_data, 0)))) {
+void registrationButtonClicked(GtkWidget *button, GList *additionalInfo) {
+    if (!checkName(gtk_entry_get_text(g_list_nth_data(additionalInfo, 0)))) {
         printf("Incorrect firstname. Only Latin and Russian letters are allowed.\n");
-        popupNotification("Incorrect firstname. Only Latin and Russian letters are allowed.");
+        popupNotification("Incorrect firstname. Only Latin and Russian letters are allowed.",
+                          g_list_nth_data(additionalInfo, 6));
         return;
     }
 
-    if (!checkName(gtk_entry_get_text(g_list_nth_data(user_data, 1)))) {
+    if (!checkName(gtk_entry_get_text(g_list_nth_data(additionalInfo, 1)))) {
         printf("Incorrect lastname. Only Latin and Russian letters are allowed.\n");
-        popupNotification("Incorrect lastname. Only Latin and Russian letters are allowed.");
+        popupNotification("Incorrect lastname. Only Latin and Russian letters are allowed.",
+                          g_list_nth_data(additionalInfo, 6));
         return;
     }
 
-    if (!checkLoginAndPasswordCorrectness(gtk_entry_get_text(g_list_nth_data(user_data, 2)))) {
+    if (!checkLoginAndPasswordCorrectness(gtk_entry_get_text(g_list_nth_data(additionalInfo, 2)))) {
         printf("Incorrect login. Only Latin letters and numbers are allowed.\n");
-        popupNotification("Incorrect login. Only Latin letters and numbers are allowed.");
+        popupNotification("Incorrect login. Only Latin letters and numbers are allowed.",
+                          g_list_nth_data(additionalInfo, 6));
         return;
     }
 
-    if (!checkLoginAndPasswordCorrectness(gtk_entry_get_text(g_list_nth_data(user_data, 3)))) {
+    if (!checkLoginAndPasswordCorrectness(gtk_entry_get_text(g_list_nth_data(additionalInfo, 3)))) {
         printf("Incorrect password. Only Latin letters and numbers are allowed.\n");
-        popupNotification("Incorrect password. Only Latin letters and numbers are allowed.");
+        popupNotification("Incorrect password. Only Latin letters and numbers are allowed.",
+                          g_list_nth_data(additionalInfo, 6));
         return;
     }
 
-    if (!checkPasswordMatching(gtk_entry_get_text(g_list_nth_data(user_data, 3)),
-                               gtk_entry_get_text(g_list_nth_data(user_data, 4)))) {
+    if (!checkPasswordMatching(gtk_entry_get_text(g_list_nth_data(additionalInfo, 3)),
+                               gtk_entry_get_text(g_list_nth_data(additionalInfo, 4)))) {
         printf("Incorrect password. Password mismatch.\n");
-        popupNotification("Incorrect password. Password mismatch.");
+        popupNotification("Incorrect password. Password mismatch.", g_list_nth_data(additionalInfo, 6));
         return;
     }
 
-    // TODO Other checks are server-side
-
-    popupNotification("Registration success!");
+    popupNotification("Registration success!", g_list_nth_data(additionalInfo, 6));
 
     // Create new user
     FullUserInfo newUser;
-    strcpy(newUser.firstName, gtk_entry_get_text(g_list_nth_data(user_data, 0)));
-    strcpy(newUser.lastName, gtk_entry_get_text(g_list_nth_data(user_data, 1)));
-    strcpy(newUser.login, gtk_entry_get_text(g_list_nth_data(user_data, 2)));
-    strcpy(newUser.password, gtk_entry_get_text(g_list_nth_data(user_data, 3)));
+    strcpy(newUser.firstName, gtk_entry_get_text(g_list_nth_data(additionalInfo, 0)));
+    strcpy(newUser.lastName, gtk_entry_get_text(g_list_nth_data(additionalInfo, 1)));
+    strcpy(newUser.login, gtk_entry_get_text(g_list_nth_data(additionalInfo, 2)));
+    strcpy(newUser.password, gtk_entry_get_text(g_list_nth_data(additionalInfo, 3)));
 
     // Send information to server
-    SOCKET *serverSocket = g_list_nth_data(user_data, 5);
+    SOCKET *serverSocket = g_list_nth_data(additionalInfo, 5);
     clientRequest_Registration(*serverSocket, newUser);
 }
 
-void authorizationButtonClicked(GtkWidget *button, GList *user_data) {
-    if (!checkLoginAndPasswordCorrectness(gtk_entry_get_text(g_list_nth_data(user_data, 0)))) {
+void authorizationButtonClicked(GtkWidget *button, GList *additionalInfo) {
+    if (!checkLoginAndPasswordCorrectness(gtk_entry_get_text(g_list_nth_data(additionalInfo, 0)))) {
         printf("Incorrect login. Only Latin letters and numbers are allowed.\n");
-        popupNotification("Incorrect login. Only Latin letters and numbers are allowed.");
+        popupNotification("Incorrect login. Only Latin letters and numbers are allowed.",
+                          g_list_nth_data(additionalInfo, 3));
         return;
     }
 
-    if (!checkLoginAndPasswordCorrectness(gtk_entry_get_text(g_list_nth_data(user_data, 1)))) {
+    if (!checkLoginAndPasswordCorrectness(gtk_entry_get_text(g_list_nth_data(additionalInfo, 1)))) {
         printf("Incorrect password. Only Latin letters and numbers are allowed.\n");
-        popupNotification("Incorrect password. Only Latin letters and numbers are allowed.");
+        popupNotification("Incorrect password. Only Latin letters and numbers are allowed.",
+                          g_list_nth_data(additionalInfo, 3));
         return;
     }
 
-    popupNotification("Authorization success!");
-
-    // TODO Other checks are server-side
+    popupNotification("Authorization success!", g_list_nth_data(additionalInfo, 3));
 
     // Fill user information
     FullUserInfo newUser;
-    strcpy(newUser.login, gtk_entry_get_text(g_list_nth_data(user_data, 0)));
-    strcpy(newUser.password, gtk_entry_get_text(g_list_nth_data(user_data, 1)));
+    strcpy(newUser.login, gtk_entry_get_text(g_list_nth_data(additionalInfo, 0)));
+    strcpy(newUser.password, gtk_entry_get_text(g_list_nth_data(additionalInfo, 1)));
 
     // Send information to server
-    SOCKET *serverSocket = g_list_nth_data(user_data, 2);
+    SOCKET *serverSocket = g_list_nth_data(additionalInfo, 2);
     clientRequest_Authorization(*serverSocket, newUser);
 }

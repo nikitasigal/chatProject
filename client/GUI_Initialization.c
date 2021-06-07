@@ -6,10 +6,6 @@
 #include "friends.h"
 #include "clientCommand.h"
 
-GtkWidget *msgMenu;
-GtkWidget *msgList;
-GtkWidget *popupLabel;
-
 void GUIInit(SOCKET *serverSocket) {
     GtkBuilder *builder = gtk_builder_new_from_file("glade.glade");
 
@@ -21,7 +17,6 @@ void GUIInit(SOCKET *serverSocket) {
     GtkWidget *dialogsButton = GTK_WIDGET(gtk_builder_get_object(builder, "dialogsButton"));
     GtkWidget *dialogMenuBox = GTK_WIDGET(gtk_builder_get_object(builder, "dialogMenuBox"));
     GtkWidget *dialogsWindow = GTK_WIDGET(gtk_builder_get_object(builder, "dialogsWindow"));
-    GtkWidget *chatsViewport = GTK_WIDGET(gtk_builder_get_object(builder, "chatsViewport"));
     GtkWidget *friendsButton = GTK_WIDGET(gtk_builder_get_object(builder, "friendsButton"));
     GtkWidget *chatEntry = GTK_WIDGET(gtk_builder_get_object(builder, "chatEntry"));
     GtkWidget *chatButton = GTK_WIDGET(gtk_builder_get_object(builder, "chatButton"));
@@ -39,14 +34,12 @@ void GUIInit(SOCKET *serverSocket) {
     GtkWidget *createDialogFriendsBoxList = GTK_WIDGET(gtk_builder_get_object(builder, "createDialogFriendsBoxList"));
     GtkWidget *createDialogButton = GTK_WIDGET(gtk_builder_get_object(builder, "createDialogButton"));
     GtkWidget *createDialogEntry = GTK_WIDGET(gtk_builder_get_object(builder, "createDialogEntry"));
-    GtkWidget *createDialogEventBox = GTK_WIDGET(gtk_builder_get_object(builder, "createDialogEventBox"));
     GtkWidget *friendMenu = GTK_WIDGET(gtk_builder_get_object(builder, "friendMenu"));
     GtkWidget *friendMenuRemoveFriend = GTK_WIDGET(gtk_builder_get_object(builder, "friendMenuRemoveFriend"));
-    popupLabel = GTK_WIDGET(gtk_builder_get_object(builder, "popupLabel"));
-    msgList = GTK_WIDGET(gtk_builder_get_object(builder, "MsgListBox"));
+    GtkWidget *popupLabel = GTK_WIDGET(gtk_builder_get_object(builder, "popupLabel"));
 
     // Message menu
-    msgMenu = GTK_WIDGET(gtk_builder_get_object(builder, "msgMenu"));
+    GtkWidget *msgMenu = GTK_WIDGET(gtk_builder_get_object(builder, "msgMenu"));
     g_object_ref(msgMenu);
 
     // Friends window:
@@ -116,11 +109,13 @@ void GUIInit(SOCKET *serverSocket) {
     regList = g_list_append(regList, GTK_ENTRY(gtk_builder_get_object(builder, "passwordEntry")));
     regList = g_list_append(regList, GTK_ENTRY(gtk_builder_get_object(builder, "passwordRepeatEntry")));
     regList = g_list_append(regList, serverSocket);
+    regList = g_list_append(regList, popupLabel);
 
     GList *authList = NULL;
     authList = g_list_append(authList, GTK_ENTRY(gtk_builder_get_object(builder, "loginAuthWindow")));
     authList = g_list_append(authList, gtk_builder_get_object(builder, "passwordAuthWindow"));
     authList = g_list_append(authList, serverSocket);
+    authList = g_list_append(authList, popupLabel);
 
     int *currentDialogID = malloc(sizeof(int));
     *currentDialogID = -1;
@@ -157,6 +152,8 @@ void GUIInit(SOCKET *serverSocket) {
     additionalInfo = g_list_append(additionalInfo, dialogIsJustOpened);
     additionalInfo = g_list_append(additionalInfo, friendMenu);
     additionalInfo = g_list_append(additionalInfo, friendMenuRemoveFriend);
+    additionalInfo = g_list_append(additionalInfo, msgMenu);
+    additionalInfo = g_list_append(additionalInfo, popupLabel);
 
     // Создадим пару друзей
     FullUserInfo *first = malloc(sizeof(FullUserInfo));
@@ -183,17 +180,8 @@ void GUIInit(SOCKET *serverSocket) {
     g_signal_connect(friendsButton, "clicked", (GCallback) gotoFriends, additionalInfo);
     g_signal_connect(createDialogButton, "clicked", (GCallback) createDialog, additionalInfo);
     g_signal_connect(friendSendRequestButton, "clicked", (GCallback) sendFriendRequest, additionalInfo);
-
     g_signal_connect(friendMenuRemoveFriend, "activate", (GCallback) removeFriend, additionalInfo);
 
-    //FullUserInfo user1 = {1, "Kolya", "Ivanov", "Lololoshka"};
-    //FullUserInfo user2 = {2, "Kostya", "Rumyantsev", "Korostast"};
-    //FullDialogInfo dialogInfo = {CREATE_DIALOG, 123, "DIALOG LOL", {user1, user2}, 2};
-    //serverRequest_CreateDialog(dialogInfo, additionalInfo);
-
-    //gdk_threads_add_timeout(500, (GSourceFunc) serverRequestProcess, additionalServerData);
-    //serverRequestProcess(additionalServerData);
-    //gdk_threads_add_idle(G_SOURCE_FUNC(serverRequestProcess), additionalServerData);
     g_thread_new("Server thread", (GThreadFunc) serverRequestProcess, additionalInfo);
 
     gtk_widget_show_all(window);

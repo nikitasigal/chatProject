@@ -3,10 +3,10 @@
 
 #include "definitions.h"
 
-void popupNotification(char *string);
+void popupNotification(char *string, GtkWidget *popupLabel);
 
-void registrationButtonClicked(GtkWidget *button, GList *user_data);
+void registrationButtonClicked(GtkWidget *button, GList *additionalInfo);
 
-void authorizationButtonClicked(GtkWidget *button, GList *user_data);
+void authorizationButtonClicked(GtkWidget *button, GList *additionalInfo);
 
 #endif //TESTGTK_LOGIN_H

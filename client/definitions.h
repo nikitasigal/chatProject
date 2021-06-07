@@ -48,7 +48,9 @@ typedef enum {
     FRIEND_REQUEST_LIST_BOX,
     DIALOG_IS_JUST_OPENED,
     FRIEND_MENU,
-    FRIEND_MENU_REMOVE_FRIEND
+    FRIEND_MENU_REMOVE_FRIEND,
+    MSG_MENU,
+    POPUP_LABEL
 } AddServerDataType;
 
 typedef struct {

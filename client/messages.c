@@ -2,16 +2,16 @@
 #include "chat.h"
 #include "login.h"
 
-void createDialog(GtkButton *button, GList *appDialogsMenuList) {
+void createDialog(GtkButton *button, GList *additionalInfo) {
     // Распакуем данные
-    GtkListBox *createDialogFriendsBoxList = g_list_nth_data(appDialogsMenuList, CREATE_DIALOG_FRIENDS_LIST_BOX);
-    GtkEntry *createDialogEntry = g_list_nth_data(appDialogsMenuList, CREATE_DIALOG_ENTRY);
-    SOCKET *serverDescriptor = g_list_nth_data(appDialogsMenuList, SERVER_SOCKET);
+    GtkListBox *createDialogFriendsBoxList = g_list_nth_data(additionalInfo, CREATE_DIALOG_FRIENDS_LIST_BOX);
+    GtkEntry *createDialogEntry = g_list_nth_data(additionalInfo, CREATE_DIALOG_ENTRY);
+    SOCKET *serverDescriptor = g_list_nth_data(additionalInfo, SERVER_SOCKET);
 
     // Проверим, не пустое ли поле имени диалога
     if (strlen(gtk_entry_get_text(createDialogEntry)) == 0) {
         printf("Dialog entry is empty.\n");
-        popupNotification("Dialog name can't be empty.");
+        popupNotification("Dialog name can't be empty.", g_list_nth_data(additionalInfo, POPUP_LABEL));
         return;
     }
 

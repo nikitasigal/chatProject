@@ -82,13 +82,15 @@ void sendFriendRequest(GtkButton *button, GList *additionalInfo) {
 
     // Проверим, не хотим ли мы случайно добавить себя же
     if (!strcmp(currentUser->login, gtk_entry_get_text(friendRequestSendEntry))) {
-        popupNotification("You can't make friends with yourself. You just can't stand it");
+        popupNotification("You can't make friends with yourself. You just can't stand it",
+                          g_list_nth_data(additionalInfo, POPUP_LABEL));
         return;
     }
 
     // Проверим, не пустое ли поле имени диалога
     if (strlen(gtk_entry_get_text(friendRequestSendEntry)) == 0) {
-        popupNotification("You should use login of the user you want to make friends");
+        popupNotification("You should use login of the user you want to make friends",
+                          g_list_nth_data(additionalInfo, POPUP_LABEL));
         return;
     }
 

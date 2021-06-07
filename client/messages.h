@@ -6,6 +6,6 @@
 
 void openDialog(GtkWidget *button, GList *data);
 
-void createDialog(GtkButton *button, GList *appDialogsMenuList);
+void createDialog(GtkButton *button, GList *additionalInfo);
 
 #endif //TESTGTK_MESSAGES_H
