@@ -10,7 +10,7 @@ GtkWidget *msgMenu;
 GtkWidget *msgList;
 GtkWidget *popupLabel;
 
-void GUIInit(SOCKET serverSocket) {
+void GUIInit(SOCKET *serverSocket) {
     GtkBuilder *builder = gtk_builder_new_from_file("glade.glade");
 
     GtkWidget *window = GTK_WIDGET(gtk_builder_get_object(builder, "registrationWindow"));
@@ -33,9 +33,15 @@ void GUIInit(SOCKET serverSocket) {
     GtkWidget *friendsSwitcher = GTK_WIDGET(gtk_builder_get_object(builder, "friendsSwitcher"));
     GtkWidget *friendsStack = GTK_WIDGET(gtk_builder_get_object(builder, "friendsStack"));
     GtkWidget *friendsListBox = GTK_WIDGET(gtk_builder_get_object(builder, "friendsListBox"));
+    GtkWidget *friendSendRequestButton = GTK_WIDGET(gtk_builder_get_object(builder, "friendSendRequestButton"));
+    GtkWidget *friendSendRequestEntry = GTK_WIDGET(gtk_builder_get_object(builder, "friendSendRequestEntry"));
+    GtkWidget *friendRequestListBox = GTK_WIDGET(gtk_builder_get_object(builder, "friendRequestListBox"));
     GtkWidget *createDialogFriendsBoxList = GTK_WIDGET(gtk_builder_get_object(builder, "createDialogFriendsBoxList"));
     GtkWidget *createDialogButton = GTK_WIDGET(gtk_builder_get_object(builder, "createDialogButton"));
     GtkWidget *createDialogEntry = GTK_WIDGET(gtk_builder_get_object(builder, "createDialogEntry"));
+    GtkWidget *createDialogEventBox = GTK_WIDGET(gtk_builder_get_object(builder, "createDialogEventBox"));
+    GtkWidget *friendMenu = GTK_WIDGET(gtk_builder_get_object(builder, "friendMenu"));
+    GtkWidget *friendMenuRemoveFriend = GTK_WIDGET(gtk_builder_get_object(builder, "friendMenuRemoveFriend"));
     popupLabel = GTK_WIDGET(gtk_builder_get_object(builder, "popupLabel"));
     msgList = GTK_WIDGET(gtk_builder_get_object(builder, "MsgListBox"));
 
@@ -65,10 +71,10 @@ void GUIInit(SOCKET serverSocket) {
     friendsList = g_list_append(friendsList, &a);
     friendsList = g_list_append(friendsList, &b);*/
 
-    addFriend(1, "Kolya", "Ivanov", "Lololoshka", &friendsList, GTK_LIST_BOX(friendsListBox),
-              GTK_LIST_BOX(createDialogFriendsBoxList));
-    addFriend(2, "Kostya", "Rumyantsev", "Korostast", &friendsList, GTK_LIST_BOX(friendsListBox),
-              GTK_LIST_BOX(createDialogFriendsBoxList));
+    /*addFriendOld(1, "Kolya", "Ivanov", "Lololoshka", &friendsList, GTK_LIST_BOX(friendsListBox),
+                 GTK_LIST_BOX(createDialogFriendsBoxList));
+    addFriendOld(2, "Kostya", "Rumyantsev", "Korostast", &friendsList, GTK_LIST_BOX(friendsListBox),
+                 GTK_LIST_BOX(createDialogFriendsBoxList));*/
 
     /*User *a = g_malloc(sizeof(User));
     a->ID = 1;
@@ -109,21 +115,24 @@ void GUIInit(SOCKET serverSocket) {
     regList = g_list_append(regList, GTK_ENTRY(gtk_builder_get_object(builder, "loginEntry")));
     regList = g_list_append(regList, GTK_ENTRY(gtk_builder_get_object(builder, "passwordEntry")));
     regList = g_list_append(regList, GTK_ENTRY(gtk_builder_get_object(builder, "passwordRepeatEntry")));
-    regList = g_list_append(regList, &serverSocket);
+    regList = g_list_append(regList, serverSocket);
 
     GList *authList = NULL;
     authList = g_list_append(authList, GTK_ENTRY(gtk_builder_get_object(builder, "loginAuthWindow")));
     authList = g_list_append(authList, gtk_builder_get_object(builder, "passwordAuthWindow"));
-    authList = g_list_append(authList, &serverSocket);
+    authList = g_list_append(authList, serverSocket);
 
     int *currentDialogID = malloc(sizeof(int));
     *currentDialogID = -1;
+
+    gboolean *dialogIsJustOpened = malloc(sizeof(gboolean));
+    *dialogIsJustOpened = -1;
 
     // Current user information
     FullUserInfo *user = malloc(sizeof(FullUserInfo));
 
     GList *additionalInfo = NULL;
-    additionalInfo = g_list_append(additionalInfo, &serverSocket);
+    additionalInfo = g_list_append(additionalInfo, serverSocket);
     additionalInfo = g_list_append(additionalInfo, chatEntry);
     additionalInfo = g_list_append(additionalInfo, chatButton);
     additionalInfo = g_list_append(additionalInfo, dialogViewport);
@@ -143,6 +152,28 @@ void GUIInit(SOCKET serverSocket) {
     additionalInfo = g_list_append(additionalInfo, window);
     additionalInfo = g_list_append(additionalInfo, mainWindow);
     additionalInfo = g_list_append(additionalInfo, user);
+    additionalInfo = g_list_append(additionalInfo, friendSendRequestEntry);
+    additionalInfo = g_list_append(additionalInfo, friendRequestListBox);
+    additionalInfo = g_list_append(additionalInfo, dialogIsJustOpened);
+    additionalInfo = g_list_append(additionalInfo, friendMenu);
+    additionalInfo = g_list_append(additionalInfo, friendMenuRemoveFriend);
+
+    // Создадим пару друзей
+    FullUserInfo *first = malloc(sizeof(FullUserInfo));
+    first->ID = 3;
+    first->request = 0;
+    strcpy(first->firstName, "Ivan");
+    strcpy(first->lastName, "Petrov");
+    strcpy(first->login, "Lol2002");
+
+    FullUserInfo *second = malloc(sizeof(FullUserInfo));
+    second->ID = 4;
+    second->request = 0;
+    strcpy(second->firstName, "Masha");
+    strcpy(second->lastName, "Nyasha");
+    strcpy(second->login, "creeper_kitty");
+    addFriend(first, additionalInfo);
+    addFriend(second, additionalInfo);
 
     // Launch application
     gtk_builder_connect_signals(builder, NULL);
@@ -151,6 +182,9 @@ void GUIInit(SOCKET serverSocket) {
     g_signal_connect(dialogsButton, "clicked", (GCallback) gotoMessages, additionalInfo);
     g_signal_connect(friendsButton, "clicked", (GCallback) gotoFriends, additionalInfo);
     g_signal_connect(createDialogButton, "clicked", (GCallback) createDialog, additionalInfo);
+    g_signal_connect(friendSendRequestButton, "clicked", (GCallback) sendFriendRequest, additionalInfo);
+
+    g_signal_connect(friendMenuRemoveFriend, "activate", (GCallback) removeFriend, additionalInfo);
 
     //FullUserInfo user1 = {1, "Kolya", "Ivanov", "Lololoshka"};
     //FullUserInfo user2 = {2, "Kostya", "Rumyantsev", "Korostast"};
@@ -166,5 +200,4 @@ void GUIInit(SOCKET serverSocket) {
     gtk_widget_hide(chatEntry);
     gtk_widget_hide(chatButton);
     gtk_widget_hide(dialogUsersScrolledWindow);
-    gtk_list_box_unselect_all(GTK_LIST_BOX(msgList));
 }

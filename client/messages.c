@@ -4,7 +4,7 @@
 
 void createDialog(GtkButton *button, GList *appDialogsMenuList) {
     // Распакуем данные
-    GtkListBox *createDialogFriendsBoxList = g_list_nth_data(appDialogsMenuList, CREATE_DIALOG_FRIENDS_BOX_LIST);
+    GtkListBox *createDialogFriendsBoxList = g_list_nth_data(appDialogsMenuList, CREATE_DIALOG_FRIENDS_LIST_BOX);
     GtkEntry *createDialogEntry = g_list_nth_data(appDialogsMenuList, CREATE_DIALOG_ENTRY);
     SOCKET *serverDescriptor = g_list_nth_data(appDialogsMenuList, SERVER_SOCKET);
 
@@ -25,7 +25,7 @@ void createDialog(GtkButton *button, GList *appDialogsMenuList) {
     GList *selectedFriends = gtk_list_box_get_selected_rows(createDialogFriendsBoxList);
     GList *temp = selectedFriends;
     while (temp != NULL) {
-        FullUserInfo *tempUser = g_object_get_data(G_OBJECT(gtk_bin_get_child(GTK_BIN(temp->data))), "Data");//(FullUserInfo *) gtk_bin_get_child(GTK_BIN(temp->data));
+        FullUserInfo *tempUser = g_object_get_data(G_OBJECT(gtk_bin_get_child(GTK_BIN(gtk_bin_get_child(GTK_BIN(temp->data))))), "Data");
         dialogInfo.users[dialogInfo.usersNumber].ID = tempUser->ID;
         strcpy(dialogInfo.users[dialogInfo.usersNumber].firstName, tempUser->firstName);
         strcpy(dialogInfo.users[dialogInfo.usersNumber].lastName, tempUser->lastName);
@@ -48,9 +48,6 @@ void createDialog(GtkButton *button, GList *appDialogsMenuList) {
 
 void newOpenDialog(GtkWidget *button, GList *data) {
     // Step 0
-    //g_free(g_list_nth_data(data, 0));
-    //g_list_nth(data, 0)->data = g_object_get_data(G_OBJECT(button), "Data");
-    //Dialog *newDialog = g_list_nth_data(data, 0);
     Dialog *newDialog = g_object_get_data(G_OBJECT(button), "Data");
     GList *additionalInfo = g_list_nth_data(data, 1);
     GtkWidget *chatEntry = g_list_nth_data(additionalInfo, CHAT_ENTRY);
@@ -68,7 +65,6 @@ void newOpenDialog(GtkWidget *button, GList *data) {
 
     // Step 1.1
     g_list_nth(additionalInfo, CURRENT_DIALOG_ID)->data = &(newDialog->ID);
-    int *currentDialogID = g_list_nth_data(additionalInfo, CURRENT_DIALOG_ID);
 
     // Step 2
     gtk_container_add(GTK_CONTAINER(dialogUsersViewport), GTK_WIDGET(newDialog->userList));
@@ -77,6 +73,10 @@ void newOpenDialog(GtkWidget *button, GList *data) {
     static unsigned signalHandler = 0;
     if (signalHandler != 0)
         g_signal_handler_disconnect(chatButton, signalHandler);
+
+    gboolean *dialogIsJustOpened = g_list_nth_data(additionalInfo, DIALOG_IS_JUST_OPENED);
+    *dialogIsJustOpened = TRUE;
+
     GList *temp = NULL;
     temp = g_list_append(temp, newDialog);
     temp = g_list_append(temp, data);
@@ -189,7 +189,7 @@ newCreateChat(int ID, const char *name, const int usersID[30], int usersIDCount,
     data = g_list_append(data, newDialog);
     data = g_list_append(data, additionalInfo); // entry and send-button
     g_signal_connect(dialogButton, "clicked", (GCallback) newOpenDialog, data);
-    g_signal_connect(newDialog->msgList, "size-allocate", (GCallback) sizeAllocate, NULL);
+    //g_signal_connect(newDialog->msgList, "size-allocate", (GCallback) sizeAllocate, NULL);
 
     // Сделаем ID невидимым
     gtk_widget_set_no_show_all(dialogLabelWithID, TRUE);
@@ -237,7 +237,7 @@ void createChat(char *name, int ID, GtkListBox *dialogList, GList *chatList, GLi
     data->chatList = chatList;
     data->additionalInfo = additionalInfo;
     g_signal_connect(dialogButton, "clicked", (GCallback) openDialog, data);
-    g_signal_connect(chat->msgList, "size-allocate", (GCallback) sizeAllocate, NULL);
+    //g_signal_connect(chat->msgList, "size-allocate", (GCallback) sizeAllocate, NULL);
 
     // Сделаем ID невидимым
     gtk_widget_set_no_show_all(dialogLabelWithID, TRUE);

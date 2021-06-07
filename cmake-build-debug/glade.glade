@@ -51,7 +51,6 @@
                         <property name="halign">center</property>
                         <property name="selection-mode">multiple</property>
                         <property name="activate-on-single-click">False</property>
-                        <signal name="size-allocate" handler="sizeAllocate" swapped="no"/>
                         <child>
                           <object class="GtkListBoxRow">
                             <property name="visible">True</property>
@@ -236,36 +235,6 @@
       </object>
     </child>
   </object>
-  <object class="GtkWindow">
-    <property name="can-focus">False</property>
-    <child>
-      <object class="GtkBox">
-        <property name="visible">True</property>
-        <property name="can-focus">False</property>
-        <property name="orientation">vertical</property>
-        <child>
-          <object class="GtkSearchEntry">
-            <property name="visible">True</property>
-            <property name="can-focus">True</property>
-            <property name="primary-icon-name">edit-find-symbolic</property>
-            <property name="primary-icon-activatable">False</property>
-            <property name="primary-icon-sensitive">False</property>
-          </object>
-          <packing>
-            <property name="expand">False</property>
-            <property name="fill">True</property>
-            <property name="position">0</property>
-          </packing>
-        </child>
-        <child>
-          <placeholder/>
-        </child>
-        <child>
-          <placeholder/>
-        </child>
-      </object>
-    </child>
-  </object>
   <object class="GtkWindow" id="dialogsWindow">
     <property name="can-focus">False</property>
     <child>
@@ -420,6 +389,18 @@
       </object>
     </child>
   </object>
+  <object class="GtkMenu" id="friendMenu">
+    <property name="visible">True</property>
+    <property name="can-focus">False</property>
+    <child>
+      <object class="GtkMenuItem" id="friendMenuRemoveFriend">
+        <property name="visible">True</property>
+        <property name="can-focus">False</property>
+        <property name="label" translatable="yes">Удалить</property>
+        <property name="use-underline">True</property>
+      </object>
+    </child>
+  </object>
   <object class="GtkWindow" id="friendsWindow">
     <property name="can-focus">False</property>
     <child>
@@ -491,6 +472,7 @@
                       <object class="GtkListBox" id="friendRequestListBox">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
+                        <property name="selection-mode">none</property>
                         <child type="placeholder">
                           <object class="GtkLabel">
                             <property name="visible">True</property>
@@ -513,28 +495,60 @@
               <object class="GtkBox">
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
-                <property name="orientation">vertical</property>
+                <property name="valign">start</property>
+                <property name="margin-top">30</property>
                 <child>
-                  <object class="GtkSearchEntry">
+                  <object class="GtkEntry" id="friendSendRequestEntry">
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
-                    <property name="primary-icon-name">edit-find-symbolic</property>
-                    <property name="primary-icon-activatable">False</property>
-                    <property name="primary-icon-sensitive">False</property>
+                    <property name="valign">end</property>
+                    <property name="margin-top">8</property>
+                    <property name="margin-bottom">8</property>
+                    <property name="vexpand">True</property>
+                    <property name="max-length">1000</property>
+                    <property name="secondary-icon-name">face-smile-symbolic</property>
+                    <property name="secondary-icon-tooltip-text" translatable="yes">Вставить Emoji</property>
+                    <property name="secondary-icon-tooltip-markup" translatable="yes">Вставить Emoji</property>
                   </object>
                   <packing>
-                    <property name="expand">False</property>
+                    <property name="expand">True</property>
                     <property name="fill">True</property>
+                    <property name="padding">10</property>
                     <property name="position">0</property>
                   </packing>
                 </child>
                 <child>
-                  <placeholder/>
+                  <object class="GtkButton" id="friendSendRequestButton">
+                    <property name="label" translatable="yes">Отправить</property>
+                    <property name="visible">True</property>
+                    <property name="can-focus">True</property>
+                    <property name="receives-default">True</property>
+                    <property name="valign">end</property>
+                    <property name="margin-start">3</property>
+                    <property name="margin-bottom">8</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="padding">5</property>
+                    <property name="position">1</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkLabel">
+                    <property name="visible">True</property>
+                    <property name="can-focus">False</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">2</property>
+                  </packing>
                 </child>
               </object>
               <packing>
                 <property name="name">page2</property>
-                <property name="title" translatable="yes">Поиск людей</property>
+                <property name="title" translatable="yes">Отправить запрос</property>
                 <property name="position">2</property>
               </packing>
             </child>
@@ -819,7 +833,7 @@
         <property name="orientation">vertical</property>
         <child>
           <object class="GtkLabel">
-            <property name="height-request">50</property>
+            <property name="height-request">60</property>
             <property name="visible">True</property>
             <property name="can-focus">False</property>
             <property name="label" translatable="yes">Application name</property>
@@ -919,6 +933,7 @@
               <object class="GtkBox">
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
+                <property name="margin-bottom">26</property>
                 <property name="orientation">vertical</property>
                 <child>
                   <object class="GtkScrolledWindow">

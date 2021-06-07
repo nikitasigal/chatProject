@@ -106,7 +106,7 @@ int main(int argc, char *argv[]) {
 
     gtk_init(&argc, &argv);
 
-    GUIInit(serverSocket);
+    GUIInit(&serverSocket);
 
     gtk_main();
 

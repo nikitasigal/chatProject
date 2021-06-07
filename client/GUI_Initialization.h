@@ -3,6 +3,6 @@
 
 #include "definitions.h"
 
-void GUIInit(SOCKET serverSocket);
+void GUIInit(SOCKET *serverSocket);
 
 #endif //TESTGTK_GUI_INITIALIZATION_H

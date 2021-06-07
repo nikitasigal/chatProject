@@ -95,6 +95,35 @@ void clientRequestReceiving(void *clientSocket) {
 
                 break;
             }
+            case SEND_FRIEND_REQUEST: {
+                printf("Processing sending friend request..\n");
+                FullUserInfo *userInfo = userData;
+                // Допустим, обработали успешно
+                userInfo->ID = -3;
+
+                int bytesSent = send(socket, (void *) userInfo, sizeof(FullUserInfo), 0);
+                if (bytesSent < 0)
+                    printf("Warning: sent < 0 bytes\n");
+
+                break;
+            }
+            case FRIEND_REQUEST_ACCEPTED: {
+                printf("Processing friend request accepting..\n");
+                FullUserInfo *userInfo = userData;
+                // Обновлены базы данных
+                int bytesSent = send(socket, (void *) userInfo, sizeof(FullUserInfo), 0);
+                if (bytesSent < 0)
+                    printf("Warning: sent < 0 bytes\n");
+
+                break;
+            }
+            case FRIEND_REQUEST_DECLINED: {
+                printf("Processing friend request declining..\n");
+                // Обновлены базы данных
+                // Не будем посылать никуда запрос
+
+                break;
+            }
             default:
                 printf("Warning in 'clientRequestReceiving': unknown request type\n");
 

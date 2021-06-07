@@ -1,69 +1,18 @@
 #include "clientCommand.h"
 #include "chat.h"
 #include "messages.h"
+#include "friends.h"
+#include "login.h"
 #include <windows.h>
 
 extern gdouble lastAdj;
-
-/*
- * Мы приняли запрос от сервера. Есть несколько видов запросов:
- * 1) Создать беседу с именем name и идентификатором ID (с участниками array userID[] ?)
- * 2) Добавить сообщение в беседу с идентификатором ID, от name в время date c текстом text
- * 3) Запрос на добавление в друзья от пользователя ID с именем name
- * 4) Пользователь с именем name принял запрос на добавление в друзья
- * 5) Друг с именем name появился в сети
- */
-
-/*
- * Мы хотим отправить запрос серверу. Есть несколько видов запросов:
- * 1) Создать беседу с именем name и идентификатором ID с участниками array userID[]
- * 2) Добавить сообщение в беседу с идентификатором ID, от name в время date c текстом text
- * 3) Запрос на добавление в друзья пользователя ID
- * 4) Мы приняли запрос на добавление в друзья пользователя ID
- * 5) Присоединиться к серверу с логином login и паролем password
- * 6) Зарегистрироваться (...)
- */
-
-/*
- * Любой диалог должен содержать информацию:
- * 1) ID
- * 2) Name
- * 3) Список участников (name, login, ID (?))
- * 4) Список сообщений
- */
-
-/*
- * Пользователь должен содержать информацию: (на сервере?)
- * 1) ID
- * 2) First name
- * 3) Last name
- * 4) Login
- * 5) Password (?)
- * 6) Список диалогов
- * 7) Список друзей
- */
-
-/*
- * Сообщение содержит данные:
- * 1) Date
- * 2) Name (login)
- * 3) Text
- * 4) ID беседы (?)
- */
-
-/*
- * Пользователь умеет:
- * 1) Отправлять сообщение в беседу ID
- * 2) Добавлять в друзья
- * 3) Переходить по вкладкам
- */
 
 void clientRequest_CreateDialog(SOCKET serverSocket, FullDialogInfo dialogInfo) {
     // Хотим отправить запрос на создание диалога
     dialogInfo.request = CREATE_DIALOG;
     int bytes = send(serverSocket, (void *) &dialogInfo, sizeof(FullDialogInfo), 0);
     if (bytes < 0)
-        printf("ERROR, file - 'clientCommand.c', foo - 'clientRequest_SendMessage': Can't create a dialog. Received 0 bytes of information\n");
+        printf("ERROR, file - 'clientCommand.c', foo - 'clientRequest_SendMessage': Can't create a dialog. Sent 0 bytes of information\n");
 }
 
 void clientRequest_SendMessage(SOCKET serverSocket, FullMessageInfo messageInfo) {
@@ -71,22 +20,45 @@ void clientRequest_SendMessage(SOCKET serverSocket, FullMessageInfo messageInfo)
     messageInfo.request = SEND_MESSAGE;
     int bytes = send(serverSocket, (void *) &messageInfo, sizeof(FullMessageInfo), 0);
     if (bytes < 0)
-        printf("ERROR, file - 'clientCommand.c', foo - 'clientRequest_SendMessage': Can't get a message. Received 0 bytes of information\n");
+        printf("ERROR, file - 'clientCommand.c', foo - 'clientRequest_SendMessage': Can't get a message. Sent 0 bytes of information\n");
 }
 
 void clientRequest_Registration(SOCKET serverSocket, FullUserInfo userInfo) {
     userInfo.request = REGISTRATION;
     int bytes = send(serverSocket, (void *) &userInfo, sizeof(FullMessageInfo), 0);
     if (bytes < 0)
-        printf("ERROR, file - 'clientCommand.c', foo - 'clientRequest_Registration': Registration failed. Received 0 bytes of information\n");
+        printf("ERROR, file - 'clientCommand.c', foo - 'clientRequest_Registration': Registration failed. Sent 0 bytes of information\n");
 }
 
 void clientRequest_Authorization(SOCKET serverSocket, FullUserInfo userInfo) {
     userInfo.request = AUTHORIZATION;
     int bytes = send(serverSocket, (void *) &userInfo, sizeof(FullMessageInfo), 0);
     if (bytes < 0)
-        printf("ERROR, file - 'clientCommand.c', foo - 'clientRequest_Authorization': Authorization failed. Received 0 bytes of information\n");
+        printf("ERROR, file - 'clientCommand.c', foo - 'clientRequest_Authorization': Authorization failed. Sent 0 bytes of information\n");
 }
+
+void clientRequest_SendFriendRequest(SOCKET serverSocket, FullUserInfo userInfo) {
+    userInfo.request = SEND_FRIEND_REQUEST;
+    int bytes = send(serverSocket, (void *) &userInfo, sizeof(FullUserInfo), 0);
+    if (bytes < 0)
+        printf("ERROR, file - 'clientCommand.c', foo - 'clientRequest_SendFriendRequest': Can't send friend request. Sent 0 bytes of information\n");
+}
+
+void clientRequest_FriendRequestAccepted(SOCKET serverSocket, FullUserInfo userInfo) {
+    userInfo.request = FRIEND_REQUEST_ACCEPTED;
+    int bytes = send(serverSocket, (void *) &userInfo, sizeof(FullUserInfo), 0);
+    if (bytes < 0)
+        printf("ERROR, file - 'clientCommand.c', foo - 'clientRequest_FriendRequestAccepted': Can't accept a friend request. Sent 0 bytes of information\n");
+}
+
+void clientRequest_FriendRequestDeclined(SOCKET serverSocket, FullUserInfo userInfo) {
+    userInfo.request = FRIEND_REQUEST_DECLINED;
+    int bytes = send(serverSocket, (void *) &userInfo, sizeof(FullUserInfo), 0);
+    if (bytes < 0)
+        printf("ERROR, file - 'clientCommand.c', foo - 'clientRequest_FriendRequestDeclined': Can't decline a friend request. Sent 0 bytes of information\n");
+}
+
+
 
 void serverRequest_CreateDialog(FullDialogInfo dialogInfo, GList *additionalInfo) {
     // Распакуем нужную дополнительную информацию
@@ -134,7 +106,7 @@ void serverRequest_CreateDialog(FullDialogInfo dialogInfo, GList *additionalInfo
     data = g_list_append(data, newDialog);
     data = g_list_append(data, additionalInfo); // entry and send-button
     g_signal_connect(dialogButton, "clicked", (GCallback) newOpenDialog, data);
-    g_signal_connect(newDialog->msgList, "size-allocate", (GCallback) sizeAllocate, NULL);
+    g_signal_connect(newDialog->msgList, "size-allocate", (GCallback) sizeAllocate, g_list_nth_data(additionalInfo, DIALOG_IS_JUST_OPENED));
 
     // Сделаем ID невидимым
     gtk_widget_set_no_show_all(dialogLabelWithID, TRUE);
@@ -174,9 +146,6 @@ void serverRequest_SendMessage(FullMessageInfo messageInfo, GList *additionalInf
 
     // Creating event box that catch clicking
     GtkWidget *eventBox = gtk_event_box_new();
-    gtk_container_add(GTK_CONTAINER(eventBox), msgMainBox);
-    g_signal_connect(eventBox, "button-press-event", (GCallback) processMsgSelecting, currentDialog->msgList);
-    g_signal_connect(eventBox, "button-release-event", (GCallback) processMsgMenu, NULL);
 
     // Name and date message box
     GtkWidget *msgNameAndDateBox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
@@ -212,20 +181,75 @@ void serverRequest_SendMessage(FullMessageInfo messageInfo, GList *additionalInf
     // Append new message into a chat
     if (*currentDialogID == messageInfo.ID && *currentDialogID != -1)
         lastAdj = gtk_adjustment_get_upper(gtk_list_box_get_adjustment(currentDialog->msgList));
+
+    gtk_container_add(GTK_CONTAINER(eventBox), msgMainBox);
     gtk_list_box_insert(currentDialog->msgList, eventBox, -1);
+
+    g_signal_connect(eventBox, "button-press-event", (GCallback) processMsgSelecting, currentDialog->msgList);
+    g_signal_connect(eventBox, "button-release-event", (GCallback) processMsgMenu, NULL);
 
     gtk_widget_show_all(eventBox);
 }
 
-void serverRequest_AddFriend(FullUserInfo userInfo) {
+void serverRequest_SendFriendRequest(FullUserInfo userInfo, GList *additionalInfo) {
+    GtkListBox *friendRequestListBox = g_list_nth_data(additionalInfo, FRIEND_REQUEST_LIST_BOX);
+
+    if (userInfo.ID == -1) {
+        popupNotification("Request already exists");
+        return;
+    }
+    if (userInfo.ID == -2) {
+        popupNotification("User with this login doesn't exist");
+        return;
+    }
+
+    // I'm a messenger of this request. All is alright
+    if (userInfo.ID == -3) {
+        popupNotification("Request has been sent");
+        return;
+    }
+
+    // I'm a receiver of this request
+    // Main gtkBox
+    GtkWidget *mainBox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+    GtkWidget *nameLabel = gtk_label_new(userInfo.additionalInfo);
+    gtk_widget_set_size_request(nameLabel, -1, 50);
+    gtk_box_pack_start(GTK_BOX(mainBox), nameLabel, TRUE, FALSE, 0);
+
+    // Button box
+    GtkWidget *buttonBox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 50);
+    gtk_widget_set_halign(buttonBox, GTK_ALIGN_CENTER);
+    GtkWidget *acceptButton = gtk_button_new_with_label("Принять");
+    gtk_widget_set_size_request(acceptButton, 120, 10);
+    g_object_set_data(G_OBJECT(acceptButton), "Data", &userInfo);
+    GtkWidget *declineButton = gtk_button_new_with_label("Отклонить");
+    gtk_widget_set_size_request(declineButton, 120, 10);
+    g_object_set_data(G_OBJECT(declineButton), "Data", nameLabel);
+    gtk_box_pack_start(GTK_BOX(buttonBox), acceptButton, TRUE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(buttonBox), declineButton, TRUE, FALSE, 0);
+
+    // Adding button box into main box
+    gtk_box_pack_start(GTK_BOX(mainBox), buttonBox, TRUE, FALSE, 0);
+
+    // Adding new request to friend request listbox
+    gtk_list_box_insert(friendRequestListBox, mainBox, -1);
+    gtk_list_box_unselect_all(friendRequestListBox);
+
+    // Output notification
+    popupNotification("Friend request received");
+
+    // Signals
+    g_signal_connect(acceptButton, "clicked", (GCallback) acceptFriendRequest, additionalInfo);
+    g_signal_connect(declineButton, "clicked", (GCallback) declineFriendRequest, additionalInfo);
+
+    gtk_widget_show_all(mainBox);
+}
+
+void serverRequest_RemoveFriend(FullUserInfo userInfo) {
 
 }
 
 void serverRequest_FriendIsOnline(FullUserInfo userInfo) {
-
-}
-
-void serverRequest_RemoveFriend(FullUserInfo userInfo) {
 
 }
 
@@ -306,7 +330,7 @@ void serverRequestProcess(GList *additionalServerData) {
             case REGISTRATION: {
                 FullUserInfo *userInfo = g_malloc(sizeof(FullUserInfo));
                 FullUserInfo *temp = (FullUserInfo *) data;
-                userInfo->request = AUTHORIZATION;
+                userInfo->request = REGISTRATION;
                 userInfo->ID = temp->ID;
                 strcpy(userInfo->firstName, temp->firstName);
                 strcpy(userInfo->lastName, temp->lastName);
@@ -348,6 +372,20 @@ void serverRequestProcess(GList *additionalServerData) {
                 FullMessageInfo *messageInfo = (FullMessageInfo *) data;
                 serverRequest_SendMessage(*messageInfo, additionalServerData);
                 printf("LOG INFO, file - 'clientCommand.c', foo - 'serverRequestProcess': Receiving a message in dialog with ID '%d'\n", messageInfo->ID);
+
+                break;
+            }
+            case SEND_FRIEND_REQUEST: {
+                FullUserInfo *userInfo = (FullUserInfo *) data;
+                serverRequest_SendFriendRequest(*userInfo, additionalServerData);
+                printf("LOG INFO, file - 'clientCommand.c', foo - 'serverRequestProcess': Receiving a friend request from '%s'\n", userInfo->login);
+
+                break;
+            }
+            case FRIEND_REQUEST_ACCEPTED: {
+                FullUserInfo *userInfo = (FullUserInfo *) data;
+                addFriend(userInfo, additionalServerData);
+                printf("LOG INFO, file - 'clientCommand.c', foo - 'serverRequestProcess': Accepted a friend request with login '%s'\n", userInfo->login);
 
                 break;
             }

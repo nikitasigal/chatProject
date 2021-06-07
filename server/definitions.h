@@ -14,7 +14,10 @@ typedef enum {
     REGISTRATION,
     AUTHORIZATION,
     CREATE_DIALOG,
-    SEND_MESSAGE
+    SEND_MESSAGE,
+    SEND_FRIEND_REQUEST,
+    FRIEND_REQUEST_ACCEPTED,
+    FRIEND_REQUEST_DECLINED
 } Request;
 
 typedef enum {
@@ -30,7 +33,7 @@ typedef enum {
     FRIENDS_SWITCHER,
     FRIENDS_STACK,
     FRIENDS_BOX,
-    CREATE_DIALOG_FRIENDS_BOX_LIST,
+    CREATE_DIALOG_FRIENDS_LIST_BOX,
     CREATE_DIALOG_BUTTON,
     CREATE_DIALOG_ENTRY,
     DIALOGS_LIST,
@@ -68,6 +71,7 @@ typedef struct {
     char lastName[NAME_SIZE];
     char login[NAME_SIZE];
     char password[NAME_SIZE];
+    char additionalInfo[NAME_SIZE];
 } FullUserInfo;
 
 typedef struct {
@@ -76,7 +80,6 @@ typedef struct {
     char dialogName[NAME_SIZE];
     FullUserInfo users[MAX_NUMBER_OF_USERS];
     int usersNumber;
-    //GList *users;   // List of FullUserInfo
 } FullDialogInfo;
 
 #endif //CHATPROJECT_DEFINITIONS_H

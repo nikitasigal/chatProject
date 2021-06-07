@@ -3,14 +3,26 @@
 
 gdouble lastAdj = 0;
 
-void sizeAllocate(GtkWidget *something, gpointer user_data) {
-    GtkAdjustment *adjustment = gtk_list_box_get_adjustment(GTK_LIST_BOX(something));
+gdouble g_abs(gdouble number) {
+    return number < 0 ? -number : number;
+}
+
+void sizeAllocate(GtkWidget *msgListBox, GdkRectangle *allocation, int *dialogIsJustOpened) {
+    if (*dialogIsJustOpened) {
+        GtkAdjustment *adjustment = gtk_list_box_get_adjustment(GTK_LIST_BOX(msgListBox));
+        gtk_adjustment_set_value(adjustment, gtk_adjustment_get_upper(adjustment));
+        gtk_list_box_set_adjustment(GTK_LIST_BOX(msgList), adjustment);
+        *dialogIsJustOpened = FALSE;
+        return;
+    }
+
+    GtkAdjustment *adjustment = gtk_list_box_get_adjustment(GTK_LIST_BOX(msgListBox));
     gdouble curAdj = gtk_adjustment_get_value(adjustment);
     gdouble pageSize = gtk_adjustment_get_page_size(adjustment);
     gdouble maxLastAdj = gtk_adjustment_get_upper(adjustment);
     gdouble result = maxLastAdj - (maxLastAdj - lastAdj) - curAdj - pageSize;
-    if (result < 1e-6) {
-        gtk_adjustment_set_value(adjustment, gtk_adjustment_get_upper(adjustment));
+    if (g_abs(result) < 1e-6) {
+        gtk_adjustment_set_value(adjustment, maxLastAdj);
         gtk_list_box_set_adjustment(GTK_LIST_BOX(msgList), adjustment);
     }
 }
@@ -19,13 +31,10 @@ G_MODULE_EXPORT void processMsgSelecting(GtkWidget *widget, GdkEvent *event, gpo
     GtkWidget *row = gtk_widget_get_parent(widget);
 
     if (event->button.button == GDK_BUTTON_PRIMARY) {
-        if (!gtk_list_box_row_is_selected(GTK_LIST_BOX_ROW(row))) {
+        if (!gtk_list_box_row_is_selected(GTK_LIST_BOX_ROW(row)))
             gtk_list_box_select_row(user_data, GTK_LIST_BOX_ROW(row));
-            printf("selected\n");
-        } else {
-            printf("unselected\n");
+        else
             gtk_list_box_unselect_row(user_data, GTK_LIST_BOX_ROW(row));
-        }
     }
 }
 

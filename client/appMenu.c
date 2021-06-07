@@ -8,8 +8,6 @@ void gotoMessages(GtkWidget *button, GList *appDialogsMenuList) {
     GtkWidget *dialogUsersScrolledWindow = g_list_nth_data(appDialogsMenuList, DIALOG_USERS_SCROLLED_WINDOW);
     GtkWidget *dialogUsersViewport = g_list_nth_data(appDialogsMenuList, DIALOG_USERS_VIEWPORT);
     GtkWidget *dialogMenuBox = g_list_nth_data(appDialogsMenuList, DIALOGS_MENU_BOX);
-    //int *currentDialogID = g_list_nth_data(appDialogsMenuList, CURRENT_DIALOG_ID);
-    //*currentDialogID = -2;
 
     gtk_container_remove(GTK_CONTAINER(dialogViewport), gtk_bin_get_child(GTK_BIN(dialogViewport)));
     GtkWidget *child = gtk_bin_get_child(GTK_BIN(dialogUsersViewport));
@@ -30,8 +28,6 @@ void gotoFriends(GtkWidget *button, GList *appDialogsMenuList) {
     GtkViewport *dialogViewport = g_list_nth_data(appDialogsMenuList, DIALOG_VIEWPORT);
     GtkWidget *dialogUsersScrolledWindow = g_list_nth_data(appDialogsMenuList, DIALOG_USERS_SCROLLED_WINDOW);
     GtkBox *friendsBox = g_list_nth_data(appDialogsMenuList, FRIENDS_BOX);
-    //int *currentDialogID = g_list_nth_data(appDialogsMenuList, CURRENT_DIALOG_ID);
-    //*currentDialogID = -1;
 
     gtk_container_remove(GTK_CONTAINER(dialogViewport), gtk_bin_get_child(GTK_BIN(dialogViewport)));
     gtk_container_add(GTK_CONTAINER(dialogViewport), GTK_WIDGET(friendsBox));
