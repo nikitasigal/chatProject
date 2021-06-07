@@ -16,7 +16,8 @@ void clientRequestReceiving(void *clientSocket) {
         char byte;
         int isAlive = recv(socket, &byte, 1, MSG_PEEK);
         if (isAlive == -1) {
-            printf("Client %d disconnected\n", socket); // TODO send message to friends of this client, that friend is offline
+            printf("Client %d disconnected\n",
+                   socket); // TODO send message to friends of this client, that friend is offline
             return;
         }
 
@@ -61,8 +62,7 @@ void clientRequestReceiving(void *clientSocket) {
                     userInfo->ID = userID;
                     strcpy(userInfo->firstName, "Kostya");
                     strcpy(userInfo->lastName, "Rumyantsev");
-                }
-                else {
+                } else {
                     // Put the value -1 at user ID, because it's wrong password
                     userInfo->ID = -1;
                 }
@@ -98,7 +98,7 @@ void clientRequestReceiving(void *clientSocket) {
             default:
                 printf("Warning in 'clientRequestReceiving': unknown request type\n");
 
-            g_free(temp);
+                g_free(temp);
         }
 
         free(userData);
@@ -131,7 +131,7 @@ int main() {
         return -2;
     }
 
-    int bindError = bind(listenSocket, result->ai_addr, (int)result->ai_addrlen);   // Привязываем IP и порт к сокету
+    int bindError = bind(listenSocket, result->ai_addr, (int) result->ai_addrlen);   // Привязываем IP и порт к сокету
     if (bindError == SOCKET_ERROR) {
         printf("Binding error");
         freeaddrinfo(result);
