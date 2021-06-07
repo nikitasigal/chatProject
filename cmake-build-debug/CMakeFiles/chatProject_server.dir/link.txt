@@ -1,3 +1,0 @@
-"D:\Program Files\JetBrains\CLion 2020.3.2\bin\cmake\win\bin\cmake.exe" -E rm -f CMakeFiles\chatProject_server.dir/objects.a
-C:\msys64\mingw64\bin\ar.exe cr CMakeFiles\chatProject_server.dir/objects.a @CMakeFiles\chatProject_server.dir\objects1.rsp
-C:\msys64\mingw64\bin\gcc.exe -g -Wl,--whole-archive CMakeFiles\chatProject_server.dir/objects.a -Wl,--no-whole-archive -o chatProject_server.exe -Wl,--out-implib,libchatProject_server.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles\chatProject_server.dir\linklibs.rsp
