@@ -76,10 +76,10 @@ typedef struct {
 typedef struct {
     Request request;
     int ID;
-    char firstName[NAME_SIZE];
-    char lastName[NAME_SIZE];
-    char login[NAME_SIZE];
+    char username[NAME_SIZE];
     char password[NAME_SIZE];
+    char firstName[NAME_SIZE];
+    char secondName[NAME_SIZE];
     char additionalInfo[NAME_SIZE];
 } FullUserInfo;
 

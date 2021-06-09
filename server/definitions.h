@@ -67,10 +67,10 @@ typedef struct {
 typedef struct {
     Request request;
     int ID;
-    char firstName[NAME_SIZE];
-    char lastName[NAME_SIZE];
-    char login[NAME_SIZE];
+    char username[NAME_SIZE];
     char password[NAME_SIZE];
+    char firstName[NAME_SIZE];
+    char secondName[NAME_SIZE];
     char additionalInfo[NAME_SIZE];
 } FullUserInfo;
 
@@ -80,6 +80,18 @@ typedef struct {
     char dialogName[NAME_SIZE];
     FullUserInfo users[MAX_NUMBER_OF_USERS];
     int usersNumber;
+    int isGroup;
 } FullDialogInfo;
+
+
+typedef struct{
+    FullUserInfo authorizedUser;
+    int dialogCount;
+    FullDialogInfo dialogList[100];
+    int friendCount;
+    FullUserInfo friends[100];
+    int requestsCount;
+    FullUserInfo requests[100];
+}AuthorizationPackage;
 
 #endif //CHATPROJECT_DEFINITIONS_H

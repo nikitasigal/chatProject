@@ -84,8 +84,8 @@ void registrationButtonClicked(GtkWidget *button, GList *user_data) {
     }
 
     if (!checkLoginAndPasswordCorrectness(gtk_entry_get_text(g_list_nth_data(user_data, 2)))) {
-        printf("Incorrect login. Only Latin letters and numbers are allowed.\n");
-        popupNotification("Incorrect login. Only Latin letters and numbers are allowed.");
+        printf("Incorrect username. Only Latin letters and numbers are allowed.\n");
+        popupNotification("Incorrect username. Only Latin letters and numbers are allowed.");
         return;
     }
 
@@ -109,8 +109,8 @@ void registrationButtonClicked(GtkWidget *button, GList *user_data) {
     // Create new user
     FullUserInfo newUser;
     strcpy(newUser.firstName, gtk_entry_get_text(g_list_nth_data(user_data, 0)));
-    strcpy(newUser.lastName, gtk_entry_get_text(g_list_nth_data(user_data, 1)));
-    strcpy(newUser.login, gtk_entry_get_text(g_list_nth_data(user_data, 2)));
+    strcpy(newUser.secondName, gtk_entry_get_text(g_list_nth_data(user_data, 1)));
+    strcpy(newUser.username, gtk_entry_get_text(g_list_nth_data(user_data, 2)));
     strcpy(newUser.password, gtk_entry_get_text(g_list_nth_data(user_data, 3)));
 
     // Send information to server
@@ -120,8 +120,8 @@ void registrationButtonClicked(GtkWidget *button, GList *user_data) {
 
 void authorizationButtonClicked(GtkWidget *button, GList *user_data) {
     if (!checkLoginAndPasswordCorrectness(gtk_entry_get_text(g_list_nth_data(user_data, 0)))) {
-        printf("Incorrect login. Only Latin letters and numbers are allowed.\n");
-        popupNotification("Incorrect login. Only Latin letters and numbers are allowed.");
+        printf("Incorrect username. Only Latin letters and numbers are allowed.\n");
+        popupNotification("Incorrect username. Only Latin letters and numbers are allowed.");
         return;
     }
 
@@ -137,7 +137,7 @@ void authorizationButtonClicked(GtkWidget *button, GList *user_data) {
 
     // Fill user information
     FullUserInfo newUser;
-    strcpy(newUser.login, gtk_entry_get_text(g_list_nth_data(user_data, 0)));
+    strcpy(newUser.username, gtk_entry_get_text(g_list_nth_data(user_data, 0)));
     strcpy(newUser.password, gtk_entry_get_text(g_list_nth_data(user_data, 1)));
 
     // Send information to server

@@ -79,13 +79,13 @@ void GUIInit(SOCKET *serverSocket) {
     /*User *a = g_malloc(sizeof(User));
     a->ID = 1;
     strcpy(a->firstName, "Kolya");
-    strcpy(a->lastName, "Ivanov");
-    strcpy(a->login, "Lololoshka");
+    strcpy(a->secondName, "Ivanov");
+    strcpy(a->username, "Lololoshka");
     User *b = g_malloc(sizeof(User));
     b->ID = 2;
     strcpy(b->firstName, "Kostya");
-    strcpy(b->lastName, "Rumyantsev");
-    strcpy(b->login, "Korostast");
+    strcpy(b->secondName, "Rumyantsev");
+    strcpy(b->username, "Korostast");
     friendsList = g_list_append(friendsList, a);
     friendsList = g_list_append(friendsList, b);*/
 
@@ -163,15 +163,15 @@ void GUIInit(SOCKET *serverSocket) {
     first->ID = 3;
     first->request = 0;
     strcpy(first->firstName, "Ivan");
-    strcpy(first->lastName, "Petrov");
-    strcpy(first->login, "Lol2002");
+    strcpy(first->secondName, "Petrov");
+    strcpy(first->username, "Lol2002");
 
     FullUserInfo *second = malloc(sizeof(FullUserInfo));
     second->ID = 4;
     second->request = 0;
     strcpy(second->firstName, "Masha");
-    strcpy(second->lastName, "Nyasha");
-    strcpy(second->login, "creeper_kitty");
+    strcpy(second->secondName, "Nyasha");
+    strcpy(second->username, "creeper_kitty");
     addFriend(first, additionalInfo);
     addFriend(second, additionalInfo);
 
