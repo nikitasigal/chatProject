@@ -80,7 +80,7 @@ void serverRequest_CreateDialog(FullDialogInfo dialogInfo, GList *additionalInfo
 
     // Обновим userList
     for (int i = 0; i < dialogInfo.usersNumber; ++i)
-        gtk_list_box_insert(newDialog->userList, gtk_label_new(dialogInfo.users[i].login), -1);
+        gtk_list_box_insert(newDialog->userList, gtk_label_new(dialogInfo.users[i].username), -1);
 
     // Преобразуем ID в строку
     char IDString[TEXT_SIZE] = {0};
@@ -199,7 +199,7 @@ void serverRequest_SendFriendRequest(FullUserInfo userInfo, GList *additionalInf
         return;
     }
     if (userInfo.ID == -2) {
-        popupNotification("User with this login doesn't exist");
+        popupNotification("User with this username doesn't exist");
         return;
     }
 
@@ -265,7 +265,7 @@ gboolean serverRequest_Registration(GList *specialAdditionalServerData) {
     FullUserInfo *userInfo = g_list_nth_data(specialAdditionalServerData, 0);
     GList *additionalServerData = g_list_nth_data(specialAdditionalServerData, 1);
     if (userInfo->ID == -1) {
-        printf("WARNING, file - 'clientCommand.c', foo - 'serverRequest_Registration': login is already in use\n");
+        printf("WARNING, file - 'clientCommand.c', foo - 'serverRequest_Registration': username is already in use\n");
         g_free(userInfo);
         return FALSE;
     }
@@ -287,7 +287,7 @@ gboolean serverRequest_Authorization(GList *specialAdditionalServerData) {
     GList *additionalServerData = g_list_nth_data(specialAdditionalServerData, 1);
 
     if (userInfo->ID == -1) {
-        printf("WARNING, file - 'clientCommand.c', foo - 'serverRequest_Authorization': incorrect password or login\n");
+        printf("WARNING, file - 'clientCommand.c', foo - 'serverRequest_Authorization': incorrect password or username\n");
         g_free(userInfo);
         return FALSE;
     }
@@ -333,8 +333,8 @@ void serverRequestProcess(GList *additionalServerData) {
                 userInfo->request = REGISTRATION;
                 userInfo->ID = temp->ID;
                 strcpy(userInfo->firstName, temp->firstName);
-                strcpy(userInfo->lastName, temp->lastName);
-                strcpy(userInfo->login, temp->login);
+                strcpy(userInfo->secondName, temp->secondName);
+                strcpy(userInfo->username, temp->username);
 
                 GList *list = NULL;
                 list = g_list_append(list, userInfo);
@@ -350,8 +350,8 @@ void serverRequestProcess(GList *additionalServerData) {
                 userInfo->request = AUTHORIZATION;
                 userInfo->ID = temp->ID;
                 strcpy(userInfo->firstName, temp->firstName);
-                strcpy(userInfo->lastName, temp->lastName);
-                strcpy(userInfo->login, temp->login);
+                strcpy(userInfo->secondName, temp->secondName);
+                strcpy(userInfo->username, temp->username);
 
                 GList *list = NULL;
                 list = g_list_append(list, userInfo);
@@ -378,14 +378,14 @@ void serverRequestProcess(GList *additionalServerData) {
             case SEND_FRIEND_REQUEST: {
                 FullUserInfo *userInfo = (FullUserInfo *) data;
                 serverRequest_SendFriendRequest(*userInfo, additionalServerData);
-                printf("LOG INFO, file - 'clientCommand.c', foo - 'serverRequestProcess': Receiving a friend request from '%s'\n", userInfo->login);
+                printf("LOG INFO, file - 'clientCommand.c', foo - 'serverRequestProcess': Receiving a friend request from '%s'\n", userInfo->username);
 
                 break;
             }
             case FRIEND_REQUEST_ACCEPTED: {
                 FullUserInfo *userInfo = (FullUserInfo *) data;
                 addFriend(userInfo, additionalServerData);
-                printf("LOG INFO, file - 'clientCommand.c', foo - 'serverRequestProcess': Accepted a friend request with login '%s'\n", userInfo->login);
+                printf("LOG INFO, file - 'clientCommand.c', foo - 'serverRequestProcess': Accepted a friend request with username '%s'\n", userInfo->username);
 
                 break;
             }

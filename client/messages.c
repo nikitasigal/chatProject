@@ -28,8 +28,8 @@ void createDialog(GtkButton *button, GList *appDialogsMenuList) {
         FullUserInfo *tempUser = g_object_get_data(G_OBJECT(gtk_bin_get_child(GTK_BIN(gtk_bin_get_child(GTK_BIN(temp->data))))), "Data");
         dialogInfo.users[dialogInfo.usersNumber].ID = tempUser->ID;
         strcpy(dialogInfo.users[dialogInfo.usersNumber].firstName, tempUser->firstName);
-        strcpy(dialogInfo.users[dialogInfo.usersNumber].lastName, tempUser->lastName);
-        strcpy(dialogInfo.users[dialogInfo.usersNumber].login, tempUser->login);
+        strcpy(dialogInfo.users[dialogInfo.usersNumber].secondName, tempUser->secondName);
+        strcpy(dialogInfo.users[dialogInfo.usersNumber].username, tempUser->username);
         ++dialogInfo.usersNumber;
 
         temp = temp->next;

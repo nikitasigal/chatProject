@@ -117,8 +117,8 @@ void sendMessage(GtkWidget *button, GList *data) {
     FullMessageInfo messageInfo;
     messageInfo.ID = currentDialog->ID;
     strcpy(messageInfo.firstName, currentUser->firstName);
-    strcpy(messageInfo.lastName, currentUser->lastName);
-    strcpy(messageInfo.login, currentUser->login);
+    strcpy(messageInfo.lastName, currentUser->secondName);
+    strcpy(messageInfo.login, currentUser->username);
     strcpy(messageInfo.text, message);
 
     clientRequest_SendMessage(*serverDescriptor, messageInfo);

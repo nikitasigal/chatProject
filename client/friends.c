@@ -15,7 +15,7 @@ void removeFriend(GtkMenuItem *menuitem, GList *data) {
     while (temp != NULL) {
         GtkListBoxRow *tempRow = temp->data;
         FullUserInfo *user = g_object_get_data(G_OBJECT(gtk_bin_get_child(GTK_BIN(gtk_bin_get_child(GTK_BIN(tempRow))))), "Data");
-        if (!strcmp(user->login, searchingUser->login)) {
+        if (!strcmp(user->username, searchingUser->username)) {
             gtk_widget_destroy(GTK_WIDGET(temp->data));
             break;
         }
@@ -83,14 +83,14 @@ void sendFriendRequest(GtkButton *button, GList *additionalInfo) {
     strcpy(currentUser->additionalInfo, gtk_entry_get_text(GTK_ENTRY(friendRequestSendEntry)));
 
     // Проверим, не хотим ли мы случайно добавить себя же
-    if (!strcmp(currentUser->login, gtk_entry_get_text(friendRequestSendEntry))) {
+    if (!strcmp(currentUser->username, gtk_entry_get_text(friendRequestSendEntry))) {
         popupNotification("You can't make friends with yourself. You just can't stand it");
         return;
     }
 
     // Проверим, не пустое ли поле имени диалога
     if (strlen(gtk_entry_get_text(friendRequestSendEntry)) == 0) {
-        popupNotification("You should use login of the user you want to make friends");
+        popupNotification("You should use username of the user you want to make friends");
         return;
     }
 
@@ -110,7 +110,7 @@ void addFriend(FullUserInfo *user, GList *additionalInfo) {
 
     // Добавим в список друзей во вкладке создания диалога и друзей
     GString *fullName = g_string_new("");
-    g_string_append_printf(fullName, "%s %s (%s)", user->firstName, user->lastName, user->login);
+    g_string_append_printf(fullName, "%s %s (%s)", user->firstName, user->secondName, user->username);
     GtkWidget *friendLabel = gtk_label_new(fullName->str);
     gtk_widget_set_size_request(friendLabel, -1, 30);
     GtkWidget *friendLabel2 = gtk_label_new(fullName->str);
@@ -143,8 +143,8 @@ void addFriendOld(int ID, char *firstName, char *lastName, char *login, GList **
     FullUserInfo *friend = g_malloc(sizeof(User));
     friend->ID = ID;
     strcpy(friend->firstName, firstName);
-    strcpy(friend->lastName, lastName);
-    strcpy(friend->login, login);
+    strcpy(friend->secondName, lastName);
+    strcpy(friend->username, login);
     *friendsList = g_list_append(*friendsList, friend);
 
     // Отобразим в friendsListBox
