@@ -77,6 +77,7 @@ void createDialog(GtkButton *button, GList *additionalInfo) {
         temp = temp->next;
     }
 
+
     // Добавим и себя
     dialogInfo.users[dialogInfo.usersNumber].ID = currentUser->ID;
     strcpy(dialogInfo.users[dialogInfo.usersNumber].firstName, currentUser->firstName);
