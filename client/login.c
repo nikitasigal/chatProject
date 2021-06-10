@@ -104,8 +104,6 @@ void registrationButtonClicked(GtkWidget *button, GList *additionalInfo) {
         return;
     }
 
-    popupNotification("Registration success!", g_list_nth_data(additionalInfo, 6));
-
     // Create new user
     FullUserInfo newUser;
     strcpy(newUser.firstName, gtk_entry_get_text(g_list_nth_data(additionalInfo, 0)));
@@ -132,8 +130,6 @@ void authorizationButtonClicked(GtkWidget *button, GList *additionalInfo) {
                           g_list_nth_data(additionalInfo, 3));
         return;
     }
-
-    popupNotification("Authorization success!", g_list_nth_data(additionalInfo, 3));
 
     // Fill user information
     FullUserInfo newUser;

@@ -57,17 +57,86 @@ void clientRequestReceiving(void *clientSocket) {
                 int userID = 0;
                 strcpy(foundPassword, "666kostya666");
 
+                AuthorizationPackage package;
+                FullUserInfo user1;
+                FullUserInfo user2;
+                FullUserInfo currentUser;
+                FullDialogInfo dialog1;
+                FullDialogInfo dialog2;
+                FullUserInfo userRequest1;
+                FullUserInfo userRequest2;
+                FullUserInfo userRequest3;
+
                 if (!strcmp(userInfo->password, foundPassword)) {
-                    // Give user his ID
-                    userInfo->ID = userID;
-                    strcpy(userInfo->firstName, "Kostya");
-                    strcpy(userInfo->lastName, "Rumyantsev");
+                    // Package
+                    user1.ID = 4;
+                    strcpy(user1.login, "Abc123");
+                    strcpy(user1.firstName, "Ivan");
+                    strcpy(user1.lastName, "Kolesnikov");
+
+                    user2.ID = 13;
+                    strcpy(user2.login, "ChannelOfLove");
+                    strcpy(user2.firstName, "Kakashi");
+                    strcpy(user2.lastName, "Naruto");
+
+                    currentUser.ID = 2;
+                    strcpy(currentUser.login, "koko20412");
+                    strcpy(currentUser.firstName, "Kirgiz");
+                    strcpy(currentUser.lastName, "Anarashitara");
+                    package.authorizedUser.ID = currentUser.ID;
+                    strcpy(package.authorizedUser.login, currentUser.login);
+                    strcpy(package.authorizedUser.firstName, currentUser.firstName);
+                    strcpy(package.authorizedUser.lastName, currentUser.lastName);
+
+                    dialog1.ID = 50;
+                    strcpy(dialog1.dialogName, "abc");
+                    dialog1.usersNumber = 2;
+                    dialog1.users[0] = user1;
+                    dialog1.users[1] = user2;
+
+                    dialog2.ID = 51;
+                    strcpy(dialog2.dialogName, "DialogWithOneUser");
+                    dialog2.usersNumber = 2;
+                    dialog2.users[0] = user1;
+
+                    package.dialogCount = 2;
+                    package.dialogList[0] = dialog1;
+                    package.dialogList[1] = dialog2;
+
+                    userRequest1.ID = 6;
+                    strcpy(userRequest1.login, "123");
+                    strcpy(userRequest1.firstName, "321");
+                    strcpy(userRequest1.lastName, "213");
+                    strcpy(userRequest1.additionalInfo, "213");
+
+                    userRequest2.ID = 9;
+                    strcpy(userRequest2.login, "AhaHAHAhaHA");
+                    strcpy(userRequest2.firstName, "Name");
+                    strcpy(userRequest2.lastName, "NotName");
+                    strcpy(userRequest2.additionalInfo, "NotName");
+
+                    userRequest3.ID = 31;
+                    strcpy(userRequest3.login, "User3");
+                    strcpy(userRequest3.firstName, "Alex");
+                    strcpy(userRequest3.lastName, "Romanov");
+                    strcpy(userRequest3.additionalInfo, "Romanov");
+
+                    package.requestCount = 3;
+                    package.requests[0] = userRequest1;
+                    package.requests[1] = userRequest2;
+                    package.requests[2] = userRequest3;
+
+                    package.friendCount = 2;
+                    package.friends[0] = user1;
+                    package.friends[1] = user2;
+
                 } else {
                     // Put the value -1 at user ID, because it's wrong password
                     userInfo->ID = -1;
                 }
 
-                int bytesSent = send(socket, (void *) userInfo, sizeof(FullUserInfo), 0);
+                package.request = AUTHORIZATION;
+                int bytesSent = send(socket, (void *) &package, sizeof(AuthorizationPackage), 0);
                 if (bytesSent < 0)
                     printf("Warning: sent < 0 bytes\n");
 
@@ -130,6 +199,16 @@ void clientRequestReceiving(void *clientSocket) {
                 int bytesSent = send(socket, (void *) userInfo, sizeof(FullUserInfo), 0);
                 if (bytesSent < 0)
                     printf("Warning: sent < 0 bytes\n");
+
+                break;
+            }
+            case LEAVE_DIALOG: {
+                printf("Processing leaving dialog..\n");
+                FullUserInfo *userInfo = userData;
+                int bytesSent = send(socket, (void *) userInfo, sizeof(FullUserInfo), 0);
+                if (bytesSent < 0)
+                    printf("Warning: sent < 0 bytes\n");
+
                 break;
             }
             default:

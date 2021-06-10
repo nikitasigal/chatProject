@@ -235,6 +235,18 @@
       </object>
     </child>
   </object>
+  <object class="GtkMenu" id="dialogMenu">
+    <property name="visible">True</property>
+    <property name="can-focus">False</property>
+    <child>
+      <object class="GtkMenuItem" id="dialogMenuLeaveDialog">
+        <property name="visible">True</property>
+        <property name="can-focus">False</property>
+        <property name="label" translatable="yes">Покинуть беседу</property>
+        <property name="use-underline">True</property>
+      </object>
+    </child>
+  </object>
   <object class="GtkWindow" id="dialogsWindow">
     <property name="can-focus">False</property>
     <child>
@@ -340,6 +352,7 @@
                       <object class="GtkEntry" id="createDialogEntry">
                         <property name="visible">True</property>
                         <property name="can-focus">True</property>
+                        <property name="max-length">48</property>
                         <property name="placeholder-text" translatable="yes">Название беседы</property>
                       </object>
                       <packing>
@@ -397,6 +410,14 @@
         <property name="visible">True</property>
         <property name="can-focus">False</property>
         <property name="label" translatable="yes">Удалить</property>
+        <property name="use-underline">True</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkMenuItem" id="friendMenuOpenDialog">
+        <property name="visible">True</property>
+        <property name="can-focus">False</property>
+        <property name="label" translatable="yes">Перейти к диалогу</property>
         <property name="use-underline">True</property>
       </object>
     </child>
@@ -505,7 +526,7 @@
                     <property name="margin-top">8</property>
                     <property name="margin-bottom">8</property>
                     <property name="vexpand">True</property>
-                    <property name="max-length">1000</property>
+                    <property name="max-length">16</property>
                     <property name="secondary-icon-name">face-smile-symbolic</property>
                     <property name="secondary-icon-tooltip-text" translatable="yes">Вставить Emoji</property>
                     <property name="secondary-icon-tooltip-markup" translatable="yes">Вставить Emoji</property>
@@ -639,6 +660,7 @@
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
                     <property name="is-focus">True</property>
+                    <property name="max-length">16</property>
                     <property name="max-width-chars">16</property>
                     <property name="xalign">0.5</property>
                     <property name="placeholder-text" translatable="yes">Имя</property>
@@ -654,6 +676,7 @@
                   <object class="GtkEntry" id="secondNameEntry">
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
+                    <property name="max-length">16</property>
                     <property name="max-width-chars">16</property>
                     <property name="xalign">0.5</property>
                     <property name="placeholder-text" translatable="yes">Фамилия</property>
@@ -669,6 +692,7 @@
                   <object class="GtkEntry" id="loginEntry">
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
+                    <property name="max-length">16</property>
                     <property name="max-width-chars">16</property>
                     <property name="xalign">0.5</property>
                     <property name="placeholder-text" translatable="yes">Логин</property>
@@ -684,6 +708,7 @@
                   <object class="GtkEntry" id="passwordEntry">
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
+                    <property name="max-length">16</property>
                     <property name="visibility">False</property>
                     <property name="max-width-chars">16</property>
                     <property name="xalign">0.5</property>
@@ -701,6 +726,7 @@
                   <object class="GtkEntry" id="passwordRepeatEntry">
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
+                    <property name="max-length">16</property>
                     <property name="visibility">False</property>
                     <property name="max-width-chars">16</property>
                     <property name="xalign">0.5</property>
@@ -747,6 +773,7 @@
                   <object class="GtkEntry" id="loginAuthWindow">
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
+                    <property name="max-length">16</property>
                     <property name="xalign">0.5</property>
                     <property name="placeholder-text" translatable="yes">Логин</property>
                     <property name="input-hints">GTK_INPUT_HINT_NO_EMOJI | GTK_INPUT_HINT_NONE</property>
@@ -761,6 +788,7 @@
                   <object class="GtkEntry" id="passwordAuthWindow">
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
+                    <property name="max-length">16</property>
                     <property name="visibility">False</property>
                     <property name="invisible-char">●</property>
                     <property name="xalign">0.5</property>
@@ -935,6 +963,17 @@
                 <property name="can-focus">False</property>
                 <property name="margin-bottom">26</property>
                 <property name="orientation">vertical</property>
+                <child>
+                  <object class="GtkLabel" id="dialogNameLabel">
+                    <property name="visible">True</property>
+                    <property name="can-focus">False</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
                 <child>
                   <object class="GtkScrolledWindow">
                     <property name="width-request">600</property>

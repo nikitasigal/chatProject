@@ -68,9 +68,17 @@ void clientRequest_RemoveFriend(SOCKET serverSocket, FullUserInfo userInfo) {
         printf("ERROR, file - 'clientCommand.c', foo - 'clientRequest_RemoveFriend': Can't remove friend. Sent 0 bytes of information\n");
 }
 
+void clientRequest_LeaveDialog(SOCKET serverSocket, FullUserInfo userInfo) {
+    userInfo.request = LEAVE_DIALOG;
+    int bytes = send(serverSocket, (void *) &userInfo, sizeof(FullUserInfo), 0);
+    if (bytes < 0)
+        printf("ERROR, file - 'clientCommand.c', foo - 'clientRequest_LeaveDialog': Can't leave dialog. Sent 0 bytes of information\n");
+}
+
 void serverRequest_CreateDialog(FullDialogInfo dialogInfo, GList *additionalInfo) {
     // Распакуем нужную дополнительную информацию
     GtkListBox *dialogsListBox = g_list_nth_data(additionalInfo, DIALOGS_LIST_BOX);
+    GtkMenu *dialogMenu = g_list_nth_data(additionalInfo, DIALOG_MENU);
 
     // Создадим новый диалог с информацией: ID, name, ссылка на историю чата, ссылка на виджет чата
     Dialog *newDialog = g_malloc(sizeof(Dialog));
@@ -78,11 +86,13 @@ void serverRequest_CreateDialog(FullDialogInfo dialogInfo, GList *additionalInfo
     newDialog->userList = GTK_LIST_BOX(gtk_list_box_new());
     newDialog->msgList = GTK_LIST_BOX(gtk_list_box_new());
     newDialog->isOpened = FALSE;
+    newDialog->isGroup = dialogInfo.isGroup;
     strcpy(newDialog->name, dialogInfo.dialogName);
 
     gtk_list_box_set_selection_mode(newDialog->msgList, GTK_SELECTION_MULTIPLE);
     GtkWidget *msgListLabelNoMessages = gtk_label_new("Нет сообщений. Будь первым, напиши какую-нибудь чушь!");
     gtk_list_box_set_placeholder(newDialog->msgList, msgListLabelNoMessages);
+    gtk_widget_show(msgListLabelNoMessages);
     gtk_list_box_set_selection_mode(newDialog->userList, GTK_SELECTION_NONE);
     g_object_ref(newDialog->msgList);
     g_object_ref(newDialog->userList);
@@ -93,22 +103,33 @@ void serverRequest_CreateDialog(FullDialogInfo dialogInfo, GList *additionalInfo
 
     // Создаём окно с кнопкой беседы и ссылку на чат
     GtkWidget *dialogButton = gtk_button_new_with_label(dialogInfo.dialogName);
+    GtkWidget *dialogEventBox = gtk_event_box_new();
+    gtk_container_add(GTK_CONTAINER(dialogEventBox), dialogButton);
     g_object_set_data(G_OBJECT(dialogButton), "Data", newDialog);
 
     // Добавим созданный диалог в список диалогов
-    gtk_list_box_insert(dialogsListBox, dialogButton, -1);
+    gtk_list_box_insert(dialogsListBox, dialogEventBox, -1);
 
     GList *dialogList = g_list_nth(additionalInfo, DIALOGS_LIST);
     dialogList->data = g_list_append(dialogList->data, newDialog);
 
-    // Подключаем сигнал нажатия кнопки. При нажатии открывается диалог
-    GList *data = NULL;
-    data = g_list_append(data, newDialog);
-    data = g_list_append(data, additionalInfo); // entry and send-button
-    g_signal_connect(dialogButton, "clicked", (GCallback) openDialog, data);
+    // Данные для processDialogMenu
+    GList *dialogMenuData = NULL;
+    dialogMenuData = g_list_append(dialogMenuData, dialogMenu);
+    dialogMenuData = g_list_append(dialogMenuData, additionalInfo);
+    g_signal_connect(dialogButton, "clicked", (GCallback) openDialog, additionalInfo);
+    g_signal_connect(dialogEventBox, "button-press-event", (GCallback) processDialogMenu, dialogMenuData);
     g_signal_connect(newDialog->msgList, "size-allocate", (GCallback) sizeAllocate, g_list_nth_data(additionalInfo, DIALOG_IS_JUST_OPENED));
 
-    gtk_widget_show_all(dialogButton);
+    gtk_widget_show_all(dialogEventBox);
+
+    // Надо ли нам его сейчас открыть?
+    if (dialogInfo.isSupposeToOpen) {
+        GList *tempList = NULL;
+        tempList = g_list_append(tempList, newDialog);
+        tempList = g_list_append(tempList, additionalInfo);
+        openDialog(NULL, tempList);
+    }
 }
 
 void serverRequest_SendMessage(FullMessageInfo messageInfo, GList *additionalInfo) {
@@ -265,8 +286,34 @@ void serverRequest_RemoveFriend(FullUserInfo userInfo, GList *additionalInfo) {
     }
 }
 
-void serverRequest_UserLeaveDialog(FullUserInfo userInfo, FullDialogInfo dialogInfo) {
+void serverRequest_LeaveDialog(FullUserInfo userInfo, GList *additionalInfo) {
+    GList *dialogsList = g_list_nth_data(additionalInfo, DIALOGS_LIST);
+    GList *temp = dialogsList;
 
+    // Преобразуем строковое ID в число
+    int ID = strtol(userInfo.additionalInfo, NULL, 10);
+    Dialog *currentDialog;
+    while (temp != NULL) {
+        currentDialog = temp->data;
+        if (currentDialog->ID == ID)
+            break;
+
+        temp = temp->next;
+    }
+
+    // Найдём этого пользователя в списке участников чата
+    if (temp != NULL) {
+        GList *users = gtk_container_get_children(GTK_CONTAINER(currentDialog->userList));
+        GList *currentRow = users;
+        while (currentRow != NULL) {
+            if (!strcmp(gtk_label_get_text(GTK_LABEL(gtk_bin_get_child(GTK_BIN(currentRow->data)))), userInfo.login)) {
+                gtk_widget_destroy(currentRow->data);
+                break;
+            }
+
+            currentRow = currentRow->next;
+        }
+    }
 }
 
 void serverRequest_FriendIsOnline(FullUserInfo userInfo, GList *additionalInfo) {
@@ -299,16 +346,42 @@ gboolean serverRequest_Registration(GList *specialAdditionalServerData) {
 }
 
 gboolean serverRequest_Authorization(GList *specialAdditionalServerData) {
-    FullUserInfo *userInfo = g_list_nth_data(specialAdditionalServerData, 0);
+    AuthorizationPackage *startPackage = g_list_nth_data(specialAdditionalServerData, 0);
     GList *additionalServerData = g_list_nth_data(specialAdditionalServerData, 1);
 
+    FullUserInfo *userInfo = g_malloc(sizeof(FullUserInfo));
+    userInfo->request = AUTHORIZATION;
+    userInfo->ID = startPackage->authorizedUser.ID;
+    strcpy(userInfo->firstName, startPackage->authorizedUser.firstName);
+    strcpy(userInfo->lastName, startPackage->authorizedUser.lastName);
+    strcpy(userInfo->login, startPackage->authorizedUser.login);
+
     if (userInfo->ID == -1) {
-        printf("WARNING, file - 'clientCommand.c', foo - 'serverRequest_Authorization': incorrect password or login\n");
+        popupNotification("User doesn't exist", g_list_nth_data(additionalServerData, POPUP_LABEL));
+        g_free(userInfo);
+        return FALSE;
+    }
+    if (userInfo->ID == -2) {
+        popupNotification("Incorrect password", g_list_nth_data(additionalServerData, POPUP_LABEL));
         g_free(userInfo);
         return FALSE;
     }
 
     g_list_nth(additionalServerData, CURRENT_USER)->data = userInfo;
+
+    // Загрузим данные
+    for (int i = 0; i < startPackage->dialogCount; ++i) {
+        serverRequest_CreateDialog(startPackage->dialogList[i], additionalServerData);
+        printf(">> CreateDialog %d\n", i + 1);
+    }
+    for (int i = 0; i < startPackage->friendCount; ++i) {
+        addFriend(&startPackage->friends[i], additionalServerData);
+        printf(">> AddFriend %d\n", i + 1);
+    }
+    for (int i = 0; i < startPackage->requestCount; ++i) {
+        serverRequest_SendFriendRequest(startPackage->requests[i], additionalServerData);
+        printf(">> FriendRequest %d\n", i + 1);
+    }
 
     GtkWidget *window = g_list_nth_data(additionalServerData, APPLICATION_WINDOW);
     GtkWidget *authWindow = g_list_nth_data(additionalServerData, AUTHENTICATION_WINDOW);
@@ -316,6 +389,9 @@ gboolean serverRequest_Authorization(GList *specialAdditionalServerData) {
     gtk_widget_hide(authWindow);
     gtk_widget_show(window);
     gtk_widget_show_all(g_list_nth_data(additionalServerData, DIALOG_VIEWPORT));
+
+    g_free(startPackage);
+    g_list_free(specialAdditionalServerData);
 
     return FALSE;
 }
@@ -334,8 +410,8 @@ void serverRequestProcess(GList *additionalServerData) {
         }
 
         printf("Received request number %d\n", i++);
-        void *data = malloc(10000);
-        int bytesReceived = recv(*serverSocket, data, 10000, 0);
+        void *data = malloc(820000);
+        int bytesReceived = recv(*serverSocket, data, 820000, 0);
         if (bytesReceived < 0) {
             printf("ERROR, file - 'clientCommand.c', foo - 'serverRequestProcess': data is not received\n");
             continue;
@@ -361,16 +437,25 @@ void serverRequestProcess(GList *additionalServerData) {
                 break;
             }
             case AUTHORIZATION: {
-                FullUserInfo *userInfo = g_malloc(sizeof(FullUserInfo));
-                FullUserInfo *temp = (FullUserInfo *) data;
-                userInfo->request = AUTHORIZATION;
-                userInfo->ID = temp->ID;
-                strcpy(userInfo->firstName, temp->firstName);
-                strcpy(userInfo->lastName, temp->lastName);
-                strcpy(userInfo->login, temp->login);
+                AuthorizationPackage *startPackage = g_malloc(sizeof(AuthorizationPackage));
+                AuthorizationPackage *temp = (AuthorizationPackage *) data;
+
+                startPackage->request = AUTHORIZATION;
+                startPackage->requestCount = temp->requestCount;
+                startPackage->dialogCount = temp->dialogCount;
+                startPackage->friendCount = temp->friendCount;
+                startPackage->authorizedUser = temp->authorizedUser;
+
+                for (int j = 0; j < temp->requestCount; ++j)
+                    startPackage->requests[j] = temp->requests[j];
+                for (int j = 0; j < temp->dialogCount; ++j)
+                    startPackage->friends[j] = temp->friends[j];
+                for (int j = 0; j < temp->friendCount; ++j)
+                    startPackage->dialogList[j] = temp->dialogList[j];
+                
 
                 GList *list = NULL;
-                list = g_list_append(list, userInfo);
+                list = g_list_append(list, startPackage);
                 list = g_list_append(list, additionalServerData);
 
                 gdk_threads_add_idle(G_SOURCE_FUNC(serverRequest_Authorization), list);
@@ -409,6 +494,13 @@ void serverRequestProcess(GList *additionalServerData) {
                 FullUserInfo *userInfo = (FullUserInfo *) data;
                 serverRequest_RemoveFriend(*userInfo, additionalServerData);
                 printf("LOG INFO, file - 'clientCommand.c', foo - 'serverRequestProcess': You was removed from friend-list of '%s'\n", userInfo->login);
+
+                break;
+            }
+            case LEAVE_DIALOG: {
+                FullUserInfo *userInfo = (FullUserInfo *) data;
+                serverRequest_LeaveDialog(*userInfo, additionalServerData);
+                printf("LOG INFO, file - 'clientCommand.c', foo - 'serverRequestProcess': User '%s' leave dialog with ID '%s'\n", userInfo->login, userInfo->additionalInfo);
 
                 break;
             }

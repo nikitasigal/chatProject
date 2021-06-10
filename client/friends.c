@@ -2,10 +2,66 @@
 #include "clientCommand.h"
 #include "login.h"
 #include "chat.h"
+#include "messages.h"
 
-void removeFriend(GtkMenuItem *menuitem, GList *data) {
-    GtkListBox *friendsListBox = g_list_nth_data(data, FRIENDS_LIST_BOX);
-    GtkListBox *createDialogFriendsListBox = g_list_nth_data(data, CREATE_DIALOG_FRIENDS_LIST_BOX);
+void openPersonalDialog(GtkMenuItem *menuitem, GList *additionalInfo) {
+    GtkListBox *friendsListBox = g_list_nth_data(additionalInfo, FRIENDS_LIST_BOX);
+    GList *dialogsList = g_list_nth_data(additionalInfo, DIALOGS_LIST);
+    FullUserInfo *currentUser = g_list_nth_data(additionalInfo, CURRENT_USER);
+    SOCKET *serverDescriptor = g_list_nth_data(additionalInfo, SERVER_SOCKET);
+
+    GtkListBoxRow *row = gtk_list_box_get_selected_row(friendsListBox);
+
+    FullUserInfo *currentFriend = g_object_get_data(G_OBJECT(gtk_bin_get_child(GTK_BIN(gtk_bin_get_child(GTK_BIN(row))))), "Data");
+    GString *currentUserFullName = g_string_new("");
+    g_string_printf(currentUserFullName, "%s %s (%s)", currentFriend->firstName, currentFriend->lastName, currentFriend->login);
+
+    // Поищем этот диалог в списке
+    GList *currentDialog = dialogsList;
+    while (currentDialog != NULL) {
+        Dialog *dialog = (Dialog *) currentDialog->data;
+        if (!dialog->isGroup && !strcmp(dialog->name, currentUserFullName->str)) {
+            // Нашли
+            GList *tempList = NULL;
+            tempList = g_list_append(tempList, dialog);
+            tempList = g_list_append(tempList, additionalInfo);
+            openDialog(NULL, tempList);
+
+            return;
+        }
+
+        currentDialog = currentDialog->next;
+    }
+
+    // Не нашли, тогда создадим
+    FullDialogInfo newDialog;
+    strcpy(newDialog.dialogName, currentUserFullName->str);
+
+    // Добавим друга в беседу
+    newDialog.users[0].ID = currentFriend->ID;
+    strcpy(newDialog.users[0].firstName, currentFriend->firstName);
+    strcpy(newDialog.users[0].lastName, currentFriend->lastName);
+    strcpy(newDialog.users[0].login, currentFriend->login);
+
+    // Добавим себя в беседу
+    newDialog.users[1].ID = currentUser->ID;
+    strcpy(newDialog.users[1].firstName, currentUser->firstName);
+    strcpy(newDialog.users[1].lastName, currentUser->lastName);
+    strcpy(newDialog.users[1].login, currentUser->login);
+
+    newDialog.usersNumber = 2;
+    newDialog.isGroup = FALSE;
+    newDialog.isSupposeToOpen = TRUE;
+
+    clientRequest_CreateDialog(*serverDescriptor, newDialog);
+
+    // Очистим строку
+    g_string_free(currentUserFullName, TRUE);
+}
+
+void removeFriend(GtkMenuItem *menuitem, GList *additionalInfo) {
+    GtkListBox *friendsListBox = g_list_nth_data(additionalInfo, FRIENDS_LIST_BOX);
+    GtkListBox *createDialogFriendsListBox = g_list_nth_data(additionalInfo, CREATE_DIALOG_FRIENDS_LIST_BOX);
     GtkListBoxRow *row = gtk_list_box_get_selected_row(friendsListBox);
 
     // Найдём этого пользователя в другом списке
@@ -27,27 +83,29 @@ void removeFriend(GtkMenuItem *menuitem, GList *data) {
     gtk_widget_destroy(GTK_WIDGET(row));
 
     // Отправим запрос на сервер
-    SOCKET *serverDescriptor = g_list_nth_data(data, SERVER_SOCKET);
-    FullUserInfo *user = g_list_nth_data(data, CURRENT_USER);
+    SOCKET *serverDescriptor = g_list_nth_data(additionalInfo, SERVER_SOCKET);
+    FullUserInfo *user = g_list_nth_data(additionalInfo, CURRENT_USER);
     clientRequest_RemoveFriend(*serverDescriptor, *user);
 }
 
-void processFriendMenu(GtkWidget *widget, GdkEvent *event, GtkMenu *friendMenu) {
-    GtkWidget *row = gtk_widget_get_parent(widget);
-    if (event->button.button == GDK_BUTTON_SECONDARY && gtk_list_box_row_is_selected(GTK_LIST_BOX_ROW(row)))
-        gtk_menu_popup_at_pointer(friendMenu, event);
-}
+void processFriendSelecting(GtkWidget *widget, GdkEvent *event, GList *tempFriendList) {
+    GtkListBox *friendsListBox = g_list_nth_data(tempFriendList, 0);
+    GtkMenu *friendMenu = g_list_nth_data(tempFriendList, 1);
 
-void processFriendSelecting(GtkWidget *widget, GdkEvent *event, gpointer user_data) {
     GtkWidget *row = gtk_widget_get_parent(widget);
-
     if (event->button.button == GDK_BUTTON_PRIMARY) {
         if (!gtk_list_box_row_is_selected(GTK_LIST_BOX_ROW(row))) {
             gtk_list_box_unselect_all(GTK_LIST_BOX(gtk_widget_get_parent(row)));
-            gtk_list_box_select_row(user_data, GTK_LIST_BOX_ROW(row));
+            gtk_list_box_select_row(friendsListBox, GTK_LIST_BOX_ROW(row));
         }
         else
-            gtk_list_box_unselect_row(user_data, GTK_LIST_BOX_ROW(row));
+            gtk_list_box_unselect_row(friendsListBox, GTK_LIST_BOX_ROW(row));
+    }
+
+    if (event->button.button == GDK_BUTTON_SECONDARY) {
+        gtk_list_box_unselect_all(GTK_LIST_BOX(gtk_widget_get_parent(row)));
+        gtk_list_box_select_row(friendsListBox, GTK_LIST_BOX_ROW(row));
+        gtk_menu_popup_at_pointer(friendMenu, event);
     }
 }
 
@@ -134,9 +192,11 @@ void addFriend(FullUserInfo *user, GList *additionalInfo) {
 
     g_string_free(fullName, TRUE);
 
+    GList *tempFriendList = NULL;
+    tempFriendList = g_list_append(tempFriendList, friendsListBox);
+    tempFriendList = g_list_append(tempFriendList, friendMenu);
     g_signal_connect(createDialogEventBox, "button-press-event", (GCallback) processMsgSelecting, createDialogFriendsListBox);
-    g_signal_connect(friendsEventBox, "button-press-event", (GCallback) processFriendSelecting, friendsListBox);
-    g_signal_connect(friendsEventBox, "button-release-event", (GCallback) processFriendMenu, friendMenu);
+    g_signal_connect(friendsEventBox, "button-press-event", (GCallback) processFriendSelecting, tempFriendList);
 
     gtk_widget_show_all(GTK_WIDGET(friendsListBox));
     gtk_widget_show_all(createDialogEventBox);

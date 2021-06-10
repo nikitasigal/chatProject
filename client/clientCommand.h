@@ -3,6 +3,8 @@
 
 #include "definitions.h"
 
+void clientRequest_CreatePersonalDialog(SOCKET serverSocket, FullDialogInfo dialogInfo);
+
 void clientRequest_LoadMessages(SOCKET serverSocket, FullDialogInfo dialogInfo);
 
 void clientRequest_CreateDialog(SOCKET serverSocket, FullDialogInfo dialogInfo);
@@ -20,6 +22,8 @@ void clientRequest_FriendRequestAccepted(SOCKET serverSocket, FullUserInfo userI
 void clientRequest_FriendRequestDeclined(SOCKET serverSocket, FullUserInfo userInfo);
 
 void clientRequest_RemoveFriend(SOCKET serverSocket, FullUserInfo userInfo);
+
+void clientRequest_LeaveDialog(SOCKET serverSocket, FullUserInfo userInfo);
 
 void serverRequestProcess(GList *additionalServerData);
 

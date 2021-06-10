@@ -4,6 +4,10 @@
 #include "definitions.h"
 #include "clientCommand.h"
 
+void leaveDialog(GtkMenuItem *menuitem, GList *additionalInfo);
+
+void processDialogMenu(GtkWidget *widget, GdkEvent *event, GList *additionalInfo);
+
 void openDialog(GtkWidget *button, GList *data);
 
 void createDialog(GtkButton *button, GList *additionalInfo);

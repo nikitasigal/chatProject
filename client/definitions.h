@@ -6,7 +6,8 @@
 
 #define TEXT_SIZE 5000
 #define DATE_SIZE 32
-#define NAME_SIZE 48
+#define NAME_SIZE 32
+#define DIALOG_SIZE 96
 #define MAX_NUMBER_OF_USERS 30
 #define POPUP_LABEL_WIDTH 200
 #define POPUP_LABEL_HEIGHT 100
@@ -20,7 +21,8 @@ typedef enum {
     FRIEND_REQUEST_ACCEPTED,
     FRIEND_REQUEST_DECLINED,
     REMOVE_FRIEND,
-    LOAD_MESSAGES
+    LOAD_MESSAGES,
+    LEAVE_DIALOG
 } Request;
 
 typedef enum {
@@ -49,8 +51,13 @@ typedef enum {
     DIALOG_IS_JUST_OPENED,
     FRIEND_MENU,
     FRIEND_MENU_REMOVE_FRIEND,
+    FRIEND_MENU_OPEN_DIALOG,
     MSG_MENU,
-    POPUP_LABEL
+    POPUP_LABEL,
+    DIALOG_MENU,
+    DIALOG_MENU_LEAVE_DIALOG,
+    SELECTED_ROW,
+    DIALOG_NAME_LABEL
 } AddServerDataType;
 
 typedef struct {
@@ -58,7 +65,8 @@ typedef struct {
     char name[NAME_SIZE];
     GtkListBox *userList;
     GtkListBox *msgList;
-    gboolean isOpened;
+    char isOpened;
+    char isGroup;
 } Dialog;
 
 typedef struct {
@@ -84,9 +92,22 @@ typedef struct {
 typedef struct {
     Request request;
     int ID;
-    char dialogName[NAME_SIZE];
+    char dialogName[DIALOG_SIZE];
     FullUserInfo users[MAX_NUMBER_OF_USERS];
-    int usersNumber;
+    short usersNumber;
+    char isGroup;
+    char isSupposeToOpen;
 } FullDialogInfo;
+
+typedef struct {
+    Request request;
+    FullUserInfo authorizedUser;
+    short dialogCount;
+    FullDialogInfo dialogList[100];
+    short friendCount;
+    FullUserInfo friends[100];
+    short requestCount;
+    FullUserInfo requests[100];
+} AuthorizationPackage;
 
 #endif //TESTGTK_DEFINITIONS_H

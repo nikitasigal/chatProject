@@ -16,6 +16,8 @@ void sizeAllocate(GtkWidget *msgListBox, GdkRectangle *allocation, int *dialogIs
         return;
     }
 
+    printf(">> %d", lastAdj);
+
     GtkAdjustment *adjustment = gtk_list_box_get_adjustment(GTK_LIST_BOX(msgListBox));
     gdouble curAdj = gtk_adjustment_get_value(adjustment);
     gdouble pageSize = gtk_adjustment_get_page_size(adjustment);
@@ -47,15 +49,12 @@ void processMsgMenu(GtkWidget *widget, GdkEvent *event, GtkMenu *msgMenu) {
 void sendMessage(GtkWidget *button, GList *data) {
     // Разархивируем
     Dialog *currentDialog = g_list_nth_data(data, 0);
-    GList *additionalInfoTemp = g_list_nth_data(data, 1);
-    GList *additionalInfo = g_list_nth_data(additionalInfoTemp, 1);
+    GList *additionalInfo = g_list_nth_data(data, 1);
     SOCKET *serverDescriptor = g_list_nth_data(additionalInfo, SERVER_SOCKET);
     GtkWidget *dialogEntry = g_list_nth_data(additionalInfo, CHAT_ENTRY);
     FullUserInfo *currentUser = g_list_nth_data(additionalInfo, CURRENT_USER);
 
     gtk_widget_grab_focus(GTK_WIDGET(dialogEntry));
-
-    // Name TODO имя текущего пользователя
 
     // Message from entry
     char message[TEXT_SIZE] = {0};
