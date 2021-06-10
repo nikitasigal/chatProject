@@ -1,7 +1,7 @@
 #ifndef TESTGTK_MESSAGES_H
 #define TESTGTK_MESSAGES_H
 
-#include "definitions.h"
+#include "../shared/definitions.h"
 #include "clientCommand.h"
 
 void leaveDialog(GtkMenuItem *menuitem, GList *additionalInfo);

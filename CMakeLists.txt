@@ -9,8 +9,8 @@ link_libraries(ws2_32 wsock32)
 find_package(PkgConfig REQUIRED)
 PKG_CHECK_MODULES(GTK3 REQUIRED gtk+-3.0)
 
-file(GLOB src_client CONFIGURE_DEPENDS "client/*.h" "client/*.c")
-file(GLOB src_server CONFIGURE_DEPENDS "server/*.h" "server/*.c")
+file(GLOB src_client CONFIGURE_DEPENDS "client/*.h" "client/*.c" "shared/*.h" "shared/*.c")
+file(GLOB src_server CONFIGURE_DEPENDS "server/*.h" "server/*.c" "shared/*.h" "shared/*.c")
 
 add_executable(chatProject_server ${src_server})
 add_executable(chatProject_client ${src_client})

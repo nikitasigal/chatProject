@@ -1,7 +1,7 @@
 #ifndef TESTGTK_CHAT_H
 #define TESTGTK_CHAT_H
 
-#include "definitions.h"
+#include "../shared/definitions.h"
 
 void sizeAllocate(GtkWidget *msgListBox, GdkRectangle *allocation, int *dialogIsJustOpened);
 

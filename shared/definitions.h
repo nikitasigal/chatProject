@@ -1,5 +1,5 @@
-#ifndef TESTGTK_DEFINITIONS_H
-#define TESTGTK_DEFINITIONS_H
+#ifndef CHATPROJECT_DEFINITIONS_H
+#define CHATPROJECT_DEFINITIONS_H
 
 #include <gtk/gtk.h>
 #include <winsock2.h>
@@ -82,10 +82,10 @@ typedef struct {
 typedef struct {
     Request request;
     int ID;
-    char firstName[NAME_SIZE];
-    char lastName[NAME_SIZE];
-    char login[NAME_SIZE];
+    char username[NAME_SIZE];
     char password[NAME_SIZE];
+    char firstName[NAME_SIZE];
+    char secondName[NAME_SIZE];
     char additionalInfo[NAME_SIZE];
 } FullUserInfo;
 
@@ -110,4 +110,4 @@ typedef struct {
     FullUserInfo requests[100];
 } AuthorizationPackage;
 
-#endif //TESTGTK_DEFINITIONS_H
+#endif //CHATPROJECT_DEFINITIONS_H

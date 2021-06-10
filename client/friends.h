@@ -1,7 +1,7 @@
 #ifndef TESTGTK_FRIENDS_H
 #define TESTGTK_FRIENDS_H
 
-#include "definitions.h"
+#include "../shared/definitions.h"
 
 void sendFriendRequest(GtkButton *button, GList *additionalInfo);
 

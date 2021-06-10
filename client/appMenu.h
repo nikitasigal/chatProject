@@ -1,7 +1,7 @@
 #ifndef TESTGTK_APPMENU_H
 #define TESTGTK_APPMENU_H
 
-#include "definitions.h"
+#include "../shared/definitions.h"
 
 void gotoMessages(GtkWidget *button, GList *appDialogsMenuList);
 

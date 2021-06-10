@@ -14,7 +14,7 @@ void openPersonalDialog(GtkMenuItem *menuitem, GList *additionalInfo) {
 
     FullUserInfo *currentFriend = g_object_get_data(G_OBJECT(gtk_bin_get_child(GTK_BIN(gtk_bin_get_child(GTK_BIN(row))))), "Data");
     GString *currentUserFullName = g_string_new("");
-    g_string_printf(currentUserFullName, "%s %s (%s)", currentFriend->firstName, currentFriend->lastName, currentFriend->login);
+    g_string_printf(currentUserFullName, "%s %s (%s)", currentFriend->firstName, currentFriend->secondName, currentFriend->username);
 
     // Поищем этот диалог в списке
     GList *currentDialog = dialogsList;
@@ -40,14 +40,14 @@ void openPersonalDialog(GtkMenuItem *menuitem, GList *additionalInfo) {
     // Добавим друга в беседу
     newDialog.users[0].ID = currentFriend->ID;
     strcpy(newDialog.users[0].firstName, currentFriend->firstName);
-    strcpy(newDialog.users[0].lastName, currentFriend->lastName);
-    strcpy(newDialog.users[0].login, currentFriend->login);
+    strcpy(newDialog.users[0].secondName, currentFriend->secondName);
+    strcpy(newDialog.users[0].username, currentFriend->username);
 
     // Добавим себя в беседу
     newDialog.users[1].ID = currentUser->ID;
     strcpy(newDialog.users[1].firstName, currentUser->firstName);
-    strcpy(newDialog.users[1].lastName, currentUser->lastName);
-    strcpy(newDialog.users[1].login, currentUser->login);
+    strcpy(newDialog.users[1].secondName, currentUser->secondName);
+    strcpy(newDialog.users[1].username, currentUser->username);
 
     newDialog.usersNumber = 2;
     newDialog.isGroup = FALSE;
@@ -71,7 +71,7 @@ void removeFriend(GtkMenuItem *menuitem, GList *additionalInfo) {
     while (temp != NULL) {
         GtkListBoxRow *tempRow = temp->data;
         FullUserInfo *user = g_object_get_data(G_OBJECT(gtk_bin_get_child(GTK_BIN(gtk_bin_get_child(GTK_BIN(tempRow))))), "Data");
-        if (!strcmp(user->login, searchingUser->login)) {
+        if (!strcmp(user->username, searchingUser->username)) {
             gtk_widget_destroy(GTK_WIDGET(temp->data));
             break;
         }
@@ -139,7 +139,7 @@ void sendFriendRequest(GtkButton *button, GList *additionalInfo) {
     strcpy(currentUser->additionalInfo, gtk_entry_get_text(GTK_ENTRY(friendRequestSendEntry)));
 
     // Проверим, не хотим ли мы случайно добавить себя же
-    if (!strcmp(currentUser->login, gtk_entry_get_text(friendRequestSendEntry))) {
+    if (!strcmp(currentUser->username, gtk_entry_get_text(friendRequestSendEntry))) {
         popupNotification("You can't make friends with yourself. You just can't stand it",
                           g_list_nth_data(additionalInfo, POPUP_LABEL));
         return;
@@ -147,7 +147,7 @@ void sendFriendRequest(GtkButton *button, GList *additionalInfo) {
 
     // Проверим, не пустое ли поле имени диалога
     if (strlen(gtk_entry_get_text(friendRequestSendEntry)) == 0) {
-        popupNotification("You should use login of the user you want to make friends",
+        popupNotification("You should use username of the user you want to make friends",
                           g_list_nth_data(additionalInfo, POPUP_LABEL));
         return;
     }
@@ -167,7 +167,7 @@ void addFriend(FullUserInfo *user, GList *additionalInfo) {
 
     // Добавим в список друзей во вкладке создания диалога и друзей
     GString *fullName = g_string_new("");
-    g_string_append_printf(fullName, "%s %s (%s)", user->firstName, user->lastName, user->login);
+    g_string_append_printf(fullName, "%s %s (%s)", user->firstName, user->secondName, user->username);
     GtkWidget *friendLabel = gtk_label_new(fullName->str);
     gtk_widget_set_size_request(friendLabel, -1, 30);
     GtkWidget *friendLabel2 = gtk_label_new(fullName->str);
@@ -182,8 +182,8 @@ void addFriend(FullUserInfo *user, GList *additionalInfo) {
     FullUserInfo *tempUser = malloc(sizeof(FullUserInfo));
     tempUser->ID = user->ID;
     strcpy(tempUser->firstName, user->firstName);
-    strcpy(tempUser->lastName, user->lastName);
-    strcpy(tempUser->login, user->login);
+    strcpy(tempUser->secondName, user->secondName);
+    strcpy(tempUser->secondName, user->secondName);
     GtkWidget *createDialogEventBox = gtk_event_box_new();
     gtk_list_box_insert(createDialogFriendsListBox, createDialogEventBox, -1);
     gtk_container_add(GTK_CONTAINER(createDialogEventBox), friendLabel2);

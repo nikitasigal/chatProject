@@ -125,15 +125,15 @@ void GUIInit(SOCKET *serverSocket) {
     first->ID = 3;
     first->request = 0;
     strcpy(first->firstName, "Ivan");
-    strcpy(first->lastName, "Petrov");
-    strcpy(first->login, "Lol2002");
+    strcpy(first->secondName, "Petrov");
+    strcpy(first->username, "Lol2002");
 
     FullUserInfo *second = malloc(sizeof(FullUserInfo));
     second->ID = 4;
     second->request = 0;
     strcpy(second->firstName, "Masha");
-    strcpy(second->lastName, "Nyasha");
-    strcpy(second->login, "creeper_kitty");
+    strcpy(second->secondName, "Nyasha");
+    strcpy(second->username, "creeper_kitty");
     addFriend(first, additionalInfo);
     addFriend(second, additionalInfo);
 

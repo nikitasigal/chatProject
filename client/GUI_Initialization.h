@@ -1,7 +1,7 @@
 #ifndef TESTGTK_GUI_INITIALIZATION_H
 #define TESTGTK_GUI_INITIALIZATION_H
 
-#include "definitions.h"
+#include "../shared/definitions.h"
 
 void GUIInit(SOCKET *serverSocket);
 

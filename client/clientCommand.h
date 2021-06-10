@@ -1,7 +1,7 @@
 #ifndef TESTGTK_CLIENTCOMMAND_H
 #define TESTGTK_CLIENTCOMMAND_H
 
-#include "definitions.h"
+#include "../shared/definitions.h"
 
 void clientRequest_CreatePersonalDialog(SOCKET serverSocket, FullDialogInfo dialogInfo);
 

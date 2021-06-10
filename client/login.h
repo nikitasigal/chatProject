@@ -1,7 +1,7 @@
 #ifndef TESTGTK_LOGIN_H
 #define TESTGTK_LOGIN_H
 
-#include "definitions.h"
+#include "../shared/definitions.h"
 
 void popupNotification(char *string, GtkWidget *popupLabel);
 

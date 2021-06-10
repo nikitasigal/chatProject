@@ -99,7 +99,7 @@ void serverRequest_CreateDialog(FullDialogInfo dialogInfo, GList *additionalInfo
 
     // Обновим userList
     for (int i = 0; i < dialogInfo.usersNumber; ++i)
-        gtk_list_box_insert(newDialog->userList, gtk_label_new(dialogInfo.users[i].login), -1);
+        gtk_list_box_insert(newDialog->userList, gtk_label_new(dialogInfo.users[i].username), -1);
 
     // Создаём окно с кнопкой беседы и ссылку на чат
     GtkWidget *dialogButton = gtk_button_new_with_label(dialogInfo.dialogName);
@@ -224,7 +224,7 @@ void serverRequest_SendFriendRequest(FullUserInfo userInfo, GList *additionalInf
         return;
     }
     if (userInfo.ID == -2) {
-        popupNotification("User with this login doesn't exist", g_list_nth_data(additionalInfo, POPUP_LABEL));
+        popupNotification("User with this username doesn't exist", g_list_nth_data(additionalInfo, POPUP_LABEL));
         return;
     }
 
@@ -276,7 +276,7 @@ void serverRequest_RemoveFriend(FullUserInfo userInfo, GList *additionalInfo) {
     GList *temp = friends;
     while (temp != NULL) {
         FullUserInfo *user = g_object_get_data(G_OBJECT(gtk_bin_get_child(GTK_BIN(gtk_bin_get_child(GTK_BIN(temp->data))))), "Data");
-        if (!strcmp(user->login, userInfo.login)) {
+        if (!strcmp(user->username, userInfo.username)) {
             gtk_list_box_select_row(friendsListBox, temp->data);
             removeFriend(NULL, additionalInfo);
             break;
@@ -306,7 +306,7 @@ void serverRequest_LeaveDialog(FullUserInfo userInfo, GList *additionalInfo) {
         GList *users = gtk_container_get_children(GTK_CONTAINER(currentDialog->userList));
         GList *currentRow = users;
         while (currentRow != NULL) {
-            if (!strcmp(gtk_label_get_text(GTK_LABEL(gtk_bin_get_child(GTK_BIN(currentRow->data)))), userInfo.login)) {
+            if (!strcmp(gtk_label_get_text(GTK_LABEL(gtk_bin_get_child(GTK_BIN(currentRow->data)))), userInfo.username)) {
                 gtk_widget_destroy(currentRow->data);
                 break;
             }
@@ -328,7 +328,7 @@ gboolean serverRequest_Registration(GList *specialAdditionalServerData) {
     FullUserInfo *userInfo = g_list_nth_data(specialAdditionalServerData, 0);
     GList *additionalServerData = g_list_nth_data(specialAdditionalServerData, 1);
     if (userInfo->ID == -1) {
-        printf("WARNING, file - 'clientCommand.c', foo - 'serverRequest_Registration': login is already in use\n");
+        printf("WARNING, file - 'clientCommand.c', foo - 'serverRequest_Registration': username is already in use\n");
         g_free(userInfo);
         return FALSE;
     }
@@ -353,8 +353,8 @@ gboolean serverRequest_Authorization(GList *specialAdditionalServerData) {
     userInfo->request = AUTHORIZATION;
     userInfo->ID = startPackage->authorizedUser.ID;
     strcpy(userInfo->firstName, startPackage->authorizedUser.firstName);
-    strcpy(userInfo->lastName, startPackage->authorizedUser.lastName);
-    strcpy(userInfo->login, startPackage->authorizedUser.login);
+    strcpy(userInfo->secondName, startPackage->authorizedUser.secondName);
+    strcpy(userInfo->secondName, startPackage->authorizedUser.secondName);
 
     if (userInfo->ID == -1) {
         popupNotification("User doesn't exist", g_list_nth_data(additionalServerData, POPUP_LABEL));
@@ -425,8 +425,8 @@ void serverRequestProcess(GList *additionalServerData) {
                 userInfo->request = REGISTRATION;
                 userInfo->ID = temp->ID;
                 strcpy(userInfo->firstName, temp->firstName);
-                strcpy(userInfo->lastName, temp->lastName);
-                strcpy(userInfo->login, temp->login);
+                strcpy(userInfo->secondName, temp->secondName);
+                strcpy(userInfo->username, temp->username);
 
                 GList *list = NULL;
                 list = g_list_append(list, userInfo);
@@ -452,7 +452,7 @@ void serverRequestProcess(GList *additionalServerData) {
                     startPackage->friends[j] = temp->friends[j];
                 for (int j = 0; j < temp->friendCount; ++j)
                     startPackage->dialogList[j] = temp->dialogList[j];
-                
+
 
                 GList *list = NULL;
                 list = g_list_append(list, startPackage);
@@ -479,28 +479,28 @@ void serverRequestProcess(GList *additionalServerData) {
             case SEND_FRIEND_REQUEST: {
                 FullUserInfo *userInfo = (FullUserInfo *) data;
                 serverRequest_SendFriendRequest(*userInfo, additionalServerData);
-                printf("LOG INFO, file - 'clientCommand.c', foo - 'serverRequestProcess': Receiving a friend request from '%s'\n", userInfo->login);
+                printf("LOG INFO, file - 'clientCommand.c', foo - 'serverRequestProcess': Receiving a friend request from '%s'\n", userInfo->username);
 
                 break;
             }
             case FRIEND_REQUEST_ACCEPTED: {
                 FullUserInfo *userInfo = (FullUserInfo *) data;
                 addFriend(userInfo, additionalServerData);
-                printf("LOG INFO, file - 'clientCommand.c', foo - 'serverRequestProcess': Accepted a friend request with login '%s'\n", userInfo->login);
+                printf("LOG INFO, file - 'clientCommand.c', foo - 'serverRequestProcess': Accepted a friend request with username '%s'\n", userInfo->username);
 
                 break;
             }
             case REMOVE_FRIEND: {
                 FullUserInfo *userInfo = (FullUserInfo *) data;
                 serverRequest_RemoveFriend(*userInfo, additionalServerData);
-                printf("LOG INFO, file - 'clientCommand.c', foo - 'serverRequestProcess': You was removed from friend-list of '%s'\n", userInfo->login);
+                printf("LOG INFO, file - 'clientCommand.c', foo - 'serverRequestProcess': You was removed from friend-list of '%s'\n", userInfo->username);
 
                 break;
             }
             case LEAVE_DIALOG: {
                 FullUserInfo *userInfo = (FullUserInfo *) data;
                 serverRequest_LeaveDialog(*userInfo, additionalServerData);
-                printf("LOG INFO, file - 'clientCommand.c', foo - 'serverRequestProcess': User '%s' leave dialog with ID '%s'\n", userInfo->login, userInfo->additionalInfo);
+                printf("LOG INFO, file - 'clientCommand.c', foo - 'serverRequestProcess': User '%s' leave dialog with ID '%s'\n", userInfo->username, userInfo->additionalInfo);
 
                 break;
             }
