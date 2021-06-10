@@ -103,11 +103,11 @@ typedef struct {
     Request request;
     FullUserInfo authorizedUser;
     short dialogCount;
-    FullDialogInfo dialogList[100];
+    FullDialogInfo dialogList[5];
     short friendCount;
-    FullUserInfo friends[100];
+    FullUserInfo friends[5];
     short requestCount;
-    FullUserInfo requests[100];
+    FullUserInfo requests[5];
 } AuthorizationPackage;
 
 #endif //CHATPROJECT_DEFINITIONS_H

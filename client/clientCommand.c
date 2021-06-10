@@ -401,20 +401,21 @@ void serverRequestProcess(GList *additionalServerData) {
     SOCKET *serverSocket = g_list_nth_data(additionalServerData, SERVER_SOCKET);
     int i = 1;  // debug info
     while (TRUE) {
-        char byte;
+        /*char byte;
         int isAlive = recv(*serverSocket, &byte, 1, MSG_PEEK);
         if (isAlive == -1) {
             printf("ERROR: Server is offline\n");
             // TODO Try to connect again?
             return;
-        }
+        }*/
 
         printf("Received request number %d\n", i++);
         void *data = malloc(820000);
         int bytesReceived = recv(*serverSocket, data, 820000, 0);
         if (bytesReceived < 0) {
-            printf("ERROR, file - 'clientCommand.c', foo - 'serverRequestProcess': data is not received\n");
-            continue;
+            printf("ERROR: Server is offline\n");
+            // TODO Try to connect again?
+            return;
         }
         
         Request *request = data;

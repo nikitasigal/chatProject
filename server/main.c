@@ -11,48 +11,49 @@ void clientRequestReceiving(void *clientSocket) {
     int sqlResult;
     sqlResult = sqlite3_open_v2("database.sqlite", &sqliteConn, SQLITE_OPEN_READWRITE, NULL);
     if (sqlResult != SQLITE_OK) {
-        printf("<ERROR> clientRequestReceiving()//%d : Error while opening database - shutting thread down\n", clientSocket);
+        printf("<ERROR> clientRequestReceiving() // %d : Error while opening database - shutting thread down\n", clientSocket);
         return;
     }else
-        printf("<LOG> clientRequestReceiving()//%d : Database connection established\n", clientSocket);
+        printf("<LOG> clientRequestReceiving() // %d : Database connection established\n", clientSocket);
 
     SOCKET socket = (SOCKET) clientSocket;
     GDateTime *time;
     int testDialogID = 0;
     while (TRUE) {
-        char byte;
+/*        char byte;
         int isAlive = recv(socket, &byte, 1, MSG_PEEK);
         if (isAlive == -1) {
             printf("<LOG> clientRequestReceiving()//%d : Client disconnected\n",
                    socket); // TODO send message to friends of this client, that friend is offline
             break;
-        }
+        }*/
 
         time = g_date_time_new_now_local();
         gchar *temp = g_date_time_format(time, "%H:%M:%S, %d %b %Y, %a");
         void *userData = malloc(TEXT_SIZE * 2);
         int bytesReceived = recv(socket, userData, TEXT_SIZE * 2, 0);
         if (bytesReceived < 0) {
-            printf("<WARNING> clientRequestReceiving()//%d : Socket received < 0 bytes\n", socket);
-            free(userData);
-            continue;
+            printf("<LOG> clientRequestReceiving() // %d : Client disconnected\n",
+                   socket); // TODO send message to friends of this client, that friend is offline
+            break;
         }
+
         Request *request = userData;
         switch (*request) {
             case REGISTRATION: {
-                printf("<LOG> clientRequestReceiving()//%d : Registration of new user ...\n", socket);
+                printf("<LOG> clientRequestReceiving() // %d : Registration of new user ...\n", socket);
                 FullUserInfo *userInfo = userData;
 
                 sqlRegister(sqliteConn, userInfo);
 
                 int bytesSent = send(socket, (void *) userInfo, sizeof(FullUserInfo), 0);
                 if (bytesSent < 0)
-                    printf("<WARNING> clientRequestReceiving()//%d : Socket sent < 0 bytes\n", socket);
+                    printf("<WARNING> clientRequestReceiving() // %d : Socket sent < 0 bytes\n", socket);
 
                 break;
             }
             case AUTHORIZATION: {
-                printf("<LOG> clientRequestReceiving()//%d : Authorizing user ...\n", socket);
+                printf("<LOG> clientRequestReceiving() // %d : Authorizing user ...\n", socket);
                 FullUserInfo *userInfo = userData;
 
                 AuthorizationPackage auPackage;
@@ -61,81 +62,81 @@ void clientRequestReceiving(void *clientSocket) {
                 auPackage.request = AUTHORIZATION;
                 int bytesSent = send(socket, (void *) &auPackage, sizeof(AuthorizationPackage), 0);
                 if (bytesSent < 0)
-                    printf("<WARNING> clientRequestReceiving()//%d : Socket sent < 0 bytes\n", socket);
+                    printf("<WARNING> clientRequestReceiving() // %d : Socket sent < 0 bytes\n", socket);
 
                 break;
             }
             case CREATE_DIALOG: {
-                printf("<LOG> clientRequestReceiving()//%d : Creating new dialog ...\n", socket);
+                printf("<LOG> clientRequestReceiving() // %d : Creating new dialog ...\n", socket);
                 FullDialogInfo *dialogInfo = userData;
                 dialogInfo->ID = testDialogID++;
 
                 int bytesSent = send(socket, (void *) dialogInfo, sizeof(FullDialogInfo), 0);
                 if (bytesSent < 0)
-                    printf("<WARNING> clientRequestReceiving()//%d : Socket sent < 0 bytes\n", socket);
+                    printf("<WARNING> clientRequestReceiving() // %d : Socket sent < 0 bytes\n", socket);
 
                 break;
             }
             case SEND_MESSAGE: {
-                printf("<LOG> clientRequestReceiving()//%d : Processing new message ...\n", socket);
+                printf("<LOG> clientRequestReceiving() // %d : Processing new message ...\n", socket);
                 FullMessageInfo *messageInfo = userData;
                 strcpy(messageInfo->date, temp);
 
                 int bytesSent = send(socket, (void *) messageInfo, sizeof(FullMessageInfo), 0);
                 if (bytesSent < 0)
-                    printf("<WARNING> clientRequestReceiving()//%d : Socket sent < 0 bytes\n", socket);
+                    printf("<WARNING> clientRequestReceiving() // %d : Socket sent < 0 bytes\n", socket);
 
                 break;
             }
             case SEND_FRIEND_REQUEST: {
-                printf("<LOG> clientRequestReceiving()//%d : Processing new friend request ...\n", socket);
+                printf("<LOG> clientRequestReceiving() // %d : Processing new friend request ...\n", socket);
                 FullUserInfo *userInfo = userData;
                 // Допустим, обработали успешно
                 userInfo->ID = -3;
 
                 int bytesSent = send(socket, (void *) userInfo, sizeof(FullUserInfo), 0);
                 if (bytesSent < 0)
-                    printf("<WARNING> clientRequestReceiving()//%d : Socket sent < 0 bytes\n", socket);
+                    printf("<WARNING> clientRequestReceiving() // %d : Socket sent < 0 bytes\n", socket);
 
                 break;
             }
             case FRIEND_REQUEST_ACCEPTED: {
-                printf("<LOG> clientRequestReceiving()//%d : Processing accepted friend request ...\n", socket);
+                printf("<LOG> clientRequestReceiving() // %d : Processing accepted friend request ...\n", socket);
                 FullUserInfo *userInfo = userData;
                 // Обновлены базы данных
                 int bytesSent = send(socket, (void *) userInfo, sizeof(FullUserInfo), 0);
                 if (bytesSent < 0)
-                    printf("<WARNING> clientRequestReceiving()//%d : Socket sent < 0 bytes\n", socket);
+                    printf("<WARNING> clientRequestReceiving() // %d : Socket sent < 0 bytes\n", socket);
 
                 break;
             }
             case FRIEND_REQUEST_DECLINED: {
-                printf("<LOG> clientRequestReceiving()//%d : Processing declined friend request ...\n", socket);
+                printf("<LOG> clientRequestReceiving() // %d : Processing declined friend request ...\n", socket);
                 // Обновлены базы данных
                 // Не будем посылать никуда запрос
 
                 break;
             }
             case REMOVE_FRIEND: {
-                printf("<LOG> clientRequestReceiving()//%d : Deleting friend ...\n", socket);
+                printf("<LOG> clientRequestReceiving() // %d : Deleting friend ...\n", socket);
                 FullUserInfo *userInfo = userData;
                 int bytesSent = send(socket, (void *) userInfo, sizeof(FullUserInfo), 0);
                 if (bytesSent < 0)
-                    printf("<WARNING> clientRequestReceiving()//%d : Socket sent < 0 bytes\n", socket);
+                    printf("<WARNING> clientRequestReceiving() // %d : Socket sent < 0 bytes\n", socket);
 
                 break;
             }
             case LEAVE_DIALOG: {
-                printf("<LOG> clientRequestReceiving()//%d : Leaving dialog ...\n", socket);
+                printf("<LOG> clientRequestReceiving() // %d : Leaving dialog ...\n", socket);
                 FullUserInfo *userInfo = userData;
                 int bytesSent = send(socket, (void *) userInfo, sizeof(FullUserInfo), 0);
                 if (bytesSent < 0)
-                    printf("<WARNING> clientRequestReceiving()//%d : Socket sent < 0 bytes\n", socket);
+                    printf("<WARNING> clientRequestReceiving() // %d : Socket sent < 0 bytes\n", socket);
 
                 break;
             }
             default:
-                printf("<ERROR> clientRequestReceiving()//%d : Request '%d' is not defined\n", socket, *request);
+                printf("<ERROR> clientRequestReceiving() // %d : Request '%d' is not defined\n", socket, *request);
                 g_free(temp);
         }
 
@@ -144,10 +145,10 @@ void clientRequestReceiving(void *clientSocket) {
 
     sqlResult = sqlite3_close_v2(sqliteConn);
     if (sqlResult != SQLITE_OK)
-        printf("<ERROR> clientRequestReceiving()//%d : Error while closing the database\n", socket);
+        printf("<ERROR> clientRequestReceiving() // %d : Error while closing the database\n", socket);
     else
-        printf("<LOG> clientRequestReceiving()//%d : Database connection closed\n", socket);
-    printf("<LOG> clientRequestReceiving()//%d : Thread shutting down", socket);
+        printf("<LOG> clientRequestReceiving() // %d : Database connection closed\n", socket);
+    printf("<LOG> clientRequestReceiving() // %d : Thread shutting down\n", socket);
 }
 
 int main() {

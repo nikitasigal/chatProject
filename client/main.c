@@ -3,7 +3,7 @@
 #include <winsock2.h>
 #include <ws2tcpip.h>
 
-#define DEFAULT_SERVER_IP "127.0.0.1"
+#define DEFAULT_SERVER_IP "25.46.4.30"
 #define DEFAULT_PORT "27015"
 
 SOCKET connectToServer() {
