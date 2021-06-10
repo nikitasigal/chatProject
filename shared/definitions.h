@@ -12,6 +12,9 @@
 #define POPUP_LABEL_WIDTH 200
 #define POPUP_LABEL_HEIGHT 100
 
+#define DEFAULT_SERVER_IP "127.0.0.1"
+#define DEFAULT_PORT "27015"
+
 typedef enum {
     REGISTRATION,
     AUTHORIZATION,
@@ -35,11 +38,8 @@ typedef enum {
     DIALOG_USERS_VIEWPORT,
     DIALOGS_LIST_BOX,
     FRIENDS_LIST_BOX,
-    FRIENDS_SWITCHER,
-    FRIENDS_STACK,
     FRIENDS_BOX,
     CREATE_DIALOG_FRIENDS_LIST_BOX,
-    CREATE_DIALOG_BUTTON,
     CREATE_DIALOG_ENTRY,
     DIALOGS_LIST,
     CURRENT_DIALOG_ID,
@@ -50,12 +50,9 @@ typedef enum {
     FRIEND_REQUEST_LIST_BOX,
     DIALOG_IS_JUST_OPENED,
     FRIEND_MENU,
-    FRIEND_MENU_REMOVE_FRIEND,
-    FRIEND_MENU_OPEN_DIALOG,
     MSG_MENU,
     POPUP_LABEL,
     DIALOG_MENU,
-    DIALOG_MENU_LEAVE_DIALOG,
     SELECTED_ROW,
     DIALOG_NAME_LABEL
 } AddServerDataType;
@@ -103,11 +100,11 @@ typedef struct {
     Request request;
     FullUserInfo authorizedUser;
     short dialogCount;
-    FullDialogInfo dialogList[100];
+    FullDialogInfo dialogList[5];
     short friendCount;
-    FullUserInfo friends[100];
+    FullUserInfo friends[5];
     short requestCount;
-    FullUserInfo requests[100];
+    FullUserInfo requests[5];
 } AuthorizationPackage;
 
 #endif //CHATPROJECT_DEFINITIONS_H

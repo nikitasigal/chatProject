@@ -1,6 +1,7 @@
 #include "messages.h"
 #include "chat.h"
 #include "login.h"
+#include "ServerHandler/clientCommands.h"
 
 void leaveDialog(GtkMenuItem *menuitem, GList *additionalInfo) {
     GList *dialogsList = g_list_nth_data(additionalInfo, DIALOGS_LIST);
@@ -49,7 +50,7 @@ void createDialog(GtkButton *button, GList *additionalInfo) {
 
     // Проверим, не пустое ли поле имени диалога
     if (strlen(gtk_entry_get_text(createDialogEntry)) == 0) {
-        printf("Dialog entry is empty.\n");
+        printf("WARNING, file - 'messages.c', foo - 'createDialog': Dialog entry is empty.\n");
         popupNotification("Dialog name can't be empty.", g_list_nth_data(additionalInfo, POPUP_LABEL));
         return;
     }

@@ -1,5 +1,5 @@
 #include "login.h"
-#include "clientCommand.h"
+#include "ServerHandler/clientCommands.h"
 
 gboolean isPopupShowed = FALSE;
 
@@ -140,3 +140,8 @@ void authorizationButtonClicked(GtkWidget *button, GList *additionalInfo) {
     SOCKET *serverSocket = g_list_nth_data(additionalInfo, 2);
     clientRequest_Authorization(*serverSocket, newUser);
 }
+
+G_MODULE_EXPORT void nextField(GtkEntry *entry, GtkWidget *data) {
+    gtk_widget_grab_focus(data);
+}
+

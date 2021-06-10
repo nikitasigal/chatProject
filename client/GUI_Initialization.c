@@ -1,16 +1,21 @@
 #include "GUI_Initialization.h"
 #include "login.h"
-#include "chat.h"
 #include "messages.h"
 #include "appMenu.h"
 #include "friends.h"
-#include "clientCommand.h"
+#include "generalFunctions.h"
+#include "chat.h"
 
 void GUIInit(SOCKET *serverSocket) {
-    GtkBuilder *builder = gtk_builder_new_from_file("glade.glade");
+    GtkBuilder *builder = gtk_builder_new_from_file("GUI/Glade/glade.glade");
 
     GtkWidget *window = GTK_WIDGET(gtk_builder_get_object(builder, "registrationWindow"));
-    GtkWidget *mainWindow = GTK_WIDGET(gtk_builder_get_object(builder, "testWindow"));
+    GtkWidget *mainWindow = GTK_WIDGET(gtk_builder_get_object(builder, "mainWindow"));
+    GtkWidget *chatEntry = GTK_WIDGET(gtk_builder_get_object(builder, "chatEntry"));
+    GtkWidget *chatButton = GTK_WIDGET(gtk_builder_get_object(builder, "chatButton"));
+    GtkWidget *dialogUsersScrolledWindow = GTK_WIDGET(gtk_builder_get_object(builder, "dialogUsersScrolledWindow"));
+    GtkWidget *dialogUsersViewport = GTK_WIDGET(gtk_builder_get_object(builder, "dialogUsersViewport"));
+
     GtkWidget *registrationButton = GTK_WIDGET(gtk_builder_get_object(builder, "registrationButton"));
     GtkWidget *authorizationButton = GTK_WIDGET(gtk_builder_get_object(builder, "authorizationButton"));
     GtkWidget *dialogViewport = GTK_WIDGET(gtk_builder_get_object(builder, "dialogViewport"));
@@ -18,33 +23,34 @@ void GUIInit(SOCKET *serverSocket) {
     GtkWidget *dialogMenuBox = GTK_WIDGET(gtk_builder_get_object(builder, "dialogMenuBox"));
     GtkWidget *dialogsWindow = GTK_WIDGET(gtk_builder_get_object(builder, "dialogsWindow"));
     GtkWidget *friendsButton = GTK_WIDGET(gtk_builder_get_object(builder, "friendsButton"));
-    GtkWidget *chatEntry = GTK_WIDGET(gtk_builder_get_object(builder, "chatEntry"));
-    GtkWidget *chatButton = GTK_WIDGET(gtk_builder_get_object(builder, "chatButton"));
-    GtkWidget *dialogUsersScrolledWindow = GTK_WIDGET(gtk_builder_get_object(builder, "dialogUsersScrolledWindow"));
-    GtkWidget *dialogUsersViewport = GTK_WIDGET(gtk_builder_get_object(builder, "dialogUsersViewport"));
     GtkListBox *dialogsListBox = GTK_LIST_BOX(gtk_builder_get_object(builder, "dialogsListBox"));
     GtkWidget *friendsBox = GTK_WIDGET(gtk_builder_get_object(builder, "friendsBox"));
     GtkWidget *friendsWindow = GTK_WIDGET(gtk_builder_get_object(builder, "friendsWindow"));
-    GtkWidget *friendsSwitcher = GTK_WIDGET(gtk_builder_get_object(builder, "friendsSwitcher"));
-    GtkWidget *friendsStack = GTK_WIDGET(gtk_builder_get_object(builder, "friendsStack"));
     GtkWidget *friendsListBox = GTK_WIDGET(gtk_builder_get_object(builder, "friendsListBox"));
     GtkWidget *friendSendRequestButton = GTK_WIDGET(gtk_builder_get_object(builder, "friendSendRequestButton"));
     GtkWidget *friendSendRequestEntry = GTK_WIDGET(gtk_builder_get_object(builder, "friendSendRequestEntry"));
     GtkWidget *friendRequestListBox = GTK_WIDGET(gtk_builder_get_object(builder, "friendRequestListBox"));
-    GtkWidget *createDialogFriendsBoxList = GTK_WIDGET(gtk_builder_get_object(builder, "createDialogFriendsBoxList"));
+    GtkWidget *createDialogFriendsListBox = GTK_WIDGET(gtk_builder_get_object(builder, "createDialogFriendsListBox"));
     GtkWidget *createDialogButton = GTK_WIDGET(gtk_builder_get_object(builder, "createDialogButton"));
     GtkWidget *createDialogEntry = GTK_WIDGET(gtk_builder_get_object(builder, "createDialogEntry"));
-    GtkWidget *friendMenu = GTK_WIDGET(gtk_builder_get_object(builder, "friendMenu"));
     GtkWidget *friendMenuRemoveFriend = GTK_WIDGET(gtk_builder_get_object(builder, "friendMenuRemoveFriend"));
     GtkWidget *friendMenuOpenDialog = GTK_WIDGET(gtk_builder_get_object(builder, "friendMenuOpenDialog"));
     GtkWidget *popupLabel = GTK_WIDGET(gtk_builder_get_object(builder, "popupLabel"));
-    GtkWidget *dialogMenu = GTK_WIDGET(gtk_builder_get_object(builder, "dialogMenu"));
     GtkWidget *dialogMenuLeaveDialog = GTK_WIDGET(gtk_builder_get_object(builder, "dialogMenuLeaveDialog"));
     GtkWidget *dialogNameLabel = GTK_WIDGET(gtk_builder_get_object(builder, "dialogNameLabel"));
+    GtkWidget *timeLabel = GTK_WIDGET(gtk_builder_get_object(builder, "time"));
+
+    // Dialog menu
+    GtkWidget *dialogMenu = GTK_WIDGET(gtk_builder_get_object(builder, "dialogMenu"));
+    g_object_ref(dialogMenu);
 
     // Message menu
     GtkWidget *msgMenu = GTK_WIDGET(gtk_builder_get_object(builder, "msgMenu"));
     g_object_ref(msgMenu);
+
+    // Friend menu
+    GtkWidget *friendMenu = GTK_WIDGET(gtk_builder_get_object(builder, "friendMenu"));
+    g_object_ref(friendMenu);
 
     // Friends window:
     g_object_ref(friendsBox);
@@ -96,11 +102,8 @@ void GUIInit(SOCKET *serverSocket) {
     additionalInfo = g_list_append(additionalInfo, dialogUsersViewport);
     additionalInfo = g_list_append(additionalInfo, dialogsListBox);
     additionalInfo = g_list_append(additionalInfo, friendsListBox);
-    additionalInfo = g_list_append(additionalInfo, friendsSwitcher);
-    additionalInfo = g_list_append(additionalInfo, friendsStack);
     additionalInfo = g_list_append(additionalInfo, friendsBox);
-    additionalInfo = g_list_append(additionalInfo, createDialogFriendsBoxList);
-    additionalInfo = g_list_append(additionalInfo, createDialogButton);
+    additionalInfo = g_list_append(additionalInfo, createDialogFriendsListBox);
     additionalInfo = g_list_append(additionalInfo, createDialogEntry);
     additionalInfo = g_list_append(additionalInfo, dialogsList);
     additionalInfo = g_list_append(additionalInfo, currentDialogID);
@@ -111,14 +114,18 @@ void GUIInit(SOCKET *serverSocket) {
     additionalInfo = g_list_append(additionalInfo, friendRequestListBox);
     additionalInfo = g_list_append(additionalInfo, dialogIsJustOpened);
     additionalInfo = g_list_append(additionalInfo, friendMenu);
-    additionalInfo = g_list_append(additionalInfo, friendMenuRemoveFriend);
-    additionalInfo = g_list_append(additionalInfo, friendMenuOpenDialog);
     additionalInfo = g_list_append(additionalInfo, msgMenu);
     additionalInfo = g_list_append(additionalInfo, popupLabel);
     additionalInfo = g_list_append(additionalInfo, dialogMenu);
-    additionalInfo = g_list_append(additionalInfo, dialogMenuLeaveDialog);
     additionalInfo = g_list_append(additionalInfo, selectedRow);
     additionalInfo = g_list_append(additionalInfo, dialogNameLabel);
+
+    // CSS
+    GdkScreen *screen = gdk_screen_get_default();
+    GtkCssProvider *css = gtk_css_provider_new();
+    gtk_css_provider_load_from_path(css, "GUI/Themes/theme.css", NULL);
+    gtk_style_context_add_provider_for_screen(screen, GTK_STYLE_PROVIDER(css), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+    g_object_unref(css);
 
     // Создадим пару друзей
     FullUserInfo *first = malloc(sizeof(FullUserInfo));
@@ -148,9 +155,17 @@ void GUIInit(SOCKET *serverSocket) {
     g_signal_connect(friendMenuRemoveFriend, "activate", (GCallback) removeFriend, additionalInfo);
     g_signal_connect(friendMenuOpenDialog, "activate", (GCallback) openPersonalDialog, additionalInfo);
     g_signal_connect(dialogMenuLeaveDialog, "activate", (GCallback) leaveDialog, additionalInfo);
+    g_signal_connect(chatEntry, "activate", (GCallback) enterChatClicked, additionalInfo);
+    g_signal_connect(gtk_builder_get_object(builder, "passwordAuthWindow"), "activate", (GCallback) authorizationButtonClicked, authList);
+    g_signal_connect(gtk_builder_get_object(builder, "passwordRepeatEntry"), "activate", (GCallback) registrationButtonClicked, regList);
 
     // Launch a thread for server
     g_thread_new("Server thread", (GThreadFunc) serverRequestProcess, additionalInfo);
+
+    // Launch a clock
+    gdk_threads_add_timeout_seconds(1, (GSourceFunc) timer, timeLabel);
+
+    g_object_unref(builder);
 
     gtk_widget_show_all(window);
     gtk_widget_hide(chatEntry);

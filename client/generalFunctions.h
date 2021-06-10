@@ -5,4 +5,6 @@
 
 G_MODULE_EXPORT void windowClose();
 
+void timer(GtkLabel *timeLabel);
+
 #endif //TESTGTK_GENERALFUNCTIONS_H

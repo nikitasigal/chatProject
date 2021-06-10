@@ -20,14 +20,6 @@ void clientRequestReceiving(void *clientSocket) {
     GDateTime *time;
     int testDialogID = 0;
     while (TRUE) {
-        char byte;
-        int isAlive = recv(socket, &byte, 1, MSG_PEEK);
-        if (isAlive == -1) {
-            printf("<LOG> clientRequestReceiving()//%d : Client disconnected\n",
-                   socket); // TODO send message to friends of this client, that friend is offline
-            break;
-        }
-
         time = g_date_time_new_now_local();
         gchar *temp = g_date_time_format(time, "%H:%M:%S, %d %b %Y, %a");
         void *userData = malloc(TEXT_SIZE * 2);
@@ -35,7 +27,7 @@ void clientRequestReceiving(void *clientSocket) {
         if (bytesReceived < 0) {
             printf("<WARNING> clientRequestReceiving()//%d : Socket received < 0 bytes\n", socket);
             free(userData);
-            continue;
+            break;
         }
         Request *request = userData;
         switch (*request) {

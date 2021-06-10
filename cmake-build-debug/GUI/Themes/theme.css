@@ -1,0 +1,105 @@
+/* Window */
+window {
+    background: #171919;
+}
+
+/* Entry */
+entry {
+    background: #1e2021;
+    border-color: #018c77;
+    border-radius: 10px;
+    border-width: 1px;
+    caret-color: gray;
+
+    font: 16px "Segoe UI";
+    color: #cacaca;
+}
+
+/* Button */
+button.text-button {
+    background: #1e2021;
+    border-color: #018c77;
+    border-radius: 8px;
+    border-width: 2px;
+    box-shadow: none;
+    text-shadow: none;
+
+    font: 16px "Segoe UI";
+    color: #cacaca;
+}
+
+button:hover {
+    background: #393939;
+    text-shadow: 0 0 1px white;
+}
+
+button:checked {
+    background: #018c77;
+    text-shadow: 0 0 1px white;
+}
+
+/* Label */
+label {
+    font: 16px "Segoe UI";
+    color: #cacaca;
+}
+
+#dialogNameLabel {
+    background: #141416;
+    font: 22px "Segoe UI";
+    color: #cacaca;
+
+    border-width: 4px;
+    border-radius: 16px;
+}
+
+/* Scrolled window and viewport */
+scrolledwindow {
+    border-color: #141416;
+    background: #141416;
+    border-radius: 16px;
+    border-width: 6px;
+}
+
+viewport > label {
+    background: #141416;
+}
+
+/* List boxes */
+list {
+    background: #141416;
+
+    font: 16px "Segoe UI";
+    color: #cacaca;
+}
+
+/* Menu */
+menu {
+    background: #393939;
+
+    font: 16px "Segoe UI";
+    color: #cacaca;
+}
+
+.popup {
+    background: transparent;
+    border-width: 0;
+    box-shadow: none;
+}
+
+/* Application title */
+#appTitleBox {
+    background: #141416;
+}
+
+/* Application title label*/
+#appTitle {
+    font: 26px "Comic Sans MS";
+    color: #cacaca;
+}
+
+/* Clock label */
+#timeLabel {
+    font: 36px "Segoe UI";
+    color: #cacaca;
+}

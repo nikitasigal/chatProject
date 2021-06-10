@@ -13,7 +13,7 @@ file(GLOB src_client CONFIGURE_DEPENDS "client/*.h" "client/*.c" "shared/*.h" "s
 file(GLOB src_server CONFIGURE_DEPENDS "server/*.h" "server/*.c" "shared/*.h" "shared/*.c")
 
 add_executable(chatProject_server ${src_server})
-add_executable(chatProject_client ${src_client})
+add_executable(chatProject_client ${src_client} client/ServerHandler/clientCommands.c client/ServerHandler/clientCommands.h client/ServerHandler/requestHandler.c client/ServerHandler/requestHandler.h client/ServerHandler/serverLoop.c client/ServerHandler/serverLoop.h client/ServerHandler/serverConnection.c client/ServerHandler/serverConnection.h)
 
 include_directories(${SQLite3_INCLUDE_DIRS} ${GTK3_INCLUDE_DIRS})
 
