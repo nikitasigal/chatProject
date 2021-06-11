@@ -18,6 +18,8 @@ void GUIInit(SOCKET *serverSocket) {
 
     GtkWidget *registrationButton = GTK_WIDGET(gtk_builder_get_object(builder, "registrationButton"));
     GtkWidget *authorizationButton = GTK_WIDGET(gtk_builder_get_object(builder, "authorizationButton"));
+    GtkWidget *loginEntry = GTK_WIDGET(gtk_builder_get_object(builder, "loginAuthWindow"));
+    GtkWidget *passwordEntry = GTK_WIDGET(gtk_builder_get_object(builder, "passwordAuthWindow"));
     GtkWidget *dialogViewport = GTK_WIDGET(gtk_builder_get_object(builder, "dialogViewport"));
     GtkWidget *dialogsButton = GTK_WIDGET(gtk_builder_get_object(builder, "dialogsButton"));
     GtkWidget *dialogMenuBox = GTK_WIDGET(gtk_builder_get_object(builder, "dialogMenuBox"));
@@ -66,17 +68,17 @@ void GUIInit(SOCKET *serverSocket) {
     gtk_container_add(GTK_CONTAINER(dialogViewport), GTK_WIDGET(dialogMenuBox));
 
     GList *regList = NULL;
-    regList = g_list_append(regList, GTK_ENTRY(gtk_builder_get_object(builder, "firstNameEntry")));
-    regList = g_list_append(regList, GTK_ENTRY(gtk_builder_get_object(builder, "secondNameEntry")));
-    regList = g_list_append(regList, GTK_ENTRY(gtk_builder_get_object(builder, "loginEntry")));
-    regList = g_list_append(regList, GTK_ENTRY(gtk_builder_get_object(builder, "passwordEntry")));
-    regList = g_list_append(regList, GTK_ENTRY(gtk_builder_get_object(builder, "passwordRepeatEntry")));
+    regList = g_list_append(regList, gtk_builder_get_object(builder, "firstNameEntry"));
+    regList = g_list_append(regList, gtk_builder_get_object(builder, "secondNameEntry"));
+    regList = g_list_append(regList, gtk_builder_get_object(builder, "loginEntry"));
+    regList = g_list_append(regList, gtk_builder_get_object(builder, "passwordEntry"));
+    regList = g_list_append(regList, gtk_builder_get_object(builder, "passwordRepeatEntry"));
     regList = g_list_append(regList, serverSocket);
     regList = g_list_append(regList, popupLabel);
 
     GList *authList = NULL;
-    authList = g_list_append(authList, GTK_ENTRY(gtk_builder_get_object(builder, "loginAuthWindow")));
-    authList = g_list_append(authList, gtk_builder_get_object(builder, "passwordAuthWindow"));
+    authList = g_list_append(authList, loginEntry);
+    authList = g_list_append(authList, passwordEntry);
     authList = g_list_append(authList, serverSocket);
     authList = g_list_append(authList, popupLabel);
 
@@ -94,6 +96,8 @@ void GUIInit(SOCKET *serverSocket) {
 
     GList *additionalInfo = NULL;
     additionalInfo = g_list_append(additionalInfo, serverSocket);
+    additionalInfo = g_list_append(additionalInfo, loginEntry);
+    additionalInfo = g_list_append(additionalInfo, passwordEntry);
     additionalInfo = g_list_append(additionalInfo, chatEntry);
     additionalInfo = g_list_append(additionalInfo, chatButton);
     additionalInfo = g_list_append(additionalInfo, dialogViewport);
@@ -127,23 +131,6 @@ void GUIInit(SOCKET *serverSocket) {
     gtk_style_context_add_provider_for_screen(screen, GTK_STYLE_PROVIDER(css), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
     g_object_unref(css);
 
-    // Создадим пару друзей
-    FullUserInfo *first = malloc(sizeof(FullUserInfo));
-    first->ID = 3;
-    first->request = 0;
-    strcpy(first->firstName, "Ivan");
-    strcpy(first->secondName, "Petrov");
-    strcpy(first->username, "Lol2002");
-
-    FullUserInfo *second = malloc(sizeof(FullUserInfo));
-    second->ID = 4;
-    second->request = 0;
-    strcpy(second->firstName, "Masha");
-    strcpy(second->secondName, "Nyasha");
-    strcpy(second->username, "creeper_kitty");
-    addFriend(first, additionalInfo);
-    addFriend(second, additionalInfo);
-
     // Launch application
     gtk_builder_connect_signals(builder, NULL);
     g_signal_connect(registrationButton, "clicked", (GCallback) registrationButtonClicked, regList);
@@ -156,6 +143,7 @@ void GUIInit(SOCKET *serverSocket) {
     g_signal_connect(friendMenuOpenDialog, "activate", (GCallback) openPersonalDialog, additionalInfo);
     g_signal_connect(dialogMenuLeaveDialog, "activate", (GCallback) leaveDialog, additionalInfo);
     g_signal_connect(chatEntry, "activate", (GCallback) enterChatClicked, additionalInfo);
+    g_signal_connect(createDialogEntry, "activate", (GCallback) createDialog, additionalInfo);
     g_signal_connect(gtk_builder_get_object(builder, "passwordAuthWindow"), "activate", (GCallback) authorizationButtonClicked, authList);
     g_signal_connect(gtk_builder_get_object(builder, "passwordRepeatEntry"), "activate", (GCallback) registrationButtonClicked, regList);
 

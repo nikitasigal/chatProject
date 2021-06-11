@@ -3,19 +3,19 @@
 
 #include "../../shared/definitions.h"
 
-gboolean serverRequest_Registration(GList *specialAdditionalServerData);
+gboolean serverRequest_Registration(void **specialAdditionalServerData);
 
-gboolean serverRequest_Authorization(GList *specialAdditionalServerData);
+gboolean serverRequest_Authorization(void **specialAdditionalServerData);
 
-void serverRequest_CreateDialog(FullDialogInfo dialogInfo, GList *additionalInfo);
+gboolean serverRequest_CreateDialog(void *data[2]);
 
-void serverRequest_SendMessage(FullMessageInfo messageInfo, GList *additionalInfo);
+gboolean serverRequest_SendMessage(void *data[2]);
 
-void serverRequest_SendFriendRequest(FullUserInfo userInfo, GList *additionalInfo);
+gboolean serverRequest_SendFriendRequest(void *data[2]);
 
-void serverRequest_RemoveFriend(FullUserInfo userInfo, GList *additionalInfo);
+gboolean serverRequest_RemoveFriend(void *data[2]);
 
-void serverRequest_LeaveDialog(FullUserInfo userInfo, GList *additionalInfo);
+gboolean serverRequest_LeaveDialog(void *data[2]);
 
 void serverRequest_FriendIsOnline(FullUserInfo userInfo, GList *additionalInfo);
 

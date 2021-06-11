@@ -14,10 +14,10 @@ SOCKET connectToServer() {
     hints.ai_socktype = SOCK_STREAM;    // Соединение установим TCP (а точнее, настроим потоки). Разговор ведётся, пока не будет разорвано соединение
     hints.ai_protocol = IPPROTO_TCP;    // Установка настроек сокета для TCP-соединения
 
-    printf("Enter IP:");
+    /*printf("Enter IP:");
     char IP[32] = {0};  // TODO убрать IP и scanf
-    scanf("%s", IP);
-    int getAddressInfoError = getaddrinfo(IP, DEFAULT_PORT, &hints, &result);    // Преобразовать текстовую информацию о хосте в адресную
+    scanf("%s", IP);*/
+    int getAddressInfoError = getaddrinfo(DEFAULT_SERVER_IP, DEFAULT_PORT, &hints, &result);    // Преобразовать текстовую информацию о хосте в адресную
     // Вообще, возвращает в result корректную информацию о сети сервера
     if (getAddressInfoError != 0) {
         printf("Getting host address error. Shutting down...\n");

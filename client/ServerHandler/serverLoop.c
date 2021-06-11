@@ -1,107 +1,91 @@
 #include "serverLoop.h"
 #include "requestHandler.h"
+#include "../login.h"
 #include "../friends.h"
 
 void serverRequestProcess(GList *additionalServerData) {
     SOCKET *serverSocket = g_list_nth_data(additionalServerData, SERVER_SOCKET);
-    int i = 1;
+    int requestCount = 1;
+    int tempI = 0;
     while (TRUE) {
         void *data = malloc(820000);
         int bytesReceived = recv(*serverSocket, data, 820000, 0);
+        tempI++;
         if (bytesReceived < 0) {
-            printf("ERROR: Server is offline\n");
+            g_critical("Server is offline");
             return;
         }
-        printf("Received request number %d\n", i++);
+        g_message("File - 'serverLoop.c', foo - 'serverRequestProcess': Received request number %d", requestCount++);
 
+        void *list[2] = {data, additionalServerData};
         Request *request = data;
         switch (*request) {
             case REGISTRATION: {
-                FullUserInfo *userInfo = g_malloc(sizeof(FullUserInfo));
-                FullUserInfo *temp = (FullUserInfo *) data;
-                userInfo->request = REGISTRATION;
-                userInfo->ID = temp->ID;
-                strcpy(userInfo->firstName, temp->firstName);
-                strcpy(userInfo->secondName, temp->secondName);
-                strcpy(userInfo->username, temp->username);
-
-                GList *list = NULL;
-                list = g_list_append(list, userInfo);
-                list = g_list_append(list, additionalServerData);
                 gdk_threads_add_idle(G_SOURCE_FUNC(serverRequest_Registration), list);
-
                 break;
             }
             case AUTHORIZATION: {
-                AuthorizationPackage *startPackage = g_malloc(sizeof(AuthorizationPackage));
-                AuthorizationPackage *temp = (AuthorizationPackage *) data;
-
-                startPackage->request = AUTHORIZATION;
-                startPackage->requestCount = temp->requestCount;
-                startPackage->dialogCount = temp->dialogCount;
-                startPackage->friendCount = temp->friendCount;
-                startPackage->authorizedUser = temp->authorizedUser;
-
-                for (int j = 0; j < temp->requestCount; ++j)
-                    startPackage->requests[j] = temp->requests[j];
-                for (int j = 0; j < temp->friendCount; ++j)
-                    startPackage->friends[j] = temp->friends[j];
-                for (int j = 0; j < temp->dialogCount; ++j)
-                    startPackage->dialogList[j] = temp->dialogList[j];
-
-
-                GList *list = NULL;
-                list = g_list_append(list, startPackage);
-                list = g_list_append(list, additionalServerData);
+                if (bytesReceived != sizeof(AuthorizationPackage)) {
+                    g_warning("Client received corrupted data (AuthorizationPackage). Trying to repeat request...");
+                    g_free(data);
+                    authorizationButtonClicked(NULL, additionalServerData);
+                    break;
+                } /*else {
+                    if (tempI < 10) {
+                        authorizationButtonClicked(NULL, additionalServerData);
+                        break;
+                    }
+                }*/
 
                 gdk_threads_add_idle(G_SOURCE_FUNC(serverRequest_Authorization), list);
-
                 break;
             }
             case CREATE_DIALOG: {
-                FullDialogInfo *dialogInfo = (FullDialogInfo *) data;
-                serverRequest_CreateDialog(*dialogInfo, additionalServerData);
-                printf("LOG INFO, file - 'serverLoop.c', foo - 'serverRequestProcess': Creating a dialog with ID '%d'\n", dialogInfo->ID);
+                gdk_threads_add_idle(G_SOURCE_FUNC(serverRequest_CreateDialog), list);
+
+                FullDialogInfo *dialogInfo = data;
+                g_message("File - 'serverLoop.c', foo - 'serverRequestProcess': Creating a dialog with ID '%d'\n", dialogInfo->ID);
                 break;
             }
             case SEND_MESSAGE: {
-                FullMessageInfo *messageInfo = (FullMessageInfo *) data;
-                serverRequest_SendMessage(*messageInfo, additionalServerData);
-                printf("LOG INFO, file - 'serverLoop.c', foo - 'serverRequestProcess': Receiving a message in dialog with ID '%d'\n", messageInfo->ID);
+                gdk_threads_add_idle(G_SOURCE_FUNC(serverRequest_SendMessage), list);
 
+                FullMessageInfo *messageInfo = data;
+                g_message("File - 'serverLoop.c', foo - 'serverRequestProcess': Receiving a message in dialog with ID '%d'\n", messageInfo->ID);
                 break;
             }
             case SEND_FRIEND_REQUEST: {
-                FullUserInfo *userInfo = (FullUserInfo *) data;
-                serverRequest_SendFriendRequest(*userInfo, additionalServerData);
-                printf("LOG INFO, file - 'serverLoop.c', foo - 'serverRequestProcess': Receiving a friend request from '%s'\n", userInfo->username);
+                gdk_threads_add_idle(G_SOURCE_FUNC(serverRequest_SendFriendRequest), list);
 
+                FullUserInfo *userInfo = data;
+                g_message("File - 'serverLoop.c', foo - 'serverRequestProcess': Receiving a friend request from '%s'\n", userInfo->username);
                 break;
             }
             case FRIEND_REQUEST_ACCEPTED: {
-                FullUserInfo *userInfo = (FullUserInfo *) data;
-                addFriend(userInfo, additionalServerData);
-                printf("LOG INFO, file - 'serverLoop.c', foo - 'serverRequestProcess': Accepted a friend request with username '%s'\n", userInfo->username);
+                gdk_threads_add_idle(G_SOURCE_FUNC(addFriend), list);
 
+                FullUserInfo *userInfo = data;
+                g_message("File - 'serverLoop.c', foo - 'serverRequestProcess': Accepted a friend request with username '%s'\n", userInfo->username);
                 break;
             }
             case REMOVE_FRIEND: {
-                FullUserInfo *userInfo = (FullUserInfo *) data;
-                serverRequest_RemoveFriend(*userInfo, additionalServerData);
-                printf("LOG INFO, file - 'serverLoop.c', foo - 'serverRequestProcess': You was removed from friend-list of '%s'\n", userInfo->username);
+                gdk_threads_add_idle(G_SOURCE_FUNC(serverRequest_RemoveFriend), list);
 
+                FullUserInfo *userInfo = data;
+                g_message("File - 'serverLoop.c', foo - 'serverRequestProcess': You was removed from friend-list of '%s'\n", userInfo->username);
                 break;
             }
             case LEAVE_DIALOG: {
-                FullUserInfo *userInfo = (FullUserInfo *) data;
-                serverRequest_LeaveDialog(*userInfo, additionalServerData);
-                printf("LOG INFO, file - 'serverLoop.c', foo - 'serverRequestProcess': User '%s' leave dialog with ID '%s'\n", userInfo->username, userInfo->additionalInfo);
+                gdk_threads_add_idle(G_SOURCE_FUNC(serverRequest_LeaveDialog), list);
 
+                FullUserInfo *userInfo = data;
+                printf("File - 'serverLoop.c', foo - 'serverRequestProcess': User '%s' leave dialog with ID '%s'\n", userInfo->username, userInfo->additionalInfo);
                 break;
             }
-            default:
-                printf("WARNING, file 'serverLoop.c', foo 'serverRequestProcess': Unknown type of request with code '%d' from server\n", *request);
+            default: {
+                g_warning("File 'serverLoop.c', foo 'serverRequestProcess': Unknown type of request with code '%d' from server\n", *request);
+                g_free(data);
+            }
         }
-        free(data);
     }
 }

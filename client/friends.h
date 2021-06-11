@@ -9,7 +9,7 @@ void acceptFriendRequest(GtkWidget *button, GList *additionalInfo);
 
 void declineFriendRequest(GtkWidget *button, GList *additionalInfo);
 
-void addFriend(FullUserInfo *user, GList *additionalInfo);
+gboolean addFriend(void *data[2]);
 
 void removeFriend(GtkMenuItem *menuitem, GList *additionalInfo);
 

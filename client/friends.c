@@ -75,7 +75,10 @@ void declineFriendRequest(GtkWidget *button, GList *additionalInfo) {
     clientRequest_FriendRequestDeclined(*serverDescriptor, *currentUser);
 }
 
-void addFriend(FullUserInfo *user, GList *additionalInfo) {
+gboolean addFriend(void *data[2]) {
+    FullUserInfo *user = data[0];
+    GList *additionalInfo = data[1];
+
     // Распакуем информацию
     GtkListBox *friendsListBox = g_list_nth_data(additionalInfo, FRIENDS_LIST_BOX);
     GtkListBox *createDialogFriendsListBox = g_list_nth_data(additionalInfo, CREATE_DIALOG_FRIENDS_LIST_BOX);
@@ -110,8 +113,13 @@ void addFriend(FullUserInfo *user, GList *additionalInfo) {
     g_signal_connect(createDialogEventBox, "button-press-event", (GCallback) processMsgSelecting, createDialogFriendsListBox);
     g_signal_connect(friendsEventBox, "button-press-event", (GCallback) processFriendSelecting, additionalInfo);
 
+    if (user->request == SEND_FRIEND_REQUEST)
+        g_free(user);
+
     gtk_widget_show_all(GTK_WIDGET(friendsListBox));
     gtk_widget_show_all(createDialogEventBox);
+
+    return FALSE;
 }
 
 void removeFriend(GtkMenuItem *menuitem, GList *additionalInfo) {

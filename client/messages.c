@@ -150,6 +150,8 @@ void openDialog(GtkWidget *button, GList *data) {
     if (button != NULL && newDialog->isGroup)
         gtk_widget_show_all(dialogUsersScrolledWindow);
 
+    gtk_widget_grab_focus(chatEntry);
+
     // Отправим запрос на подгрузку сообщений
     if (!newDialog->isOpened) {
         newDialog->isOpened = TRUE;

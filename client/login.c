@@ -23,6 +23,24 @@ gboolean fadeOutAnimation(gpointer caller) {
     return TRUE;
 }
 
+void popupNotification(char *string, GtkWidget *popupLabel) {
+    if (isPopupShowed)
+        return;
+
+    GtkWidget *popupWindow = gtk_widget_get_parent(popupLabel);
+    gtk_label_set_text(GTK_LABEL(popupLabel), string);
+
+    gtk_widget_set_opacity(popupWindow, 100);
+    GdkRectangle workArea = {0};
+    gdk_monitor_get_workarea(gdk_display_get_primary_monitor(gdk_display_get_default()), &workArea);
+    gtk_window_move(GTK_WINDOW(popupWindow), workArea.width - 250, workArea.height - 140);
+
+    gtk_widget_show(popupWindow);
+    isPopupShowed = TRUE;
+
+    gdk_threads_add_timeout(20, G_SOURCE_FUNC(fadeOutAnimation), popupWindow);
+}
+
 gboolean checkLoginAndPasswordCorrectness(const gchar *field) {
     if (strlen(field) == 0)
         return FALSE;
@@ -48,24 +66,6 @@ gboolean checkName(const gchar *field) {
             return FALSE;
     }
     return TRUE;
-}
-
-void popupNotification(char *string, GtkWidget *popupLabel) {
-    if (isPopupShowed)
-        return;
-
-    GtkWidget *popupWindow = gtk_widget_get_parent(popupLabel);
-    gtk_label_set_text(GTK_LABEL(popupLabel), string);
-
-    gtk_widget_set_opacity(popupWindow, 100);
-    GdkRectangle workArea = {0};
-    gdk_monitor_get_workarea(gdk_display_get_primary_monitor(gdk_display_get_default()), &workArea);
-    gtk_window_move(GTK_WINDOW(popupWindow), workArea.width - POPUP_LABEL_WIDTH, workArea.height - POPUP_LABEL_HEIGHT);
-
-    gtk_widget_show(popupWindow);
-    isPopupShowed = TRUE;
-
-    gdk_threads_add_timeout(20, G_SOURCE_FUNC(fadeOutAnimation), popupWindow);
 }
 
 void registrationButtonClicked(GtkWidget *button, GList *additionalInfo) {
@@ -117,14 +117,25 @@ void registrationButtonClicked(GtkWidget *button, GList *additionalInfo) {
 }
 
 void authorizationButtonClicked(GtkWidget *button, GList *additionalInfo) {
-    if (!checkLoginAndPasswordCorrectness(gtk_entry_get_text(g_list_nth_data(additionalInfo, 0)))) {
+    // Распакуем данные
+    GtkEntry *loginEntry;
+    GtkEntry *passwordEntry;
+    if (button == NULL) {
+        loginEntry = g_list_nth_data(additionalInfo, LOGIN_ENTRY);
+        passwordEntry = g_list_nth_data(additionalInfo, PASSWORD_ENTRY);
+    } else {
+        loginEntry = g_list_nth_data(additionalInfo, 0);
+        passwordEntry = g_list_nth_data(additionalInfo, 1);
+    }
+
+    if (!checkLoginAndPasswordCorrectness(gtk_entry_get_text(loginEntry))) {
         printf("Incorrect username. Only Latin letters and numbers are allowed.\n");
         popupNotification("Incorrect username. Only Latin letters and numbers are allowed.",
                           g_list_nth_data(additionalInfo, 3));
         return;
     }
 
-    if (!checkLoginAndPasswordCorrectness(gtk_entry_get_text(g_list_nth_data(additionalInfo, 1)))) {
+    if (!checkLoginAndPasswordCorrectness(gtk_entry_get_text(passwordEntry))) {
         printf("Incorrect password. Only Latin letters and numbers are allowed.\n");
         popupNotification("Incorrect password. Only Latin letters and numbers are allowed.",
                           g_list_nth_data(additionalInfo, 3));
@@ -133,11 +144,15 @@ void authorizationButtonClicked(GtkWidget *button, GList *additionalInfo) {
 
     // Fill user information
     FullUserInfo newUser;
-    strcpy(newUser.username, gtk_entry_get_text(g_list_nth_data(additionalInfo, 0)));
-    strcpy(newUser.password, gtk_entry_get_text(g_list_nth_data(additionalInfo, 1)));
+    strcpy(newUser.username, gtk_entry_get_text(loginEntry));
+    strcpy(newUser.password, gtk_entry_get_text(passwordEntry));
 
     // Send information to server
-    SOCKET *serverSocket = g_list_nth_data(additionalInfo, 2);
+    SOCKET *serverSocket;
+    if (button == NULL)
+        serverSocket = g_list_nth_data(additionalInfo, SERVER_SOCKET);
+    else
+        serverSocket = g_list_nth_data(additionalInfo, 2);
     clientRequest_Authorization(*serverSocket, newUser);
 }
 

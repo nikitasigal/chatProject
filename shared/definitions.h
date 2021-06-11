@@ -9,8 +9,6 @@
 #define NAME_SIZE 32
 #define DIALOG_SIZE 96
 #define MAX_NUMBER_OF_USERS 30
-#define POPUP_LABEL_WIDTH 200
-#define POPUP_LABEL_HEIGHT 100
 
 #define DEFAULT_SERVER_IP "127.0.0.1"
 #define DEFAULT_PORT "27015"
@@ -30,6 +28,8 @@ typedef enum {
 
 typedef enum {
     SERVER_SOCKET,
+    LOGIN_ENTRY,
+    PASSWORD_ENTRY,
     CHAT_ENTRY,
     CHAT_BUTTON,
     DIALOG_VIEWPORT,
@@ -100,11 +100,11 @@ typedef struct {
     Request request;
     FullUserInfo authorizedUser;
     short dialogCount;
-    FullDialogInfo dialogList[5];
+    FullDialogInfo dialogList[100];
     short friendCount;
-    FullUserInfo friends[5];
+    FullUserInfo friends[100];
     short requestCount;
-    FullUserInfo requests[5];
+    FullUserInfo requests[100];
 } AuthorizationPackage;
 
 #endif //CHATPROJECT_DEFINITIONS_H
