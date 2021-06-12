@@ -69,8 +69,15 @@ void clientRequestReceiving(void *clientSocket) {
             case CREATE_DIALOG: {
                 printf("<LOG> clientRequestReceiving() // %d : Creating new dialog ...\n", socket);
                 FullDialogInfo *dialogInfo = userData;
-                dialogInfo->ID = testDialogID++;
+                //dialogInfo->ID = testDialogID++;
 
+                sqlCreateDialog(sqliteConn, dialogInfo);
+                if(dialogInfo->ID == -1){
+                    //TODO - ERROR OCCURRED
+                    break;
+                }
+
+                // TODO - Send dialogInfo to all users in dialogInfo->users
                 int bytesSent = send(socket, (void *) dialogInfo, sizeof(FullDialogInfo), 0);
                 if (bytesSent < 0)
                     printf("<WARNING> clientRequestReceiving() // %d : Socket sent < 0 bytes\n", socket);
@@ -80,8 +87,17 @@ void clientRequestReceiving(void *clientSocket) {
             case SEND_MESSAGE: {
                 printf("<LOG> clientRequestReceiving() // %d : Processing new message ...\n", socket);
                 FullMessageInfo *messageInfo = userData;
-                strcpy(messageInfo->date, temp);
+                //strcpy(messageInfo->date, temp);
 
+                int membersCount;
+                int membersList[30] = {0};
+                sqlSendMessage(sqliteConn, messageInfo, membersList, &membersCount);
+                if(messageInfo->ID == -1) {
+                    // TODO - ERROR OCCURRED
+                    break;
+                }
+
+                // TODO - Send messageInfo to all users in membersList
                 int bytesSent = send(socket, (void *) messageInfo, sizeof(FullMessageInfo), 0);
                 if (bytesSent < 0)
                     printf("<WARNING> clientRequestReceiving() // %d : Socket sent < 0 bytes\n", socket);

@@ -1,4 +1,5 @@
 #include <string.h>
+#include <gtk/gtk.h>
 #include "sqlite.h"
 
 void sqlRegister(sqlite3 *conn, FullUserInfo *user) {
@@ -82,10 +83,10 @@ void sqlAuthorize(sqlite3 *conn, FullUserInfo *user, AuthorizationPackage *auPac
     }
 
     auPackage->authorizedUser.ID = sqlite3_column_int(stmt, 0);
-    strcpy(auPackage->authorizedUser.username, (const char*) sqlite3_column_text(stmt, 1));
+    strcpy(auPackage->authorizedUser.username, (const char *) sqlite3_column_text(stmt, 1));
     strcpy(auPackage->authorizedUser.password, "***");
-    strcpy(auPackage->authorizedUser.firstName, (const char*) sqlite3_column_text(stmt, 3));
-    strcpy(auPackage->authorizedUser.secondName, (const char*) sqlite3_column_text(stmt, 4));
+    strcpy(auPackage->authorizedUser.firstName, (const char *) sqlite3_column_text(stmt, 3));
+    strcpy(auPackage->authorizedUser.secondName, (const char *) sqlite3_column_text(stmt, 4));
     sqlite3_finalize(stmt);
     memset(query, 0, QUERY_SIZE);
 
@@ -123,12 +124,12 @@ void sqlAuthorize(sqlite3 *conn, FullUserInfo *user, AuthorizationPackage *auPac
                    "WHERE fl.friend_id = %d", auPackage->authorizedUser.ID);
     sqlite3_prepare_v2(conn, query, (int) strlen(query), &stmt, NULL);
     auPackage->friendCount = 0;
-    while(sqlite3_step(stmt)==SQLITE_ROW){
+    while (sqlite3_step(stmt) == SQLITE_ROW) {
         auPackage->friends[auPackage->friendCount].ID = sqlite3_column_int(stmt, 0);
-        strcpy(auPackage->friends[auPackage->friendCount].username, (const char*) sqlite3_column_text(stmt, 1));
+        strcpy(auPackage->friends[auPackage->friendCount].username, (const char *) sqlite3_column_text(stmt, 1));
         strcpy(auPackage->friends[auPackage->friendCount].password, "***");
-        strcpy(auPackage->friends[auPackage->friendCount].firstName, (const char*) sqlite3_column_text(stmt, 2));
-        strcpy(auPackage->friends[auPackage->friendCount].secondName, (const char*) sqlite3_column_text(stmt, 3));
+        strcpy(auPackage->friends[auPackage->friendCount].firstName, (const char *) sqlite3_column_text(stmt, 2));
+        strcpy(auPackage->friends[auPackage->friendCount].secondName, (const char *) sqlite3_column_text(stmt, 3));
         auPackage->friendCount++;
     }
     sqlite3_finalize(stmt);
@@ -143,14 +144,121 @@ void sqlAuthorize(sqlite3 *conn, FullUserInfo *user, AuthorizationPackage *auPac
                    "WHERE fr.requested_id = %d", auPackage->authorizedUser.ID);
     sqlite3_prepare_v2(conn, query, (int) strlen(query), &stmt, NULL);
     auPackage->requestCount = 0;
-    while(sqlite3_step(stmt)==SQLITE_ROW){
+    while (sqlite3_step(stmt) == SQLITE_ROW) {
         auPackage->requests[auPackage->requestCount].ID = sqlite3_column_int(stmt, 0);
-        strcpy(auPackage->requests[auPackage->requestCount].username, (const char*) sqlite3_column_text(stmt, 1));
+        strcpy(auPackage->requests[auPackage->requestCount].username, (const char *) sqlite3_column_text(stmt, 1));
         strcpy(auPackage->requests[auPackage->requestCount].password, "***");
-        strcpy(auPackage->requests[auPackage->requestCount].firstName, (const char*) sqlite3_column_text(stmt, 2));
-        strcpy(auPackage->requests[auPackage->requestCount].secondName, (const char*) sqlite3_column_text(stmt, 3));
+        strcpy(auPackage->requests[auPackage->requestCount].firstName, (const char *) sqlite3_column_text(stmt, 2));
+        strcpy(auPackage->requests[auPackage->requestCount].secondName, (const char *) sqlite3_column_text(stmt, 3));
         auPackage->requestCount++;
     }
+    sqlite3_finalize(stmt);
+    memset(query, 0, QUERY_SIZE);
+}
+
+void sqlCreateDialog(sqlite3 *conn, FullDialogInfo *dialogInfo) {
+    int result;
+    char query[QUERY_SIZE] = {0};
+    sqlite3_stmt *stmt;
+
+
+    //Query 1 - Create new entry in table 'chats'
+    sprintf(query, "INSERT INTO chats (name, is_group) VALUES ('%s', %d)", dialogInfo->dialogName, dialogInfo->isGroup);
+    sqlite3_prepare_v2(conn, query, (int) strlen(query), &stmt, NULL);
+    result = sqlite3_step(stmt);
+    if (result != SQLITE_DONE) {
+        printf("<ERROR> sqlCreateDialog(): Dialog '%s' could not be created\n", dialogInfo->dialogName);
+        dialogInfo->ID = -1;
+        return;
+    }
+    sqlite3_finalize(stmt);
+    memset(query, 0, QUERY_SIZE);
+
+
+    //Query 2 - Get new dialog's ID
+    sprintf(query, "SELECT id\n"
+                   "FROM chats\n"
+                   "ORDER BY id DESC\n"
+                   "LIMIT 1");
+    sqlite3_prepare_v2(conn, query, (int) strlen(query), &stmt, NULL);
+    result = sqlite3_step(stmt);
+    if (result != SQLITE_ROW) {
+        printf("<ERROR> sqlCreateDialog(): Table 'chats' is empty\n");
+        dialogInfo->ID = -1;
+        return;
+    }
+    dialogInfo->ID = sqlite3_column_int(stmt, 0);
+    sqlite3_finalize(stmt);
+    memset(query, 0, QUERY_SIZE);
+
+
+    //Query 3 - Create entries in table 'chats_to_users'
+    for (int i = 0; i < dialogInfo->usersNumber; ++i) {
+        //Query 1 - Create new entry in table 'chats'
+        sprintf(query, "INSERT INTO chats_to_users\n"
+                       "VALUES (%d, %d)", dialogInfo->ID, dialogInfo->users[i].ID);
+        sqlite3_prepare_v2(conn, query, (int) strlen(query), &stmt, NULL);
+        result = sqlite3_step(stmt);
+        if (result != SQLITE_DONE) {
+            printf("<ERROR> sqlCreateDialog(): User '%s' could not be added to dialog '%s'\n",
+                   dialogInfo->users[i].username, dialogInfo->dialogName);
+            dialogInfo->ID = -1;
+            return;
+        }
+        sqlite3_finalize(stmt);
+        memset(query, 0, QUERY_SIZE);
+    }
+}
+
+void sqlSendMessage(sqlite3 *conn, FullMessageInfo *message, int sendbackList[30], int *sendbackCount) {
+    int result;
+    char query[QUERY_SIZE] = {0};
+    sqlite3_stmt *stmt;
+    char *timestamp = g_date_time_format(g_date_time_new_now_local(), "%H:%M:%S, %d %b %Y, %a");
+
+
+    //Query 1 - Find sender's ID in 'users' table
+    int senderID;
+    sprintf(query, "SELECT id\n"
+                   "FROM users\n"
+                   "WHERE username = '%s'", message->login);
+    sqlite3_prepare_v2(conn, query, (int) strlen(query), &stmt, NULL);
+    result = sqlite3_step(stmt);
+    if (result != SQLITE_ROW) {
+        printf("<ERROR> sqlSendMessage(): User '%s' does not exist\n", message->login);
+        message->ID = -1;
+        return;
+    }
+    senderID = sqlite3_column_int(stmt, 0);
+    sqlite3_finalize(stmt);
+    memset(query, 0, QUERY_SIZE);
+
+
+
+    //Query 2 - Create new entry in 'messages' table
+    strcpy(message->date, timestamp);
+    sprintf(query, "INSERT INTO messages (user_id, chat_id, time, text)\n"
+                   "VALUES (%d, %d, '%s', '%s')", senderID, message->ID, message->date, message->text);
+    sqlite3_prepare_v2(conn, query, (int) strlen(query), &stmt, NULL);
+    result = sqlite3_step(stmt);
+    if (result != SQLITE_DONE) {
+        printf("<ERROR> sqlSendMessage(): Message insertion failed\n");
+        message->ID = -1;
+        return;
+    }
+    sqlite3_finalize(stmt);
+    memset(query, 0, QUERY_SIZE);
+
+
+
+    //Query 3 - extract sendback ID's
+    sprintf(query, "SELECT user_id\n"
+                   "FROM chats_to_users\n"
+                   "WHERE chat_id = %d", message->ID);
+    sqlite3_prepare_v2(conn, query, (int) strlen(query), &stmt, NULL);
+    *sendbackCount = 0;
+    while (sqlite3_step(stmt) == SQLITE_ROW)
+        sendbackList[(*sendbackCount)++] = sqlite3_column_int(stmt, 0);
     sqlite3_finalize(stmt);
     memset(query, 0, QUERY_SIZE);
 }

@@ -352,6 +352,7 @@ gboolean serverRequest_Authorization(GList *specialAdditionalServerData) {
     FullUserInfo *userInfo = g_malloc(sizeof(FullUserInfo));
     userInfo->request = AUTHORIZATION;
     userInfo->ID = startPackage->authorizedUser.ID;
+    strcpy(userInfo->username, startPackage->authorizedUser.username);
     strcpy(userInfo->firstName, startPackage->authorizedUser.firstName);
     strcpy(userInfo->secondName, startPackage->authorizedUser.secondName);
     strcpy(userInfo->secondName, startPackage->authorizedUser.secondName);
