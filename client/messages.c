@@ -1,6 +1,7 @@
 #include "messages.h"
 #include "chat.h"
 #include "login.h"
+#include "ServerHandler/clientCommands.h"
 
 void leaveDialog(GtkMenuItem *menuitem, GList *additionalInfo) {
     GList *dialogsList = g_list_nth_data(additionalInfo, DIALOGS_LIST);
@@ -49,12 +50,12 @@ void createDialog(GtkButton *button, GList *additionalInfo) {
 
     // Проверим, не пустое ли поле имени диалога
     if (strlen(gtk_entry_get_text(createDialogEntry)) == 0) {
-        printf("Dialog entry is empty.\n");
+        printf("WARNING, file - 'messages.c', foo - 'createDialog': Dialog entry is empty.\n");
         popupNotification("Dialog name can't be empty.", g_list_nth_data(additionalInfo, POPUP_LABEL));
         return;
     }
 
-    // Заполним инфу о диалоге со стороны клиента TODO
+    // Заполним инфу о диалоге со стороны клиента
     char dialogName[NAME_SIZE] = {0};
     strcpy(dialogName, gtk_entry_get_text(createDialogEntry));
     FullDialogInfo dialogInfo = {-1};
@@ -75,6 +76,7 @@ void createDialog(GtkButton *button, GList *additionalInfo) {
 
         temp = temp->next;
     }
+
 
     // Добавим и себя
     dialogInfo.users[dialogInfo.usersNumber].ID = currentUser->ID;
@@ -147,6 +149,8 @@ void openDialog(GtkWidget *button, GList *data) {
     gtk_widget_show(dialogNameLabel);
     if (button != NULL && newDialog->isGroup)
         gtk_widget_show_all(dialogUsersScrolledWindow);
+
+    gtk_widget_grab_focus(chatEntry);
 
     // Отправим запрос на подгрузку сообщений
     if (!newDialog->isOpened) {

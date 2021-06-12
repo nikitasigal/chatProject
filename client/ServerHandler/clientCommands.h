@@ -1,7 +1,7 @@
-#ifndef TESTGTK_CLIENTCOMMAND_H
-#define TESTGTK_CLIENTCOMMAND_H
+#ifndef CHATPROJECT_CLIENTCOMMANDS_H
+#define CHATPROJECT_CLIENTCOMMANDS_H
 
-#include "../shared/definitions.h"
+#include "../../shared/definitions.h"
 
 void clientRequest_CreatePersonalDialog(SOCKET serverSocket, FullDialogInfo dialogInfo);
 
@@ -25,14 +25,4 @@ void clientRequest_RemoveFriend(SOCKET serverSocket, FullUserInfo userInfo);
 
 void clientRequest_LeaveDialog(SOCKET serverSocket, FullUserInfo userInfo);
 
-void serverRequestProcess(GList *additionalServerData);
-
-void serverRequest_CreateDialog(FullDialogInfo dialogInfo, GList *additionalInfo);
-
-void serverRequest_SendMessage(FullMessageInfo messageInfo, GList *additionalInfo);
-
-gboolean serverRequest_Registration(GList *specialAdditionalServerData);
-
-gboolean serverRequest_Authorization(GList *specialAdditionalServerData);
-
-#endif //TESTGTK_CLIENTCOMMAND_H
+#endif //CHATPROJECT_CLIENTCOMMANDS_H

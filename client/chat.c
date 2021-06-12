@@ -1,5 +1,5 @@
 #include "chat.h"
-#include "clientCommand.h"
+#include "ServerHandler/clientCommands.h"
 
 gdouble lastAdj = 0;
 
@@ -15,8 +15,6 @@ void sizeAllocate(GtkWidget *msgListBox, GdkRectangle *allocation, int *dialogIs
         *dialogIsJustOpened = FALSE;
         return;
     }
-
-    printf(">> %d", lastAdj);
 
     GtkAdjustment *adjustment = gtk_list_box_get_adjustment(GTK_LIST_BOX(msgListBox));
     gdouble curAdj = gtk_adjustment_get_value(adjustment);
@@ -44,6 +42,24 @@ void processMsgMenu(GtkWidget *widget, GdkEvent *event, GtkMenu *msgMenu) {
     GtkWidget *row = gtk_widget_get_parent(widget);
     if (event->button.button == GDK_BUTTON_SECONDARY && gtk_list_box_row_is_selected(GTK_LIST_BOX_ROW(row)))
         gtk_menu_popup_at_pointer(GTK_MENU(msgMenu), event);
+}
+
+void enterChatClicked(GtkEntry *entry, GList *additionalInfo) {
+    int *currentDialogID = g_list_nth_data(additionalInfo, CURRENT_DIALOG_ID);
+    GList *dialogList = g_list_nth_data(additionalInfo, DIALOGS_LIST);
+    GList *temp = dialogList;
+    while (temp != NULL) {
+        Dialog *currentDialog = temp->data;
+        if (currentDialog->ID == *currentDialogID) {
+            GList *data = NULL;
+            data = g_list_append(data, currentDialog);
+            data = g_list_append(data, additionalInfo);
+            sendMessage(NULL, data);
+            break;
+        }
+
+        temp = temp->next;
+    }
 }
 
 void sendMessage(GtkWidget *button, GList *data) {

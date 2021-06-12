@@ -1,0 +1,152 @@
+/* Window */
+window {
+    background: #171919;
+}
+
+/* Entry */
+entry {
+    background: #1e2021;
+    border-color: #018c77;
+    border-radius: 10px;
+    border-width: 1px;
+    caret-color: gray;
+
+    font: 16px "Segoe UI";
+    color: #cacaca;
+}
+
+/* Button */
+button {
+    background: #1e2021;
+    border-color: #018c77;
+    border-radius: 8px;
+    border-width: 2px;
+    box-shadow: none;
+    text-shadow: none;
+
+    font: 16px "Segoe UI";
+    color: #cacaca;
+}
+
+button:hover {
+    background: #393939;
+    text-shadow: 0 0 1px white;
+}
+
+button:checked {
+    background: #018c77;
+    text-shadow: 0 0 1px white;
+}
+
+/* Label */
+label {
+    font: 16px "Segoe UI";
+    color: #cacaca;
+}
+
+#dialogNameLabel {
+    background: #141416;
+    font: 22px "Segoe UI";
+    color: #cacaca;
+
+    border-width: 4px;
+    border-radius: 16px;
+}
+
+/* Scrolled window and viewport */
+scrolledwindow {
+    border-color: #141416;
+    background: #141416;
+    border-radius: 16px;
+    border-width: 6px;
+}
+
+viewport > label {
+    background: #141416;
+}
+
+/* List boxes */
+list {
+    background: #141416;
+
+    font: 16px "Segoe UI";
+    color: #cacaca;
+}
+
+/* Menu */
+menu {
+    background: #393939;
+
+    font: 16px "Segoe UI";
+    color: #cacaca;
+}
+
+.popup {
+    background: transparent;
+    border-width: 0;
+    box-shadow: none;
+}
+
+popover {
+    background: #141416;
+
+    font: 16px "Segoe UI";
+    color: #cacaca;
+}
+
+.emoji-section {
+    background: #018c77;
+    border-radius: 10px;
+}
+
+.emoji-section:hover {
+    background: orange;
+}
+
+/* shrink headerbars (don't forget semicolons after each property) */
+headerbar {
+    min-height: 0px;
+    padding-left: 2px; /* same as childrens vertical margins for nicer proportions */
+    padding-right: 2px;
+    background: #2d2d2d;
+    box-shadow: none;
+    text-shadow: none;
+    border-width: 0;
+}
+
+headerbar entry,
+headerbar spinbutton,
+headerbar button,
+headerbar separator {
+    margin-top: 0; /* same as headerbar side padding for nicer proportions */
+    margin-bottom: 0;
+    padding: 8px;
+    box-shadow: none;
+    background: black;
+}
+
+/* shrink ssd titlebars */
+.default-decoration {
+    min-height: 0; /* let the entry and button drive the titlebar size */
+    padding: 0;
+    background: #2d2d2d;
+    box-shadow: none;
+    border-width: 0;
+}
+
+/* Application title */
+#appTitleBox {
+    background: #141416;
+}
+
+/* Application title label*/
+#appTitle {
+    font: 26px "Comic Sans MS";
+    color: #cacaca;
+}
+
+/* Clock label */
+#timeLabel {
+    font: 36px "Segoe UI";
+    color: #cacaca;
+}
