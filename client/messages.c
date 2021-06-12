@@ -55,7 +55,7 @@ void createDialog(GtkButton *button, GList *additionalInfo) {
         return;
     }
 
-    // Заполним инфу о диалоге со стороны клиента TODO
+    // Заполним инфу о диалоге со стороны клиента
     char dialogName[NAME_SIZE] = {0};
     strcpy(dialogName, gtk_entry_get_text(createDialogEntry));
     FullDialogInfo dialogInfo = {-1};

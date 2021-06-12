@@ -4,11 +4,12 @@
 #include <gtk/gtk.h>
 #include <winsock2.h>
 
-#define TEXT_SIZE 5000
+#define TEXT_SIZE 1000
 #define DATE_SIZE 32
 #define NAME_SIZE 32
 #define DIALOG_SIZE 96
 #define MAX_NUMBER_OF_USERS 30
+#define MAX_PACKAGE_SIZE 614400 // 600 КБ
 
 #define DEFAULT_SERVER_IP "127.0.0.1"
 #define DEFAULT_PORT "27015"

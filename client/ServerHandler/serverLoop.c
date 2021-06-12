@@ -8,8 +8,8 @@ void serverRequestProcess(GList *additionalServerData) {
     int requestCount = 1;
     int tempI = 0;
     while (TRUE) {
-        void *data = malloc(820000);
-        int bytesReceived = recv(*serverSocket, data, 820000, 0);
+        void *data = malloc(MAX_PACKAGE_SIZE);
+        int bytesReceived = recv(*serverSocket, data, MAX_PACKAGE_SIZE, 0);
         tempI++;
         if (bytesReceived < 0) {
             g_critical("Server is offline");

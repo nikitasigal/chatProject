@@ -446,7 +446,7 @@
                                 <property name="visible">True</property>
                                 <property name="can-focus">False</property>
                                 <property name="margin-end">14</property>
-                                <property name="pixbuf">..\..\..\..\..\Desktop\messages-24px.png</property>
+                                <property name="pixbuf">..\Images\messages-24px.png</property>
                               </object>
                               <packing>
                                 <property name="expand">False</property>
@@ -490,7 +490,7 @@
                                 <property name="visible">True</property>
                                 <property name="can-focus">False</property>
                                 <property name="margin-end">14</property>
-                                <property name="pixbuf">..\..\..\..\..\Desktop\friends-24.png</property>
+                                <property name="pixbuf">..\Images\friends-24.png</property>
                               </object>
                               <packing>
                                 <property name="expand">False</property>
@@ -534,7 +534,7 @@
                                 <property name="visible">True</property>
                                 <property name="can-focus">False</property>
                                 <property name="margin-end">14</property>
-                                <property name="pixbuf">..\..\..\..\..\Desktop\settings-24.png</property>
+                                <property name="pixbuf">..\Images\settings-24.png</property>
                               </object>
                               <packing>
                                 <property name="expand">False</property>

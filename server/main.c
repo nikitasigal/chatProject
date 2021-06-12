@@ -22,8 +22,8 @@ void clientRequestReceiving(void *clientSocket) {
     while (TRUE) {
         time = g_date_time_new_now_local();
         gchar *temp = g_date_time_format(time, "%H:%M:%S, %d %b %Y, %a");
-        void *userData = malloc(TEXT_SIZE * 2);
-        int bytesReceived = recv(socket, userData, TEXT_SIZE * 2, 0);
+        void *userData = malloc(MAX_PACKAGE_SIZE);
+        int bytesReceived = recv(socket, userData, MAX_PACKAGE_SIZE, 0);
         if (bytesReceived < 0) {
             printf("<WARNING> clientRequestReceiving()//%d : Socket received < 0 bytes\n", socket);
             free(userData);
