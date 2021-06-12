@@ -44,14 +44,14 @@ void serverRequestProcess(GList *additionalServerData) {
                 gdk_threads_add_idle(G_SOURCE_FUNC(serverRequest_CreateDialog), list);
 
                 FullDialogInfo *dialogInfo = data;
-                g_message("File - 'serverLoop.c', foo - 'serverRequestProcess': Creating a dialog with ID '%d'\n", dialogInfo->ID);
+                g_message("File - 'serverLoop.c', foo - 'serverRequestProcess': Creating a dialog with chatID '%d'\n", dialogInfo->ID);
                 break;
             }
             case SEND_MESSAGE: {
                 gdk_threads_add_idle(G_SOURCE_FUNC(serverRequest_SendMessage), list);
 
                 FullMessageInfo *messageInfo = data;
-                g_message("File - 'serverLoop.c', foo - 'serverRequestProcess': Receiving a message in dialog with ID '%d'\n", messageInfo->ID);
+                g_message("File - 'serverLoop.c', foo - 'serverRequestProcess': Receiving a message in dialog with chatID '%d'\n", messageInfo->chatID);
                 break;
             }
             case SEND_FRIEND_REQUEST: {
@@ -79,7 +79,7 @@ void serverRequestProcess(GList *additionalServerData) {
                 gdk_threads_add_idle(G_SOURCE_FUNC(serverRequest_LeaveDialog), list);
 
                 FullUserInfo *userInfo = data;
-                printf("File - 'serverLoop.c', foo - 'serverRequestProcess': User '%s' leave dialog with ID '%s'\n", userInfo->username, userInfo->additionalInfo);
+                printf("File - 'serverLoop.c', foo - 'serverRequestProcess': User '%s' leave dialog with chatID '%s'\n", userInfo->username, userInfo->additionalInfo);
                 break;
             }
             default: {

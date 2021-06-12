@@ -28,7 +28,7 @@ void leaveDialog(GtkMenuItem *menuitem, GList *additionalInfo) {
     // Удалим кнопку диалога
     gtk_widget_destroy(GTK_WIDGET(selectedRow));
 
-    // Установим ID беседы и отправим запрос
+    // Установим chatID беседы и отправим запрос
     clientRequest_LeaveDialog(*serverDescriptor, *currentUser);
 }
 
@@ -60,30 +60,30 @@ void createDialog(GtkButton *button, GList *additionalInfo) {
     strcpy(dialogName, gtk_entry_get_text(createDialogEntry));
     FullDialogInfo dialogInfo = {-1};
     dialogInfo.isGroup = TRUE;
-    dialogInfo.isSupposeToOpen = FALSE;
-    strcpy(dialogInfo.dialogName, dialogName);
+    dialogInfo.isSupposedToOpen = FALSE;
+    strcpy(dialogInfo.name, dialogName);
 
     // Соберём всех выбранных друзей
     GList *selectedFriends = gtk_list_box_get_selected_rows(createDialogFriendsBoxList);
     GList *temp = selectedFriends;
     while (temp != NULL) {
         FullUserInfo *tempUser = g_object_get_data(G_OBJECT(gtk_bin_get_child(GTK_BIN(gtk_bin_get_child(GTK_BIN(temp->data))))), "Data");
-        dialogInfo.users[dialogInfo.usersNumber].ID = tempUser->ID;
-        strcpy(dialogInfo.users[dialogInfo.usersNumber].firstName, tempUser->firstName);
-        strcpy(dialogInfo.users[dialogInfo.usersNumber].secondName, tempUser->secondName);
-        strcpy(dialogInfo.users[dialogInfo.usersNumber].username, tempUser->username);
-        ++dialogInfo.usersNumber;
+        dialogInfo.userList[dialogInfo.userCount].ID = tempUser->ID;
+        strcpy(dialogInfo.userList[dialogInfo.userCount].firstName, tempUser->firstName);
+        strcpy(dialogInfo.userList[dialogInfo.userCount].lastName, tempUser->lastName);
+        strcpy(dialogInfo.userList[dialogInfo.userCount].username, tempUser->username);
+        ++dialogInfo.userCount;
 
         temp = temp->next;
     }
 
 
     // Добавим и себя
-    dialogInfo.users[dialogInfo.usersNumber].ID = currentUser->ID;
-    strcpy(dialogInfo.users[dialogInfo.usersNumber].firstName, currentUser->firstName);
-    strcpy(dialogInfo.users[dialogInfo.usersNumber].secondName, currentUser->secondName);
-    strcpy(dialogInfo.users[dialogInfo.usersNumber].username, currentUser->username);
-    ++dialogInfo.usersNumber;
+    dialogInfo.userList[dialogInfo.userCount].ID = currentUser->ID;
+    strcpy(dialogInfo.userList[dialogInfo.userCount].firstName, currentUser->firstName);
+    strcpy(dialogInfo.userList[dialogInfo.userCount].lastName, currentUser->lastName);
+    strcpy(dialogInfo.userList[dialogInfo.userCount].username, currentUser->username);
+    ++dialogInfo.userCount;
 
     // Создадим запрос и отправим его на сервер
     clientRequest_CreateDialog(*serverDescriptor, dialogInfo);

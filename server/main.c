@@ -8,25 +8,19 @@
 
 void clientRequestReceiving(void *clientSocket) {
     sqlite3 *sqliteConn;
-    int sqlResult;
-    sqlResult = sqlite3_open_v2("database.sqlite", &sqliteConn, SQLITE_OPEN_READWRITE, NULL);
+    int sqlResult = sqlite3_open_v2("database.sqlite", &sqliteConn, SQLITE_OPEN_READWRITE, NULL);
     if (sqlResult != SQLITE_OK) {
-        printf("<ERROR> clientRequestReceiving() // %d : Error while opening database - shutting thread down\n", clientSocket);
+        g_critical("Thread %3d : Error while opening database - shutting thread down", clientSocket);
         return;
-    }else
-        printf("<LOG> clientRequestReceiving() // %d : Database connection established\n", clientSocket);
+    } else
+        g_message("Thread %3d : Database connection established", clientSocket);
 
     SOCKET socket = (SOCKET) clientSocket;
-    GDateTime *time;
-    int testDialogID = 0;
     while (TRUE) {
-        time = g_date_time_new_now_local();
-        gchar *temp = g_date_time_format(time, "%H:%M:%S, %d %b %Y, %a");
         void *userData = malloc(MAX_PACKAGE_SIZE);
         int bytesReceived = recv(socket, userData, MAX_PACKAGE_SIZE, 0);
         if (bytesReceived < 0) {
-            printf("<LOG> clientRequestReceiving() // %d : Client disconnected\n",
-                   socket);
+            g_message("Thread %3d : Client disconnected", socket);
             free(userData);
             break;
         }
@@ -34,119 +28,170 @@ void clientRequestReceiving(void *clientSocket) {
         Request *request = userData;
         switch (*request) {
             case REGISTRATION: {
-                printf("<LOG> clientRequestReceiving() // %d : Registration of new user ...\n", socket);
+                g_message("Thread %3d : Registration of new user ...", socket);
                 FullUserInfo *userInfo = userData;
 
                 sqlRegister(sqliteConn, userInfo);
 
                 int bytesSent = send(socket, (void *) userInfo, sizeof(FullUserInfo), 0);
                 if (bytesSent < 0)
-                    printf("<WARNING> clientRequestReceiving() // %d : Socket sent < 0 bytes\n", socket);
+                    g_warning("Tread %3d : Socket sent < 0 bytes", socket);
 
                 break;
             }
             case AUTHORIZATION: {
-                printf("<LOG> clientRequestReceiving() // %d : Authorizing user ...\n", socket);
+                g_message("Thread %3d : Authorizing user ...", socket);
                 FullUserInfo *userInfo = userData;
 
-                AuthorizationPackage auPackage;
-                sqlAuthorize(sqliteConn, userInfo, &auPackage);
+                AuthorizationPackage authPackage;
+                sqlAuthorize(sqliteConn, userInfo, &authPackage);
 
-                auPackage.request = AUTHORIZATION;
-                int bytesSent = send(socket, (void *) &auPackage, sizeof(AuthorizationPackage), 0);
+                authPackage.request = AUTHORIZATION;
+                int bytesSent = send(socket, (void *) &authPackage, sizeof(AuthorizationPackage), 0);
                 if (bytesSent < 0)
-                    printf("<WARNING> clientRequestReceiving() // %d : Socket sent < 0 bytes\n", socket);
+                    g_warning("Thread %3d : Socket sent < 0 bytes", socket);
 
                 break;
             }
             case CREATE_DIALOG: {
-                printf("<LOG> clientRequestReceiving() // %d : Creating new dialog ...\n", socket);
+                g_message("Thread %3d : Creating new dialog ...", socket);
                 FullDialogInfo *dialogInfo = userData;
-                //dialogInfo->ID = testDialogID++;
 
                 sqlCreateDialog(sqliteConn, dialogInfo);
-                if(dialogInfo->ID == -1){
-                    //TODO - ERROR OCCURRED
+                if (dialogInfo->ID == -1) {
+                    // error
                     break;
                 }
 
-                // TODO - Send dialogInfo to all users in dialogInfo->users
+                // TODO - Send dialogInfo to all users in dialogInfo->userList
                 int bytesSent = send(socket, (void *) dialogInfo, sizeof(FullDialogInfo), 0);
                 if (bytesSent < 0)
-                    printf("<WARNING> clientRequestReceiving() // %d : Socket sent < 0 bytes\n", socket);
+                    g_warning("Thread %3d : Socket sent < 0 bytes", socket);
 
                 break;
             }
             case SEND_MESSAGE: {
-                printf("<LOG> clientRequestReceiving() // %d : Processing new message ...\n", socket);
+                g_message("Thread %3d : Processing new message ...", socket);
                 FullMessageInfo *messageInfo = userData;
-                //strcpy(messageInfo->date, temp);
 
                 int membersCount;
-                int membersList[30] = {0};
+                int membersList[MAX_NUMBER_OF_USERS] = {0};
                 sqlSendMessage(sqliteConn, messageInfo, membersList, &membersCount);
-                if(messageInfo->ID == -1) {
-                    // TODO - ERROR OCCURRED
+                if (messageInfo->chatID == -1) {
+                    // error
                     break;
                 }
 
                 // TODO - Send messageInfo to all users in membersList
                 int bytesSent = send(socket, (void *) messageInfo, sizeof(FullMessageInfo), 0);
                 if (bytesSent < 0)
-                    printf("<WARNING> clientRequestReceiving() // %d : Socket sent < 0 bytes\n", socket);
+                    g_warning("Thread %3d : Socket sent < 0 bytes", socket);
 
                 break;
             }
             case SEND_FRIEND_REQUEST: {
-                printf("<LOG> clientRequestReceiving() // %d : Processing new friend request ...\n", socket);
+                g_message("Thread %3d : Processing new friend request ...", socket);
                 FullUserInfo *userInfo = userData;
-                // Допустим, обработали успешно
-                userInfo->ID = -3;
+
+                int requestID;
+                sqlSendFriendRequest(sqliteConn, userInfo, &requestID);
+
+                // TODO - Proceed with logic from .txt file - requestID contains ID of user, to whom the request is supposed to be sent
+
+                // temporary
+                if (userInfo->ID >= 0)
+                    userInfo->ID = -3;
 
                 int bytesSent = send(socket, (void *) userInfo, sizeof(FullUserInfo), 0);
                 if (bytesSent < 0)
-                    printf("<WARNING> clientRequestReceiving() // %d : Socket sent < 0 bytes\n", socket);
+                    g_warning("Thread %3d : Socket sent < 0 bytes", socket);
 
                 break;
             }
             case FRIEND_REQUEST_ACCEPTED: {
-                printf("<LOG> clientRequestReceiving() // %d : Processing accepted friend request ...\n", socket);
+                g_message("Thread %3d : Processing accepted friend request ...", socket);
                 FullUserInfo *userInfo = userData;
-                // Обновлены базы данных
-                int bytesSent = send(socket, (void *) userInfo, sizeof(FullUserInfo), 0);
+
+                FullUserInfo sender;
+                sqlAcceptFriendRequest(sqliteConn, userInfo, &sender);
+                if (userInfo->ID == -1) {
+                    // error
+                    break;
+                }
+
+                // TODO - Proceed with logic from .txt file
+
+                // temporary send to user, who answered the request
+                int bytesSent = send(socket, (void *) &sender, sizeof(FullUserInfo), 0);
                 if (bytesSent < 0)
-                    printf("<WARNING> clientRequestReceiving() // %d : Socket sent < 0 bytes\n", socket);
+                    g_warning("Thread %3d : Socket sent < 0 bytes", socket);
 
                 break;
             }
             case FRIEND_REQUEST_DECLINED: {
-                printf("<LOG> clientRequestReceiving() // %d : Processing declined friend request ...\n", socket);
-                // Обновлены базы данных
-                // Не будем посылать никуда запрос
+                g_message("Thread %3d : Processing declined friend request ...", socket);
+                FullUserInfo *userInfo = userData;
 
+                sqlDeclineFriendRequest(sqliteConn, userInfo);
+                if (userInfo->ID == -1) {
+                    // error
+                    break;
+                }
                 break;
             }
             case REMOVE_FRIEND: {
-                printf("<LOG> clientRequestReceiving() // %d : Deleting friend ...\n", socket);
+                g_message("Thread %3d : Deleting friend ...", socket);
                 FullUserInfo *userInfo = userData;
+
+                int friendID;
+                sqlRemoveFriend(sqliteConn, userInfo, &friendID);
+                if (userInfo->ID == -1) {
+                    // error
+                    break;
+                }
+
+                // TODO - Proceed with logic from .txt file
+
                 int bytesSent = send(socket, (void *) userInfo, sizeof(FullUserInfo), 0);
                 if (bytesSent < 0)
-                    printf("<WARNING> clientRequestReceiving() // %d : Socket sent < 0 bytes\n", socket);
+                    g_warning("Thread %3d : Socket sent < 0 bytes", socket);
 
                 break;
             }
             case LEAVE_DIALOG: {
-                printf("<LOG> clientRequestReceiving() // %d : Leaving dialog ...\n", socket);
+                g_message("Thread %3d : Leaving dialog ...", socket);
                 FullUserInfo *userInfo = userData;
+
+                sqlLeaveDialog(sqliteConn, userInfo);
+                if (userInfo->ID == -1) {
+                    // error
+                    break;
+                }
+
+                // TODO - Proceed with logic from .txt file
+
                 int bytesSent = send(socket, (void *) userInfo, sizeof(FullUserInfo), 0);
                 if (bytesSent < 0)
-                    printf("<WARNING> clientRequestReceiving() // %d : Socket sent < 0 bytes\n", socket);
+                    g_warning("Thread %3d : Socket sent < 0 bytes", socket);
 
                 break;
             }
+            case LOAD_MESSAGES: {
+                g_message("Thread %3d : Loading messages ...", socket);
+                FullDialogInfo *dialogInfo = userData;
+                MessagesPackage msgPackage;
+
+                sqlLoadMessages(sqliteConn, dialogInfo, &msgPackage);
+
+                // TODO - Send &msgPackage to all users in didalogInfo->userList
+
+                msgPackage.request = LOAD_MESSAGES;
+                int bytesSent = send(socket, (void *) &msgPackage, sizeof(MessagesPackage), 0);
+                if (bytesSent < 0)
+                    g_warning("Thread %3d : Socket sent < 0 bytes", socket);
+            }
             default:
-                printf("<ERROR> clientRequestReceiving() // %d : Request '%d' is not defined\n", socket, *request);
-                g_free(temp);
+                g_critical("Thread %3d : Request '%d' is not defined", socket, *request);
         }
 
         free(userData);
@@ -154,10 +199,10 @@ void clientRequestReceiving(void *clientSocket) {
 
     sqlResult = sqlite3_close_v2(sqliteConn);
     if (sqlResult != SQLITE_OK)
-        printf("<ERROR> clientRequestReceiving() // %d : Error while closing the database\n", socket);
+        g_critical("Thread %3d : Error while closing the database", socket);
     else
-        printf("<LOG> clientRequestReceiving() // %d : Database connection closed\n", socket);
-    printf("<LOG> clientRequestReceiving() // %d : Thread shutting down\n", socket);
+        g_message("Thread %3d : Database connection closed", socket);
+    g_message("Thread %3d : Thread shutting down", socket);
 }
 
 int main() {
@@ -172,7 +217,7 @@ int main() {
     hints.ai_flags = AI_PASSIVE;    // Заполняет IP адрес самостоятельно
     int getAddressInfoError = getaddrinfo(NULL, DEFAULT_PORT, &hints, &result);
     if (getAddressInfoError != 0) {
-        printf("Getting address information error");
+        g_critical("Getting address information error");
         WSACleanup();
         return -1;
     }
@@ -180,7 +225,7 @@ int main() {
     SOCKET listenSocket = INVALID_SOCKET;   // Создаём сокет для прослушивания клиентов
     listenSocket = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
     if (listenSocket == INVALID_SOCKET) {
-        printf("Socket creation error");
+        g_critical("Socket creation error");
         freeaddrinfo(result);
         WSACleanup();
         return -2;
@@ -188,7 +233,7 @@ int main() {
 
     int bindError = bind(listenSocket, result->ai_addr, (int) result->ai_addrlen);   // Привязываем IP и порт к сокету
     if (bindError == SOCKET_ERROR) {
-        printf("Binding error");
+        g_critical("Binding error");
         freeaddrinfo(result);
         closesocket(listenSocket);
         WSACleanup();
@@ -198,29 +243,29 @@ int main() {
 
     int listenError = listen(listenSocket, SOMAXCONN);
     if (listenError == SOCKET_ERROR) {
-        printf("Listening error");
+        g_critical("Listening error");
         freeaddrinfo(result);
         closesocket(listenSocket);
         WSACleanup();
         return -4;
     }
 
-    printf("Server is started\n");
+    g_message("Server is online");
 
     while (TRUE) {
         SOCKET clientSocket = INVALID_SOCKET;   // Создаём временный сокет для принятия клиента
         clientSocket = accept(listenSocket, NULL, NULL);
         if (clientSocket == INVALID_SOCKET) {
-            printf("Accepting connection error");
+            g_critical("Accepting connection error");
             freeaddrinfo(result);
             closesocket(listenSocket);
             WSACleanup();
             return -5;
         }
 
-        printf("<LOG> main(): Client thread for client '%d' is created\n", clientSocket);
+        g_message("main(): Created thread for client '%3d'", clientSocket);
         char thread_name[30] = {0};
-        sprintf(thread_name, "client_thread_%d", clientSocket);
+        sprintf(thread_name, "client_thread_%3d", clientSocket);
         g_thread_new(thread_name, (GThreadFunc) clientRequestReceiving, (void *) clientSocket);
     }
 
