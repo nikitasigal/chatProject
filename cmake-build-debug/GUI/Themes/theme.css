@@ -150,3 +150,32 @@ headerbar separator {
     font: 36px "Segoe UI";
     color: #cacaca;
 }
+
+/* Current user login */
+#currentUserLabel {
+    background: #171919;
+    border-radius: 14px;
+    border-width: 2px;
+    border-color: #018c77;
+    padding: 12px;
+
+    font: 18px "Segoe UI";
+}
+
+/* Dialog add user button */
+#menuButton * {
+    color: #067eea;
+}
+
+#menuButton:checked * {
+    color: yellow;
+}
+
+#menuButton:hover * {
+    text-shadow: none;
+}
+
+*:selected {
+    background: darkslategrey;
+    border-radius: 5px;
+}

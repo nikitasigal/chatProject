@@ -267,12 +267,8 @@ void clientRequestReceiving(void *clientSocket) {
                     break;
                 }
 
-                // TODO - Proceed with logic from .txt file
-
                 result.request = DIALOG_ADD_USER;
-                //result.ID = userInfo->ID;
                 result.isSupposedToOpen = -1;
-                //strcpy(result.name, userInfo->username);
                 result.isGroup = TRUE;
                 SOCKET current;
 
@@ -286,7 +282,6 @@ void clientRequestReceiving(void *clientSocket) {
                     }
                 }
                 result.isSupposedToOpen = 0;
-                //result.ID = userInfo->ID;
                 strcpy(result.name, userInfo->username);
 
                 for (int i = 0; i < result.userCount; i++) {

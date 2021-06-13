@@ -9,9 +9,11 @@
         <property name="visible">True</property>
         <property name="can-focus">True</property>
         <property name="receives-default">True</property>
+        <property name="tooltip-text" translatable="yes">Нажмите Enter, чтобы подтвердить запрос</property>
         <property name="max-length">16</property>
         <property name="text" translatable="yes">Логин друга...</property>
         <property name="xalign">0.5</property>
+        <property name="primary-icon-tooltip-text" translatable="yes">Нажмите Enter, чтобы подтвердить запрос</property>
       </object>
     </child>
   </object>
@@ -38,6 +40,11 @@
               <object class="GtkImage">
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
+                <property name="tooltip-text" translatable="yes">Разработчики:
+Никита Сигал
+Костя Румянцев
+Размик Алексанян
+Юля Лапшина</property>
                 <property name="halign">center</property>
                 <property name="margin-start">30</property>
                 <property name="pixbuf">..\Images\logo110x62.png</property>
@@ -70,7 +77,8 @@
                 <property name="name">currentUserLabel</property>
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
-                <property name="halign">end</property>
+                <property name="halign">center</property>
+                <property name="valign">center</property>
                 <property name="margin-end">30</property>
                 <property name="justify">center</property>
               </object>
@@ -96,6 +104,7 @@
               <object class="GtkBox">
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
+                <property name="margin-top">8</property>
                 <property name="orientation">vertical</property>
                 <child>
                   <object class="GtkButtonBox">
@@ -321,6 +330,7 @@
                     </child>
                     <child>
                       <object class="GtkMenuButton" id="menuButton">
+                        <property name="name">menuButton</property>
                         <property name="visible">True</property>
                         <property name="can-focus">True</property>
                         <property name="focus-on-click">False</property>
@@ -821,9 +831,9 @@
                     <property name="margin-bottom">8</property>
                     <property name="vexpand">True</property>
                     <property name="max-length">16</property>
-                    <property name="secondary-icon-name">face-smile-symbolic</property>
-                    <property name="secondary-icon-tooltip-text" translatable="yes">Вставить Emoji</property>
-                    <property name="secondary-icon-tooltip-markup" translatable="yes">Вставить Emoji</property>
+                    <property name="xalign">0.5</property>
+                    <property name="placeholder-text" translatable="yes">Введите логин пользователя...</property>
+                    <property name="input-hints">GTK_INPUT_HINT_NO_EMOJI | GTK_INPUT_HINT_NONE</property>
                   </object>
                   <packing>
                     <property name="expand">True</property>
