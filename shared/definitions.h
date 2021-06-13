@@ -60,12 +60,15 @@ typedef enum {
     POPUP_LABEL,
     DIALOG_MENU,
     SELECTED_ROW,
-    DIALOG_NAME_LABEL
+    DIALOG_NAME_LABEL,
+    DIALOG_TASK_BAR,
+    MENU_BUTTON,
+    DIALOG_ADDITIONAL_LABEL
 } AddServerDataType;
 
 typedef struct {
     int ID;
-    char name[NAME_SIZE];
+    char name[DIALOG_SIZE];
     GtkListBox *userList;
     GtkListBox *msgList;
     char isOpened;

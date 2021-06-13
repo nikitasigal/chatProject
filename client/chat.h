@@ -13,4 +13,6 @@ G_MODULE_EXPORT void processMsgMenu(GtkWidget *widget, GdkEvent *event, GtkMenu 
 
 G_MODULE_EXPORT void sendMessage(GtkWidget *button, GList *data);
 
+void dialogAddUser(GtkEntry *entry, GList *additionalInfo);
+
 #endif //TESTGTK_CHAT_H

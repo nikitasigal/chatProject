@@ -51,12 +51,12 @@ void createDialog(GtkButton *button, GList *additionalInfo) {
     // Проверим, не пустое ли поле имени диалога
     if (strlen(gtk_entry_get_text(createDialogEntry)) == 0) {
         printf("WARNING, file - 'messages.c', foo - 'createDialog': Dialog entry is empty.\n");
-        popupNotification("Dialog name can't be empty.", g_list_nth_data(additionalInfo, POPUP_LABEL));
+        popupNotification("Dialog name can't be empty.");
         return;
     }
 
     // Заполним инфу о диалоге со стороны клиента
-    char dialogName[NAME_SIZE] = {0};
+    char dialogName[DIALOG_SIZE] = {0};
     strcpy(dialogName, gtk_entry_get_text(createDialogEntry));
     FullDialogInfo dialogInfo = {-1};
     dialogInfo.isGroup = TRUE;
@@ -114,6 +114,9 @@ void openDialog(GtkWidget *button, GList *data) {
     GtkWidget *dialogUsersViewport = g_list_nth_data(additionalInfo, DIALOG_USERS_VIEWPORT);
     GtkWidget *dialogUsersScrolledWindow = g_list_nth_data(additionalInfo, DIALOG_USERS_SCROLLED_WINDOW);
     GtkWidget *dialogNameLabel = g_list_nth_data(additionalInfo, DIALOG_NAME_LABEL);
+    GtkWidget *dialogTaskBar = g_list_nth_data(additionalInfo, DIALOG_TASK_BAR);
+    GtkWidget *menuButton = g_list_nth_data(additionalInfo, MENU_BUTTON);
+    GtkWidget *dialogAdditionalLabel = g_list_nth_data(additionalInfo, DIALOG_ADDITIONAL_LABEL);
 
     // Step 0.0
     gtk_label_set_text(GTK_LABEL(dialogNameLabel), newDialog->name);
@@ -146,9 +149,19 @@ void openDialog(GtkWidget *button, GList *data) {
     gtk_widget_show_all(dialogViewport);
     gtk_widget_show(chatEntry);
     gtk_widget_show(chatButton);
-    gtk_widget_show(dialogNameLabel);
-    if (button != NULL && newDialog->isGroup)
+    gtk_widget_show_all(dialogTaskBar);
+    if (button != NULL && newDialog->isGroup) {
+        gtk_widget_set_margin_start(dialogNameLabel, 95);
         gtk_widget_show_all(dialogUsersScrolledWindow);
+        gtk_widget_show_all(menuButton);
+        gtk_widget_show(dialogAdditionalLabel);
+    }
+
+    if (button != NULL && !newDialog->isGroup) {
+        gtk_widget_set_margin_start(dialogNameLabel, 0);
+        gtk_widget_hide(menuButton);
+        gtk_widget_hide(dialogAdditionalLabel);
+    }
 
     gtk_widget_grab_focus(chatEntry);
 

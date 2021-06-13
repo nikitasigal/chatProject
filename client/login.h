@@ -3,7 +3,7 @@
 
 #include "../shared/definitions.h"
 
-void popupNotification(char *string, GtkWidget *popupLabel);
+void popupNotification(char *string);
 
 void registrationButtonClicked(GtkWidget *button, GList *additionalInfo);
 
