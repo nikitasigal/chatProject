@@ -273,18 +273,24 @@ void clientRequestReceiving(void *clientSocket) {
                 //result.ID = userInfo->ID;
                 result.isSupposedToOpen = -1;
                 //strcpy(result.name, userInfo->username);
+                SOCKET current;
 
-                int bytesSent = send(socket, (void *) &result, sizeof(FullDialogInfo), 0);
-                if (bytesSent < 0)
-                    g_warning("Thread %3d : Socket sent < 0 bytes", socket);
-
+                for (int i = 0; i < connectionSize; i++) {
+                    if (connection[i].usID == result.ID && connection[i].usSocket != 0) {
+                        current = connection[i].usSocket;
+                        int bytesSent = send(connection[i].usSocket, (void *) &result, sizeof(FullDialogInfo), 0);
+                        if (bytesSent < 0)
+                            g_warning("Thread %3d : Socket sent < 0 bytes", connection[i].usSocket);
+                        break;
+                    }
+                }
                 result.isSupposedToOpen = 0;
                 //result.ID = userInfo->ID;
                 strcpy(result.name, userInfo->username);
 
                 for (int i = 0; i < result.userCount; i++) {
                     for (int j = 0; j < connectionSize; j++) {
-                        if (result.userList[i].ID == connection[j].usID && connection[j].usSocket != 0 && connection[j].usSocket != socket) {
+                        if (result.userList[i].ID == connection[j].usID && connection[j].usSocket != 0 && connection[j].usSocket != current) {
                             int bytesSent = send(connection[j].usSocket, (void *) &result, sizeof(FullDialogInfo), 0);
                             if (bytesSent < 0)
                                 g_warning("Thread %3d : Socket sent < 0 bytes", connection[j].usSocket);
