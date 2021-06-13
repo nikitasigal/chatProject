@@ -19,7 +19,7 @@
 #define DEFAULT_PORT "27015"
 
 typedef enum {
-    REGISTRATION = 1,
+    REGISTRATION,
     AUTHORIZATION,
     CREATE_DIALOG,
     SEND_MESSAGE,

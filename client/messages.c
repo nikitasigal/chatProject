@@ -167,7 +167,7 @@ void openDialog(GtkWidget *button, GList *data) {
 
     // Отправим запрос на подгрузку сообщений
     if (!newDialog->isOpened) {
-        //newDialog->isOpened = TRUE;
+        newDialog->isOpened = TRUE;
         FullDialogInfo dialogInfo;
         dialogInfo.ID = newDialog->ID;
         SOCKET *serverDescriptor = g_list_nth_data(additionalInfo, SERVER_SOCKET);
