@@ -458,6 +458,7 @@ gboolean serverRequest_DialogAddUser(void *data[2]) {
         Dialog *currentDialog = temp->data;
         if (currentDialog->ID == dialogInfo->ID) {
             gtk_list_box_insert(currentDialog->userList, gtk_label_new(dialogInfo->dialogName), -1);
+            gtk_widget_show_all(GTK_WIDGET(currentDialog->userList));
             break;
         }
 

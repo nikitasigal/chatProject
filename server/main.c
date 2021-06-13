@@ -157,7 +157,7 @@ void clientRequestReceiving(void *clientSocket) {
                 FullUserInfo user2 = {0, 1, "Aba", "baba", "abababa", "additionalInfo2"};
 
                 // Test
-                FullDialogInfo dialogInfo = {DIALOG_ADD_USER, 4, "abc", {user1, user2}, 2, TRUE, -1};
+                FullDialogInfo dialogInfo = {DIALOG_ADD_USER, 4, "abc", {user1, user2}, 2, TRUE, 0};
 
                 int bytesSent = send(socket, (void *) &dialogInfo, sizeof(FullDialogInfo), 0);
                 if (bytesSent < 0)
