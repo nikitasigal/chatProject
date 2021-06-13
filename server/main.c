@@ -231,9 +231,17 @@ void clientRequestReceiving(void *clientSocket) {
                 // TODO - Proceed with logic from .txt file
                 // Send back to all users in dialogInfo->userList
 
-                int bytesSent = send(socket, (void *) userInfo, sizeof(FullUserInfo), 0);
-                if (bytesSent < 0)
-                    g_warning("Thread %3d : Socket sent < 0 bytes", socket);
+                for (int i = 0; i < dialogInfo.userCount; i++) {
+                    for (int j = 0; j < connectionSize; j++) {
+                        if (dialogInfo.userList[i].ID == connection[j].usID && connection[j].usSocket != 0) {
+
+                            int bytesSent = send(connection[j].usSocket, (void *) userInfo, sizeof(FullUserInfo), 0);
+                            if (bytesSent < 0)
+                                g_warning("Thread %3d : Socket sent < 0 bytes", connection[j].usSocket);
+                        }
+                    }
+                }
+
                 break;
             }
             case LOAD_MESSAGES: {
@@ -266,10 +274,17 @@ void clientRequestReceiving(void *clientSocket) {
                 result.ID = userInfo->ID;
                 result.isSupposedToOpen = 0;
                 strcpy(result.name, userInfo->username);
-                int bytesSent = send(socket, (void *) &result, sizeof(FullDialogInfo), 0);
-                if (bytesSent < 0)
-                    g_warning("Thread %3d : Socket sent < 0 bytes", socket);
-                break;
+
+                for (int i = 0; i < result.userCount; i++) {
+                    for (int j = 0; j < connectionSize; j++) {
+                        if (result.userList[i].ID == connection[j].usID && connection[j].usSocket != 0) {
+                            int bytesSent = send(connection[j].usSocket, (void *) &result, sizeof(FullDialogInfo), 0);
+                            if (bytesSent < 0)
+                                g_warning("Thread %3d : Socket sent < 0 bytes", connection[j].usSocket);
+                            break;
+                        }
+                    }
+                }
             }
             default:
                 g_critical("Thread %3d : Request '%d' is not defined", socket, *request);
