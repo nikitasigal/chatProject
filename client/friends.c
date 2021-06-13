@@ -59,6 +59,7 @@ void acceptFriendRequest(GtkWidget *button, GList *additionalInfo) {
 
     // Delete request on interface
     GtkWidget *requestBox = gtk_widget_get_parent(gtk_widget_get_parent(button));
+    strcpy(currentUser->additionalInfo, gtk_label_get_text(g_list_nth_data(gtk_container_get_children(GTK_CONTAINER(requestBox)), 0)));
     gtk_widget_destroy(requestBox);
 
     clientRequest_FriendRequestAccepted(*serverDescriptor, *currentUser);
@@ -70,6 +71,7 @@ void declineFriendRequest(GtkWidget *button, GList *additionalInfo) {
 
     // Delete request on interface
     GtkWidget *requestBox = gtk_widget_get_parent(gtk_widget_get_parent(button));
+    strcpy(currentUser->additionalInfo, gtk_label_get_text(g_list_nth_data(gtk_container_get_children(GTK_CONTAINER(requestBox)), 0)));
     gtk_widget_destroy(requestBox);
 
     clientRequest_FriendRequestDeclined(*serverDescriptor, *currentUser);
