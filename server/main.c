@@ -273,10 +273,11 @@ void clientRequestReceiving(void *clientSocket) {
                 //result.ID = userInfo->ID;
                 result.isSupposedToOpen = -1;
                 //strcpy(result.name, userInfo->username);
+                result.isGroup = TRUE;
                 SOCKET current;
 
                 for (int i = 0; i < connectionSize; i++) {
-                    if (connection[i].usID == result.ID && connection[i].usSocket != 0) {
+                    if (connection[i].usID == userInfo->ID && connection[i].usSocket != 0) {
                         current = connection[i].usSocket;
                         int bytesSent = send(connection[i].usSocket, (void *) &result, sizeof(FullDialogInfo), 0);
                         if (bytesSent < 0)
