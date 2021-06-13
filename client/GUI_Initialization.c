@@ -45,6 +45,7 @@ void GUIInit(SOCKET *serverSocket) {
     GtkWidget *dialogTaskBar = GTK_WIDGET(gtk_builder_get_object(builder, "dialogTaskBar"));
     GtkWidget *dialogAdditionalLabel = GTK_WIDGET(gtk_builder_get_object(builder, "dialogAdditionalLabel"));
     GtkWidget *dialogAddUserEntry = GTK_WIDGET(gtk_builder_get_object(builder, "dialogAddUserEntry"));
+    GtkWidget *currentUserLabel = GTK_WIDGET(gtk_builder_get_object(builder, "currentUserLabel"));
 
     // Dialog menu button
     GtkWidget *menuButtonLabel = gtk_label_new("пригласить");
@@ -134,6 +135,7 @@ void GUIInit(SOCKET *serverSocket) {
     additionalInfo = g_list_append(additionalInfo, dialogTaskBar);
     additionalInfo = g_list_append(additionalInfo, menuButton);
     additionalInfo = g_list_append(additionalInfo, dialogAdditionalLabel);
+    additionalInfo = g_list_append(additionalInfo, currentUserLabel);
 
     // CSS
     GdkScreen *screen = gdk_screen_get_default();

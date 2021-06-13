@@ -15,7 +15,7 @@
 #define AUTH_MAX_FRIENDS 100
 #define AUTH_MAX_REQUESTS 100
 
-#define DEFAULT_SERVER_IP "25.48.127.168"
+#define DEFAULT_SERVER_IP "127.0.0.1"
 #define DEFAULT_PORT "27015"
 
 typedef enum {
@@ -63,7 +63,8 @@ typedef enum {
     DIALOG_NAME_LABEL,
     DIALOG_TASK_BAR,
     MENU_BUTTON,
-    DIALOG_ADDITIONAL_LABEL
+    DIALOG_ADDITIONAL_LABEL,
+    CURRENT_USER_LABEL
 } AddServerDataType;
 
 typedef struct {

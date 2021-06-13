@@ -8,6 +8,10 @@ gboolean serverRequest_Registration(void **specialAdditionalServerData) {
     // Распакуем полученную информацию
     FullUserInfo *userInfo = specialAdditionalServerData[0];
     GList *additionalServerData = specialAdditionalServerData[1];
+    GtkWidget *currentUserLabel = g_list_nth_data(additionalServerData, CURRENT_USER_LABEL);
+
+    // Положим в лейбл ник пользователя
+    gtk_label_set_text(GTK_LABEL(currentUserLabel), userInfo->username);
 
     // Если мы получили user chatID == -1, то логин уже используется
     if (userInfo->ID == -1) {
@@ -31,6 +35,10 @@ gboolean serverRequest_Authorization(void **specialAdditionalServerData) {
     // Распакуем полученную информацию
     AuthorizationPackage *startPackage = specialAdditionalServerData[0];
     GList *additionalServerData = specialAdditionalServerData[1];
+    GtkWidget *currentUserLabel = g_list_nth_data(additionalServerData, CURRENT_USER_LABEL);
+
+    // Положим в лейбл ник пользователя
+    gtk_label_set_text(GTK_LABEL(currentUserLabel), startPackage->authorizedUser.username);
 
     FullUserInfo *userInfo = g_malloc(sizeof(FullUserInfo));
     userInfo->request = AUTHORIZATION;

@@ -5,10 +5,11 @@
   <object class="GtkPopover" id="dialogAddUserPopover">
     <property name="can-focus">False</property>
     <child>
-      <object class="GtkEntry">
+      <object class="GtkEntry" id="dialogAddUserEntry">
         <property name="visible">True</property>
         <property name="can-focus">True</property>
         <property name="receives-default">True</property>
+        <property name="max-length">16</property>
         <property name="text" translatable="yes">Логин друга...</property>
         <property name="xalign">0.5</property>
       </object>
@@ -16,6 +17,7 @@
   </object>
   <object class="GtkWindow" id="mainWindow">
     <property name="can-focus">False</property>
+    <property name="title" translatable="yes">VBonkgram</property>
     <property name="window-position">center</property>
     <property name="default-width">1200</property>
     <property name="default-height">900</property>
@@ -31,6 +33,7 @@
             <property name="height-request">62</property>
             <property name="visible">True</property>
             <property name="can-focus">False</property>
+            <property name="homogeneous">True</property>
             <child>
               <object class="GtkImage">
                 <property name="visible">True</property>
@@ -52,14 +55,29 @@
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
                 <property name="halign">center</property>
-                <property name="margin-end">126</property>
                 <property name="hexpand">True</property>
                 <property name="label" translatable="yes">VBonkgram</property>
+                <property name="justify">center</property>
+              </object>
+              <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="halign">end</property>
+                <property name="margin-end">30</property>
+                <property name="label" translatable="yes">asdfasdfasdfasdf</property>
+                <property name="justify">center</property>
               </object>
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">True</property>
-                <property name="position">1</property>
+                <property name="position">2</property>
               </packing>
             </child>
           </object>
@@ -909,6 +927,7 @@
   <object class="GtkWindow" id="registrationWindow">
     <property name="name">registrationWindow</property>
     <property name="can-focus">False</property>
+    <property name="title" translatable="yes">VBonkgram</property>
     <property name="resizable">False</property>
     <property name="window-position">center</property>
     <property name="default-width">280</property>

@@ -7,7 +7,7 @@ void sqlRegister(sqlite3 *conn, FullUserInfo *user) {
     sqlite3_stmt *stmt;
 
     //Query 1 - Try to insert new user
-    sprintf(query, "INSERT INTO userList (username, password, first_name, second_name) \n"
+    sprintf(query, "INSERT INTO users (username, password, first_name, second_name) \n"
                    "VALUES ('%s','%s','%s','%s')", user->username, user->password, user->firstName, user->lastName);
     sqlite3_prepare_v2(conn, query, (int) strlen(query), &stmt, NULL);
     result = sqlite3_step(stmt);
@@ -21,7 +21,7 @@ void sqlRegister(sqlite3 *conn, FullUserInfo *user) {
 
     //Query 2 - Return chatID of this user
     sprintf(query, "SELECT id\n"
-                   "FROM userList\n"
+                   "FROM users\n"
                    "WHERE username = '%s'", user->username);
     sqlite3_prepare_v2(conn, query, (int) strlen(query), &stmt, NULL);
     result = sqlite3_step(stmt);
@@ -41,9 +41,9 @@ void getChatMembers(sqlite3 *conn, FullUserInfo memberList[30], short *memberCou
     sqlite3_stmt *stmt;
 
     //Select all userList that are in this chat
-    sprintf(query, "SELECT userList.id, username, first_name, second_name\n"
-                   "FROM userList\n"
-                   "JOIN chats_to_users ctu on userList.id = ctu.user_id\n"
+    sprintf(query, "SELECT users.id, username, first_name, second_name\n"
+                   "FROM users\n"
+                   "JOIN chats_to_users ctu on users.id = ctu.user_id\n"
                    "JOIN chats c on c.id = ctu.chat_id\n"
                    "WHERE c.id = %d", chatID);
     sqlite3_prepare_v2(conn, query, (int) strlen(query), &stmt, NULL);
@@ -66,7 +66,7 @@ void sqlAuthorize(sqlite3 *conn, FullUserInfo *user, AuthorizationPackage *auPac
 
     //Query 1 - Check user credentials
     sprintf(query, "SELECT id, username, password, first_name, second_name\n"
-                   "FROM userList\n"
+                   "FROM users\n"
                    "WHERE username = '%s'", user->username);
     sqlite3_prepare_v2(conn, query, (int) strlen(query), &stmt, NULL);
     result = sqlite3_step(stmt);
@@ -95,7 +95,7 @@ void sqlAuthorize(sqlite3 *conn, FullUserInfo *user, AuthorizationPackage *auPac
     sprintf(query, "SELECT chats.id, chats.name, chats.is_group\n"
                    "FROM chats\n"
                    "JOIN chats_to_users ctu on chats.id = ctu.chat_id\n"
-                   "JOIN userList u on ctu.user_id = u.id\n"
+                   "JOIN users u on ctu.user_id = u.id\n"
                    "WHERE u.id = %d", auPackage->authorizedUser.ID);
     sqlite3_prepare_v2(conn, query, (int) strlen(query), &stmt, NULL);
     auPackage->dialogCount = 0;
@@ -118,8 +118,8 @@ void sqlAuthorize(sqlite3 *conn, FullUserInfo *user, AuthorizationPackage *auPac
 
     //Query 3 - extract friends
     sprintf(query, "SELECT id, username, first_name, second_name\n"
-                   "FROM userList\n"
-                   "JOIN friend_list fl on userList.id = fl.user_id\n"
+                   "FROM users\n"
+                   "JOIN friend_list fl on users.id = fl.user_id\n"
                    "WHERE fl.friend_id = %d", auPackage->authorizedUser.ID);
     sqlite3_prepare_v2(conn, query, (int) strlen(query), &stmt, NULL);
     auPackage->friendCount = 0;
@@ -138,8 +138,8 @@ void sqlAuthorize(sqlite3 *conn, FullUserInfo *user, AuthorizationPackage *auPac
 
     //Query 4 - extract friend requests
     sprintf(query, "SELECT id, username, first_name, second_name\n"
-                   "FROM userList\n"
-                   "JOIN friend_requests fr on userList.id = fr.user_id\n"
+                   "FROM users\n"
+                   "JOIN friend_requests fr on users.id = fr.user_id\n"
                    "WHERE fr.requested_id = %d", auPackage->authorizedUser.ID);
     sqlite3_prepare_v2(conn, query, (int) strlen(query), &stmt, NULL);
     auPackage->requestCount = 0;
