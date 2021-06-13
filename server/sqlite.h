@@ -12,7 +12,7 @@ void sqlAuthorize(sqlite3 *conn, FullUserInfo *user, AuthorizationPackage *packa
 
 void sqlCreateDialog(sqlite3 *conn, FullDialogInfo *dialog);
 
-void sqlSendMessage(sqlite3 *conn, FullMessageInfo *message, int sendbackList[30], int *sendbackCount);
+void sqlSendMessage(sqlite3 *conn, FullMessageInfo *message, FullDialogInfo *dialog);
 
 void sqlSendFriendRequest(sqlite3 *conn, FullUserInfo *user, int *friendID);
 
@@ -22,7 +22,9 @@ void sqlDeclineFriendRequest(sqlite3 *conn, FullUserInfo *user);
 
 void sqlRemoveFriend(sqlite3 *conn, FullUserInfo *user, int *friendID);
 
-void sqlLeaveDialog(sqlite3 *conn, FullUserInfo *user);
+void sqlLeaveDialog(sqlite3 *conn, FullUserInfo *leaveRequest, FullDialogInfo *dialog);
+
+void sqlJoinDialog(sqlite3 *conn, FullUserInfo *addRequest, FullDialogInfo* dialog);
 
 void sqlLoadMessages(sqlite3 *conn, FullDialogInfo *dialog, MessagesPackage *package);
 

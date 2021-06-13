@@ -50,7 +50,6 @@ void clientRequestReceiving(void *clientSocket) {
                 int bytesSent = send(socket, (void *) &authPackage, sizeof(AuthorizationPackage), 0);
                 if (bytesSent < 0)
                     g_warning("Thread %3d : Socket sent < 0 bytes", socket);
-
                 break;
             }
             case CREATE_DIALOG: {
@@ -67,26 +66,23 @@ void clientRequestReceiving(void *clientSocket) {
                 int bytesSent = send(socket, (void *) dialogInfo, sizeof(FullDialogInfo), 0);
                 if (bytesSent < 0)
                     g_warning("Thread %3d : Socket sent < 0 bytes", socket);
-
                 break;
             }
             case SEND_MESSAGE: {
                 g_message("Thread %3d : Processing new message ...", socket);
                 FullMessageInfo *messageInfo = userData;
 
-                int membersCount;
-                int membersList[MAX_NUMBER_OF_USERS] = {0};
-                sqlSendMessage(sqliteConn, messageInfo, membersList, &membersCount);
+                FullDialogInfo dialogInfo;
+                sqlSendMessage(sqliteConn, messageInfo, &dialogInfo);
                 if (messageInfo->chatID == -1) {
                     // error
                     break;
                 }
 
-                // TODO - Send messageInfo to all users in membersList
+                // TODO - Send messageInfo to all users in dialogInfo.userList
                 int bytesSent = send(socket, (void *) messageInfo, sizeof(FullMessageInfo), 0);
                 if (bytesSent < 0)
                     g_warning("Thread %3d : Socket sent < 0 bytes", socket);
-
                 break;
             }
             case SEND_FRIEND_REQUEST: {
@@ -105,7 +101,6 @@ void clientRequestReceiving(void *clientSocket) {
                 int bytesSent = send(socket, (void *) userInfo, sizeof(FullUserInfo), 0);
                 if (bytesSent < 0)
                     g_warning("Thread %3d : Socket sent < 0 bytes", socket);
-
                 break;
             }
             case FRIEND_REQUEST_ACCEPTED: {
@@ -125,7 +120,6 @@ void clientRequestReceiving(void *clientSocket) {
                 int bytesSent = send(socket, (void *) &sender, sizeof(FullUserInfo), 0);
                 if (bytesSent < 0)
                     g_warning("Thread %3d : Socket sent < 0 bytes", socket);
-
                 break;
             }
             case FRIEND_REQUEST_DECLINED: {
@@ -155,25 +149,25 @@ void clientRequestReceiving(void *clientSocket) {
                 int bytesSent = send(socket, (void *) userInfo, sizeof(FullUserInfo), 0);
                 if (bytesSent < 0)
                     g_warning("Thread %3d : Socket sent < 0 bytes", socket);
-
                 break;
             }
             case LEAVE_DIALOG: {
                 g_message("Thread %3d : Leaving dialog ...", socket);
                 FullUserInfo *userInfo = userData;
 
-                sqlLeaveDialog(sqliteConn, userInfo);
+                FullDialogInfo dialogInfo;
+                sqlLeaveDialog(sqliteConn, userInfo, &dialogInfo);
                 if (userInfo->ID == -1) {
                     // error
                     break;
                 }
 
                 // TODO - Proceed with logic from .txt file
+                // Send back to all users in dialogInfo->userList
 
                 int bytesSent = send(socket, (void *) userInfo, sizeof(FullUserInfo), 0);
                 if (bytesSent < 0)
                     g_warning("Thread %3d : Socket sent < 0 bytes", socket);
-
                 break;
             }
             case LOAD_MESSAGES: {
@@ -189,6 +183,29 @@ void clientRequestReceiving(void *clientSocket) {
                 int bytesSent = send(socket, (void *) &msgPackage, sizeof(MessagesPackage), 0);
                 if (bytesSent < 0)
                     g_warning("Thread %3d : Socket sent < 0 bytes", socket);
+                break;
+            }
+            case DIALOG_ADD_USER:{
+                g_message("Thread %3d : Adding user to dialog ...", socket);
+                FullUserInfo *userInfo = userData;
+
+                FullDialogInfo result;
+                sqlJoinDialog(sqliteConn, userInfo, &result);
+                if(userInfo->ID < 0){
+                    // error
+                    break;
+                }
+
+                // TODO - Proceed with logic from .txt file
+
+                result.request = DIALOG_ADD_USER;
+                result.ID = userInfo->ID;
+                result.isSupposedToOpen = 0;
+                strcpy(result.name, userInfo->username);
+                int bytesSent = send(socket, (void *) &result, sizeof(FullDialogInfo), 0);
+                if (bytesSent < 0)
+                    g_warning("Thread %3d : Socket sent < 0 bytes", socket);
+                break;
             }
             default:
                 g_critical("Thread %3d : Request '%d' is not defined", socket, *request);

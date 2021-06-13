@@ -2,6 +2,29 @@
 #include <gtk/gtk.h>
 #include "sqlite.h"
 
+void getChatMembers(sqlite3 *conn, FullUserInfo memberList[MAX_NUMBER_OF_USERS], short *memberCount, int chatID) {
+    char query[QUERY_SIZE] = {0};
+    sqlite3_stmt *stmt;
+
+    //Select all users that are in this chat
+    sprintf(query, "SELECT users.id, username, first_name, second_name\n"
+                   "FROM users\n"
+                   "JOIN chats_to_users ctu on users.id == ctu.user_id\n"
+                   "JOIN chats c on c.id == ctu.chat_id\n"
+                   "WHERE c.id == '%d'", chatID);
+    sqlite3_prepare_v2(conn, query, (int) strlen(query), &stmt, NULL);
+    *memberCount = 0;
+    while (sqlite3_step(stmt) == SQLITE_ROW) {
+        memberList[*memberCount].ID = sqlite3_column_int(stmt, 0);
+        strcpy(memberList[*memberCount].username, (const char *) sqlite3_column_text(stmt, 1));
+        strcpy(memberList[*memberCount].password, "***");
+        strcpy(memberList[*memberCount].firstName, (const char *) sqlite3_column_text(stmt, 2));
+        strcpy(memberList[*memberCount].lastName, (const char *) sqlite3_column_text(stmt, 3));
+        (*memberCount)++;
+    }
+    sqlite3_finalize(stmt);
+}
+
 void sqlRegister(sqlite3 *conn, FullUserInfo *user) {
     char query[QUERY_SIZE] = {0};
     sqlite3_stmt *stmt;
@@ -33,29 +56,6 @@ void sqlRegister(sqlite3 *conn, FullUserInfo *user) {
     memset(query, 0, QUERY_SIZE);
 }
 
-void getChatMembers(sqlite3 *conn, FullUserInfo memberList[MAX_NUMBER_OF_USERS], short *memberCount, int chatID) {
-    char query[QUERY_SIZE] = {0};
-    sqlite3_stmt *stmt;
-
-    //Select all users that are in this chat
-    sprintf(query, "SELECT users.id, username, first_name, second_name\n"
-                   "FROM users\n"
-                   "JOIN chats_to_users ctu on users.id == ctu.user_id\n"
-                   "JOIN chats c on c.id == ctu.chat_id\n"
-                   "WHERE c.id == '%d'", chatID);
-    sqlite3_prepare_v2(conn, query, (int) strlen(query), &stmt, NULL);
-    *memberCount = 0;
-    while (sqlite3_step(stmt) == SQLITE_ROW) {
-        memberList[*memberCount].ID = sqlite3_column_int(stmt, 0);
-        strcpy(memberList[*memberCount].username, (const char *) sqlite3_column_text(stmt, 1));
-        strcpy(memberList[*memberCount].password, "***");
-        strcpy(memberList[*memberCount].firstName, (const char *) sqlite3_column_text(stmt, 2));
-        strcpy(memberList[*memberCount].lastName, (const char *) sqlite3_column_text(stmt, 3));
-        (*memberCount)++;
-    }
-    sqlite3_finalize(stmt);
-}
-
 void sqlAuthorize(sqlite3 *conn, FullUserInfo *user, AuthorizationPackage *package) {
     char query[QUERY_SIZE] = {0};
     sqlite3_stmt *stmt;
@@ -83,8 +83,6 @@ void sqlAuthorize(sqlite3 *conn, FullUserInfo *user, AuthorizationPackage *packa
     strcpy(package->authorizedUser.lastName, (const char *) sqlite3_column_text(stmt, 4));
     sqlite3_finalize(stmt);
     memset(query, 0, QUERY_SIZE);
-
-
 
     //Query 2 - extract dialogs
     sprintf(query, "SELECT chats.id, name, is_group\n"
@@ -204,12 +202,10 @@ void sqlCreateDialog(sqlite3 *conn, FullDialogInfo *dialog) {
     }
 }
 
-void
-sqlSendMessage(sqlite3 *conn, FullMessageInfo *message, int sendbackList[MAX_NUMBER_OF_USERS], int *sendbackCount) {
+void sqlSendMessage(sqlite3 *conn, FullMessageInfo *message, FullDialogInfo *dialog) {
     char query[QUERY_SIZE] = {0};
     sqlite3_stmt *stmt;
     char *timestamp = g_date_time_format(g_date_time_new_now_local(), "%H:%M:%S, %d %b %Y, %a");
-
 
     //Query 1 - Find sender's chatID in 'userList' table
     sprintf(query, "SELECT id\n"
@@ -225,33 +221,21 @@ sqlSendMessage(sqlite3 *conn, FullMessageInfo *message, int sendbackList[MAX_NUM
     sqlite3_finalize(stmt);
     memset(query, 0, QUERY_SIZE);
 
-
-
     //Query 2 - Create new entry in 'messages' table
     strcpy(message->timestamp, timestamp);
     sprintf(query, "INSERT INTO messages (user_id, chat_id, time, text)\n"
                    "VALUES ('%d', '%d', '%s', '%s')", senderID, message->chatID, message->timestamp, message->text);
     sqlite3_prepare_v2(conn, query, (int) strlen(query), &stmt, NULL);
     if (sqlite3_step(stmt) != SQLITE_DONE) {
-        g_critical("sqlSendMessage(): Message insertion failed");
+        g_critical("sqlSendMessage(): Insertion failed");
         message->chatID = -1;
         return;
     }
     sqlite3_finalize(stmt);
     memset(query, 0, QUERY_SIZE);
 
-
-
-    //Query 3 - extract sendback chatID's
-    sprintf(query, "SELECT user_id\n"
-                   "FROM chats_to_users\n"
-                   "WHERE chat_id == '%d'", message->chatID);
-    sqlite3_prepare_v2(conn, query, (int) strlen(query), &stmt, NULL);
-    *sendbackCount = 0;
-    while (sqlite3_step(stmt) == SQLITE_ROW)
-        sendbackList[(*sendbackCount)++] = sqlite3_column_int(stmt, 0);
-    sqlite3_finalize(stmt);
-    memset(query, 0, QUERY_SIZE);
+    //Query 3 - Get ID's of chat members
+    getChatMembers(conn, dialog->userList, &(dialog->userCount), message->chatID);
 }
 
 void sqlSendFriendRequest(sqlite3 *conn, FullUserInfo *user, int *friendID) {
@@ -437,18 +421,71 @@ void sqlRemoveFriend(sqlite3 *conn, FullUserInfo *user, int *friendID) {
     memset(query, 0, QUERY_SIZE);
 }
 
-void sqlLeaveDialog(sqlite3 *conn, FullUserInfo *user) {
+void sqlLeaveDialog(sqlite3 *conn, FullUserInfo *leaveRequest, FullDialogInfo *dialog) {
     char query[QUERY_SIZE] = {0};
     sqlite3_stmt *stmt;
 
+    // Query 1 - Leave dialog
     sprintf(query, "DELETE\n"
                    "FROM chats_to_users\n"
                    "WHERE chat_id == '%d'\n"
-                   "  AND user_id == '%s'", user->ID, user->additionalInfo);
+                   "  AND user_id == '%s'", leaveRequest->ID, leaveRequest->additionalInfo);
     sqlite3_prepare_v2(conn, query, (int) strlen(query), &stmt, NULL);
     if (sqlite3_step(stmt) != SQLITE_DONE) {
-        g_warning("sqlLeaveDialog(): User '%s' could not leave dialog '%d'", user->username, user->ID);
-        user->ID = -1;
+        g_warning("sqlLeaveDialog(): User '%s' could not leave dialog '%d'", leaveRequest->username, leaveRequest->ID);
+        leaveRequest->ID = -1;
+        return;
+    }
+    sqlite3_finalize(stmt);
+    memset(query, 0, QUERY_SIZE);
+
+    // Query 2 - Get ID's of chat members
+    getChatMembers(conn, dialog->userList, &(dialog->userCount), leaveRequest->ID);
+}
+
+void sqlJoinDialog(sqlite3 *conn, FullUserInfo *addRequest, FullDialogInfo *dialog) {
+    char query[QUERY_SIZE] = {0};
+    sqlite3_stmt *stmt;
+
+    // Query 1 - Get sender's ID
+    sprintf(query, "SELECT id\n"
+                   "FROM users\n"
+                   "WHERE username == '%s'", addRequest->username);
+    sqlite3_prepare_v2(conn, query, (int) strlen(query), &stmt, NULL);
+    if (sqlite3_step(stmt) != SQLITE_ROW) {
+        g_warning("sqlJoinDialog(): User '%s' not found", addRequest->username);
+        addRequest->ID = -1;
+        return;
+    }
+    int addedID = sqlite3_column_int(stmt, 0);
+    sqlite3_finalize(stmt);
+    memset(query, 0, QUERY_SIZE);
+
+    // Query 2 - Get information about a dialog
+    dialog->ID = addRequest->ID;
+    addRequest->ID = addedID;   // Now addRequest->ID contains ID of added user
+    sprintf(query, "SELECT name, is_group\n"
+                   "FROM chats\n"
+                   "WHERE id == '%d'", dialog->ID);
+    sqlite3_prepare_v2(conn, query, (int) strlen(query), &stmt, NULL);
+    if (sqlite3_step(stmt) != SQLITE_ROW) {
+        g_warning("sqlJoinDialog(): Dialog '%d' not found", dialog->ID);
+        addRequest->ID = -1;
+        return;
+    }
+    strcpy(dialog->name, (const char *) sqlite3_column_text(stmt, 0));
+    dialog->isSupposedToOpen = (char) sqlite3_column_int(stmt, 1);
+    sqlite3_finalize(stmt);
+    memset(query, 0, QUERY_SIZE);
+    getChatMembers(conn, dialog->userList, &(dialog->userCount), dialog->ID);
+
+    // Query 3 - Add addRequest to dialog
+    sprintf(query, "INSERT INTO chats_to_users\n"
+                   "VALUES ('%d', '%d')", dialog->ID, addedID);
+    sqlite3_prepare_v2(conn, query, (int) strlen(query), &stmt, NULL);
+    if (sqlite3_step(stmt) != SQLITE_DONE) {
+        g_warning("sqlJoinDialog(): Insertion failed");
+        addRequest->ID = -1;
         return;
     }
     sqlite3_finalize(stmt);
