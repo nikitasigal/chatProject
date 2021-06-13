@@ -63,7 +63,8 @@ typedef enum {
     DIALOG_NAME_LABEL,
     DIALOG_TASK_BAR,
     MENU_BUTTON,
-    DIALOG_ADDITIONAL_LABEL
+    DIALOG_ADDITIONAL_LABEL,
+    CURRENT_USER_LABEL
 } AddServerDataType;
 
 typedef struct {
