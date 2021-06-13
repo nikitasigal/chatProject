@@ -145,7 +145,7 @@ void removeFriend(GtkMenuItem *menuitem, GList *additionalInfo) {
     // Отправим запрос на сервер
     SOCKET *serverDescriptor = g_list_nth_data(additionalInfo, SERVER_SOCKET);
     FullUserInfo *user = g_list_nth_data(additionalInfo, CURRENT_USER);
-    strcpy(user->additionalInfo, gtk_label_get_text(GTK_LABEL(gtk_bin_get_child(GTK_BIN(gtk_bin_get_child(GTK_BIN(row)))))));
+    strcpy(user->additionalInfo, searchingUser->username);
 
     g_list_free(rows);
 
