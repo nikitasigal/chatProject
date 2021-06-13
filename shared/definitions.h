@@ -11,12 +11,15 @@
 #define MAX_NUMBER_OF_USERS 30
 #define MAX_PACKAGE_SIZE 614400 // 600 КБ
 #define LOAD_MESSAGE_COUNT 500
+#define AUTH_MAX_DIALOGS 100
+#define AUTH_MAX_FRIENDS 100
+#define AUTH_MAX_REQUESTS 100
 
-#define DEFAULT_SERVER_IP "127.0.0.1"
+#define DEFAULT_SERVER_IP "25.48.127.168"
 #define DEFAULT_PORT "27015"
 
 typedef enum {
-    REGISTRATION,
+    REGISTRATION = 1,
     AUTHORIZATION,
     CREATE_DIALOG,
     SEND_MESSAGE,
@@ -74,13 +77,19 @@ typedef struct {
 
 typedef struct {
     Request request;
-    int ID; // ID беседы
+    int chatID; // chatID беседы
     char firstName[NAME_SIZE];
     char lastName[NAME_SIZE];
-    char login[NAME_SIZE];
-    char date[DATE_SIZE];
+    char username[NAME_SIZE];
+    char timestamp[DATE_SIZE];
     char text[TEXT_SIZE];
 } FullMessageInfo;
+
+typedef struct {
+    Request request;
+    short messagesCount;
+    FullMessageInfo messagesList[LOAD_MESSAGE_COUNT];
+} MessagesPackage;
 
 typedef struct {
     Request request;
@@ -88,35 +97,29 @@ typedef struct {
     char username[NAME_SIZE];
     char password[NAME_SIZE];
     char firstName[NAME_SIZE];
-    char secondName[NAME_SIZE];
+    char lastName[NAME_SIZE];
     char additionalInfo[NAME_SIZE];
 } FullUserInfo;
 
 typedef struct {
     Request request;
     int ID;
-    char dialogName[DIALOG_SIZE];
-    FullUserInfo users[MAX_NUMBER_OF_USERS];
-    short usersNumber;
+    char name[DIALOG_SIZE];
+    short usersCount;
+    FullUserInfo userList[MAX_NUMBER_OF_USERS];
     char isGroup;
-    char isSupposeToOpen;
+    char isSupposedToOpen;
 } FullDialogInfo;
 
 typedef struct {
     Request request;
     FullUserInfo authorizedUser;
     short dialogCount;
-    FullDialogInfo dialogList[100];
+    FullDialogInfo dialogList[AUTH_MAX_DIALOGS];
     short friendCount;
-    FullUserInfo friends[100];
+    FullUserInfo friends[AUTH_MAX_FRIENDS];
     short requestCount;
-    FullUserInfo requests[100];
+    FullUserInfo requests[AUTH_MAX_REQUESTS];
 } AuthorizationPackage;
-
-typedef struct {
-    Request request;
-    short messagesCount;
-    FullMessageInfo messagesList[LOAD_MESSAGE_COUNT];
-} MessagesPackage;
 
 #endif //CHATPROJECT_DEFINITIONS_H

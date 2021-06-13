@@ -85,7 +85,7 @@ gboolean addFriend(void *data[2]) {
 
     // Добавим в список друзей во вкладке создания диалога и друзей
     GString *fullName = g_string_new("");
-    g_string_append_printf(fullName, "%s %s (%s)", user->firstName, user->secondName, user->username);
+    g_string_append_printf(fullName, "%s %s (%s)", user->firstName, user->lastName, user->username);
     GtkWidget *friendLabel = gtk_label_new(fullName->str);
     gtk_widget_set_size_request(friendLabel, -1, 30);
     GtkWidget *friendLabel2 = gtk_label_new(fullName->str);
@@ -101,7 +101,7 @@ gboolean addFriend(void *data[2]) {
     tempUser->ID = user->ID;
     strcpy(tempUser->username, user->username);
     strcpy(tempUser->firstName, user->firstName);
-    strcpy(tempUser->secondName, user->secondName);
+    strcpy(tempUser->lastName, user->lastName);
     GtkWidget *createDialogEventBox = gtk_event_box_new();
     gtk_list_box_insert(createDialogFriendsListBox, createDialogEventBox, -1);
     gtk_container_add(GTK_CONTAINER(createDialogEventBox), friendLabel2);
@@ -161,7 +161,7 @@ void openPersonalDialog(GtkMenuItem *menuitem, GList *additionalInfo) {
 
     FullUserInfo *currentFriend = g_object_get_data(G_OBJECT(gtk_bin_get_child(GTK_BIN(gtk_bin_get_child(GTK_BIN(row))))), "Data");
     GString *currentUserFullName = g_string_new("");
-    g_string_printf(currentUserFullName, "%s %s (%s)", currentFriend->firstName, currentFriend->secondName, currentFriend->username);
+    g_string_printf(currentUserFullName, "%s %s (%s)", currentFriend->firstName, currentFriend->lastName, currentFriend->username);
 
     // Поищем этот диалог в списке
     GList *currentDialog = dialogsList;
@@ -182,23 +182,23 @@ void openPersonalDialog(GtkMenuItem *menuitem, GList *additionalInfo) {
 
     // Не нашли, тогда создадим
     FullDialogInfo newDialog;
-    strcpy(newDialog.dialogName, currentUserFullName->str);
+    strcpy(newDialog.name, currentUserFullName->str);
 
     // Добавим друга в беседу
-    newDialog.users[0].ID = currentFriend->ID;
-    strcpy(newDialog.users[0].firstName, currentFriend->firstName);
-    strcpy(newDialog.users[0].secondName, currentFriend->secondName);
-    strcpy(newDialog.users[0].username, currentFriend->username);
+    newDialog.userList[0].ID = currentFriend->ID;
+    strcpy(newDialog.userList[0].firstName, currentFriend->firstName);
+    strcpy(newDialog.userList[0].lastName, currentFriend->lastName);
+    strcpy(newDialog.userList[0].username, currentFriend->username);
 
     // Добавим себя в беседу
-    newDialog.users[1].ID = currentUser->ID;
-    strcpy(newDialog.users[1].firstName, currentUser->firstName);
-    strcpy(newDialog.users[1].secondName, currentUser->secondName);
-    strcpy(newDialog.users[1].username, currentUser->username);
+    newDialog.userList[1].ID = currentUser->ID;
+    strcpy(newDialog.userList[1].firstName, currentUser->firstName);
+    strcpy(newDialog.userList[1].lastName, currentUser->lastName);
+    strcpy(newDialog.userList[1].username, currentUser->username);
 
-    newDialog.usersNumber = 2;
+    newDialog.usersCount = 2;
     newDialog.isGroup = FALSE;
-    newDialog.isSupposeToOpen = TRUE;
+    newDialog.isSupposedToOpen = TRUE;
 
     clientRequest_CreateDialog(*serverDescriptor, newDialog);
 

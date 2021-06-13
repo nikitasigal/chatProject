@@ -9,7 +9,7 @@ gboolean serverRequest_Registration(void **specialAdditionalServerData) {
     FullUserInfo *userInfo = specialAdditionalServerData[0];
     GList *additionalServerData = specialAdditionalServerData[1];
 
-    // Если мы получили user ID == -1, то логин уже используется
+    // Если мы получили user chatID == -1, то логин уже используется
     if (userInfo->ID == -1) {
         g_warning("File - 'requestHandler.c', foo - 'serverRequest_Registration': username is already in use");
         g_free(userInfo);
@@ -36,7 +36,7 @@ gboolean serverRequest_Authorization(void **specialAdditionalServerData) {
     userInfo->request = AUTHORIZATION;
     userInfo->ID = startPackage->authorizedUser.ID;
     strcpy(userInfo->username, startPackage->authorizedUser.username);
-    strcpy(userInfo->secondName, startPackage->authorizedUser.secondName);
+    strcpy(userInfo->lastName, startPackage->authorizedUser.lastName);
     strcpy(userInfo->firstName, startPackage->authorizedUser.firstName);
 
     if (userInfo->ID == -1) {
@@ -96,7 +96,7 @@ gboolean serverRequest_CreateDialog(void *data[2]) {
     newDialog->msgList = GTK_LIST_BOX(gtk_list_box_new());
     newDialog->isOpened = FALSE;
     newDialog->isGroup = dialogInfo->isGroup;
-    strcpy(newDialog->name, dialogInfo->dialogName);
+    strcpy(newDialog->name, dialogInfo->name);
 
     // Установим виджет-заполнитель, который будет показываться, если список не содержит сообщений
     GtkWidget *msgListLabelNoMessages = gtk_label_new("Нет сообщений. Будь первым, напиши какую-нибудь чушь!");
@@ -112,11 +112,11 @@ gboolean serverRequest_CreateDialog(void *data[2]) {
     g_object_ref(newDialog->userList);
 
     // Обновим userList
-    for (int i = 0; i < dialogInfo->usersNumber; ++i)
-        gtk_list_box_insert(newDialog->userList, gtk_label_new(dialogInfo->users[i].username), -1);
+    for (int i = 0; i < dialogInfo->usersCount; ++i)
+        gtk_list_box_insert(newDialog->userList, gtk_label_new(dialogInfo->userList[i].username), -1);
 
     // Создаём окно с кнопкой беседы и ссылку на чат
-    GtkWidget *dialogButton = gtk_button_new_with_label(dialogInfo->dialogName);
+    GtkWidget *dialogButton = gtk_button_new_with_label(dialogInfo->name);
     gtk_widget_set_size_request(dialogButton, -1, 50);
     GtkWidget *dialogEventBox = gtk_event_box_new();
     gtk_container_add(GTK_CONTAINER(dialogEventBox), dialogButton);
@@ -142,7 +142,7 @@ gboolean serverRequest_CreateDialog(void *data[2]) {
     gtk_widget_show_all(dialogEventBox);
 
     // Надо ли нам его сейчас открыть?
-    if (dialogInfo->isSupposeToOpen == TRUE) {
+    if (dialogInfo->isSupposedToOpen == TRUE) {
         GList *tempList = NULL;
         tempList = g_list_append(tempList, newDialog);
         tempList = g_list_append(tempList, additionalInfo);
@@ -169,18 +169,18 @@ void createMessage(const FullMessageInfo *messageInfo, GList *additionalInfo, co
     // Creating event box that catch clicking
     GtkWidget *eventBox = gtk_event_box_new();
 
-    // Name and date message box
+    // Name and timestamp message box
     GtkWidget *msgNameAndDateBox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
 
     // Sender name
     GString *fullName = g_string_new("");
-    g_string_printf(fullName, "%s %s (%s)", messageInfo->firstName, messageInfo->lastName, messageInfo->login);
+    g_string_printf(fullName, "%s %s (%s)", messageInfo->firstName, messageInfo->lastName, messageInfo->username);
     GtkWidget *msgNameLabel = gtk_label_new(fullName->str);
     gtk_widget_set_halign(msgNameLabel, GTK_ALIGN_START);
     g_string_free(fullName, TRUE);
 
-    // Message date
-    GtkWidget *msgDateLabel = gtk_label_new(messageInfo->date);
+    // Message timestamp
+    GtkWidget *msgDateLabel = gtk_label_new(messageInfo->timestamp);
     gtk_widget_set_halign(msgDateLabel, GTK_ALIGN_END);
 
     // Message text
@@ -202,7 +202,7 @@ void createMessage(const FullMessageInfo *messageInfo, GList *additionalInfo, co
 
     // Append new message into a chat
     extern gdouble lastAdj;
-    if (*currentDialogID == messageInfo->ID && *currentDialogID != -1)
+    if (*currentDialogID == messageInfo->chatID && *currentDialogID != -1)
         lastAdj = gtk_adjustment_get_upper(gtk_list_box_get_adjustment(currentDialog->msgList));
 
     // Finish
@@ -231,7 +231,7 @@ gboolean serverRequest_SendMessage(void *data[2]) {
     Dialog *currentDialog = NULL;
     while (temp != NULL) {
         currentDialog = temp->data;
-        if (messageInfo->ID == currentDialog->ID)
+        if (messageInfo->chatID == currentDialog->ID)
             break;
 
         temp = temp->next;
@@ -239,7 +239,7 @@ gboolean serverRequest_SendMessage(void *data[2]) {
 
     // Диалог не найден
     if (currentDialog == NULL) {
-        printf("WARNING, file - 'requestHandler.c', foo - 'serverRequest_SendMessage': Dialog with ID '%d' was not found\n", messageInfo->ID);
+        printf("WARNING, file - 'requestHandler.c', foo - 'serverRequest_SendMessage': Dialog with chatID '%d' was not found\n", messageInfo->chatID);
         return FALSE;
     }
 
@@ -265,7 +265,7 @@ gboolean serverRequest_SendFriendRequest(void *data[2]) {
 
     GtkListBox *friendRequestListBox = g_list_nth_data(additionalInfo, FRIEND_REQUEST_LIST_BOX);
 
-    // Если пришёл запрос с user ID == -1, то запрос уже существует. Если ID == -2 -> пользователь не существует
+    // Если пришёл запрос с user chatID == -1, то запрос уже существует. Если chatID == -2 -> пользователь не существует
     if (userInfo->ID == -1) {
         popupNotification("Request already exists");
         return FALSE;
@@ -359,7 +359,7 @@ gboolean serverRequest_LeaveDialog(void *data[2]) {
     GList *dialogsList = g_list_nth_data(additionalInfo, DIALOGS_LIST);
     GList *temp = dialogsList;
 
-    // Преобразуем строковое ID в число
+    // Преобразуем строковое chatID в число
     int ID = strtol(userInfo->additionalInfo, NULL, 10);
     Dialog *currentDialog;
     while (temp != NULL) {
@@ -409,7 +409,7 @@ gboolean serverRequest_loadMessages(void *data[2]) {
     Dialog *currentDialog = NULL;
     while (temp != NULL) {
         currentDialog = temp->data;
-        if (messagesPackage->messagesList[0].ID == currentDialog->ID)
+        if (messagesPackage->messagesList[0].chatID == currentDialog->ID)
             break;
 
         temp = temp->next;
@@ -417,7 +417,7 @@ gboolean serverRequest_loadMessages(void *data[2]) {
 
     // Диалог не найден
     if (currentDialog == NULL) {
-        printf("WARNING, file - 'requestHandler.c', foo - 'serverRequest_SendMessage': Dialog with ID '%d' was not found\n", messagesPackage->messagesList[0].ID);
+        printf("WARNING, file - 'requestHandler.c', foo - 'serverRequest_SendMessage': Dialog with chatID '%d' was not found\n", messagesPackage->messagesList[0].chatID);
         return FALSE;
     }
 
@@ -444,28 +444,28 @@ gboolean serverRequest_DialogAddUser(void *data[2]) {
     FullUserInfo *currentUser = g_list_nth_data(additionalInfo, CURRENT_USER);
 
     // Добавляют нас?
-    if (dialogInfo->isSupposeToOpen == -1) {
+    if (dialogInfo->isSupposedToOpen == -1) {
         void *createDialogData[2] = {dialogInfo, additionalInfo};
-        dialogInfo->users[dialogInfo->usersNumber - 1].ID = currentUser->ID;
-        strcpy(dialogInfo->users[dialogInfo->usersNumber].firstName, currentUser->firstName);
-        strcpy(dialogInfo->users[dialogInfo->usersNumber].secondName, currentUser->secondName);
-        strcpy(dialogInfo->users[dialogInfo->usersNumber].username, currentUser->username);
-        dialogInfo->usersNumber++;
+        dialogInfo->userList[dialogInfo->usersCount - 1].ID = currentUser->ID;
+        strcpy(dialogInfo->userList[dialogInfo->usersCount].firstName, currentUser->firstName);
+        strcpy(dialogInfo->userList[dialogInfo->usersCount].lastName, currentUser->lastName);
+        strcpy(dialogInfo->userList[dialogInfo->usersCount].username, currentUser->username);
+        dialogInfo->usersCount++;
         serverRequest_CreateDialog(createDialogData);
 
         // Уведомление
         char notificationString[50] = {0};
-        sprintf(notificationString, "You were added to dialog '%s'", dialogInfo->dialogName);
+        sprintf(notificationString, "You were added to dialog '%s'", dialogInfo->name);
         popupNotification(notificationString);
         return FALSE;
     }
 
-    // Кого-то (dialogName) добавили в чат (ID)
+    // Кого-то (name) добавили в чат (chatID)
     GList *temp = dialogsList;
     while (temp != NULL) {
         Dialog *currentDialog = temp->data;
         if (currentDialog->ID == dialogInfo->ID) {
-            gtk_list_box_insert(currentDialog->userList, gtk_label_new(dialogInfo->dialogName), -1);
+            gtk_list_box_insert(currentDialog->userList, gtk_label_new(dialogInfo->name), -1);
             gtk_widget_show_all(GTK_WIDGET(currentDialog->userList));
             break;
         }
@@ -475,7 +475,7 @@ gboolean serverRequest_DialogAddUser(void *data[2]) {
 
     // Проверка
     if (temp == NULL) {
-        g_warning("Dialog with ID '%d' wasn't found", dialogInfo->ID);
+        g_warning("Dialog with chatID '%d' wasn't found", dialogInfo->ID);
         return FALSE;
     }
 

@@ -82,10 +82,10 @@ void sendMessage(GtkWidget *button, GList *data) {
 
     // Соберём инфу о сообщении TODO инфа о пользователе
     FullMessageInfo messageInfo;
-    messageInfo.ID = currentDialog->ID;
+    messageInfo.chatID = currentDialog->ID;
     strcpy(messageInfo.firstName, currentUser->firstName);
-    strcpy(messageInfo.lastName, currentUser->secondName);
-    strcpy(messageInfo.login, currentUser->username);
+    strcpy(messageInfo.lastName, currentUser->lastName);
+    strcpy(messageInfo.username, currentUser->username);
     strcpy(messageInfo.text, message);
 
     clientRequest_SendMessage(*serverDescriptor, messageInfo);

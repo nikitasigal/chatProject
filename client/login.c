@@ -63,7 +63,7 @@ void registrationButtonClicked(GtkWidget *button, GList *additionalInfo) {
     // Create new user
     FullUserInfo newUser;
     strcpy(newUser.firstName, gtk_entry_get_text(g_list_nth_data(additionalInfo, 0)));
-    strcpy(newUser.secondName, gtk_entry_get_text(g_list_nth_data(additionalInfo, 1)));
+    strcpy(newUser.lastName, gtk_entry_get_text(g_list_nth_data(additionalInfo, 1)));
     strcpy(newUser.username, gtk_entry_get_text(g_list_nth_data(additionalInfo, 2)));
     strcpy(newUser.password, gtk_entry_get_text(g_list_nth_data(additionalInfo, 3)));
 

@@ -73,7 +73,7 @@ void clientRequestReceiving(void *clientSocket) {
             case SEND_MESSAGE: {
                 printf("<LOG> clientRequestReceiving()//%d : Processing new message ...\n", socket);
                 FullMessageInfo *messageInfo = userData;
-                strcpy(messageInfo->date, temp);
+                strcpy(messageInfo->timestamp, temp);
 
                 int bytesSent = send(socket, (void *) messageInfo, sizeof(FullMessageInfo), 0);
                 if (bytesSent < 0)
@@ -134,11 +134,11 @@ void clientRequestReceiving(void *clientSocket) {
 
                 // Test
                 FullMessageInfo messageInfo;
-                messageInfo.ID = dialogInfo->ID;
+                messageInfo.chatID = dialogInfo->ID;
                 strcpy(messageInfo.firstName, "Lol");
                 strcpy(messageInfo.lastName, "Lol");
-                strcpy(messageInfo.login, "Lol");
-                strcpy(messageInfo.date, "12 мая 22:01");
+                strcpy(messageInfo.username, "Lol");
+                strcpy(messageInfo.timestamp, "12 мая 22:01");
                 strcpy(messageInfo.text, "Test message!!");
 
                 MessagesPackage messagesPackage = {LOAD_MESSAGES, 5,
@@ -151,7 +151,7 @@ void clientRequestReceiving(void *clientSocket) {
                 break;
             }
             case DIALOG_ADD_USER: {
-                printf("Adding new user to chat...\n");
+                /*printf("Adding new user to chat...\n");
 
                 FullUserInfo user1 = {0, 1, "Lol", "Kek", "Check", "additionalInfo1"};
                 FullUserInfo user2 = {0, 1, "Aba", "baba", "abababa", "additionalInfo2"};
@@ -161,7 +161,7 @@ void clientRequestReceiving(void *clientSocket) {
 
                 int bytesSent = send(socket, (void *) &dialogInfo, sizeof(FullDialogInfo), 0);
                 if (bytesSent < 0)
-                    printf("<WARNING> clientRequestReceiving()//%d : Socket sent < 0 bytes\n", socket);
+                    printf("<WARNING> clientRequestReceiving()//%d : Socket sent < 0 bytes\n", socket);*/
             }
             default:
                 printf("<ERROR> clientRequestReceiving()//%d : Request '%d' is not defined\n", socket, *request);
