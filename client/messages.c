@@ -157,7 +157,7 @@ void openDialog(GtkWidget *button, GList *data) {
         gtk_widget_show(dialogAdditionalLabel);
     }
 
-    if (button != NULL && !newDialog->isGroup) {
+    if (!newDialog->isGroup) {
         gtk_widget_set_margin_start(dialogNameLabel, 0);
         gtk_widget_hide(menuButton);
         gtk_widget_hide(dialogAdditionalLabel);
