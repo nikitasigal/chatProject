@@ -6,6 +6,14 @@
 
 #define DEFAULT_PORT "27015"
 
+typedef struct {
+    int usID;
+    SOCKET usSocket;
+} ID_Socket;
+
+ID_Socket connection [MAX_NUMBER_OF_USERS];
+int connectionSize = 0;
+
 void clientRequestReceiving(void *clientSocket) {
     sqlite3 *sqliteConn;
     int sqlResult = sqlite3_open_v2("database.sqlite", &sqliteConn, SQLITE_OPEN_READWRITE, NULL);
@@ -32,6 +40,11 @@ void clientRequestReceiving(void *clientSocket) {
                 FullUserInfo *userInfo = userData;
 
                 sqlRegister(sqliteConn, userInfo);
+                if (userInfo->ID > 0) {
+                    connection[connectionSize].usID = userInfo->ID;
+                    connection[connectionSize].usSocket = socket;
+                    connectionSize++;
+                }
 
                 int bytesSent = send(socket, (void *) userInfo, sizeof(FullUserInfo), 0);
                 if (bytesSent < 0)
@@ -45,6 +58,28 @@ void clientRequestReceiving(void *clientSocket) {
 
                 AuthorizationPackage authPackage;
                 sqlAuthorize(sqliteConn, userInfo, &authPackage);
+                short int exist = 0;
+                for (int i = 0; i < connectionSize; i++){
+                    if (connection[i].usID == authPackage.authorizedUser.ID){
+
+                        if (connection[i].usSocket != 0) {
+                            //отказ
+                            //но может быть мусор - подумать
+                            printf("Yup, he sure sucks");
+                        } else {
+                            connection[i].usSocket = socket;
+                        }
+
+                        exist = 1;
+                        break;
+                    }
+                }
+
+                if (!exist && authPackage.authorizedUser.ID > 0) {
+                    connection[connectionSize].usID = authPackage.authorizedUser.ID;
+                    connection[connectionSize].usSocket = socket;
+                    connectionSize++;
+                }
 
                 authPackage.request = AUTHORIZATION;
                 int bytesSent = send(socket, (void *) &authPackage, sizeof(AuthorizationPackage), 0);
@@ -63,9 +98,15 @@ void clientRequestReceiving(void *clientSocket) {
                 }
 
                 // TODO - Send dialogInfo to all users in dialogInfo->userList
-                int bytesSent = send(socket, (void *) dialogInfo, sizeof(FullDialogInfo), 0);
-                if (bytesSent < 0)
-                    g_warning("Thread %3d : Socket sent < 0 bytes", socket);
+                for (int i = 0; i < dialogInfo->userCount; i++) {
+                    for (int j = 0; j < connectionSize; j++) {
+                        if (connection[j].usID == dialogInfo->userList[i].ID && connection[j].usSocket != 0) {
+                            int bytesSent = send(connection[j].usSocket, (void *) dialogInfo, sizeof(FullDialogInfo), 0);
+                            if (bytesSent < 0)
+                                g_warning("Thread %3d : Socket sent < 0 bytes", socket);
+                        }
+                    }
+                }
                 break;
             }
             case SEND_MESSAGE: {
@@ -79,10 +120,16 @@ void clientRequestReceiving(void *clientSocket) {
                     break;
                 }
 
-                // TODO - Send messageInfo to all users in dialogInfo.userList
-                int bytesSent = send(socket, (void *) messageInfo, sizeof(FullMessageInfo), 0);
-                if (bytesSent < 0)
-                    g_warning("Thread %3d : Socket sent < 0 bytes", socket);
+                // TODO - Send messageInfo to all users in membersList
+                for (int i = 0; i < dialogInfo.userCount; i++) {
+                    for (int j = 0; j < connectionSize; j++){
+                        if (dialogInfo.userList[i].ID == connection[j].usID && connection[j].usSocket != 0) {
+                            int bytesSent = send(connection[j].usSocket, (void *) messageInfo, sizeof(FullMessageInfo), 0);
+                            if (bytesSent < 0)
+                                g_warning("Thread %3d : Socket '%d' sent < 0 bytes",(int) connection[j].usSocket);
+                        }
+                    }
+                }
                 break;
             }
             case SEND_FRIEND_REQUEST: {
@@ -97,6 +144,14 @@ void clientRequestReceiving(void *clientSocket) {
                 // temporary
                 if (userInfo->ID >= 0)
                     userInfo->ID = -3;
+
+                for (int i = 0; i < connectionSize; i++){
+                    if (requestID == connection[i].usID){
+                        int bytesSent = send(connection[i].usSocket, (void *) userInfo, sizeof(FullUserInfo), 0);
+                        if (bytesSent < 0)
+                            g_warning("Thread %3d : Socket sent < 0 bytes", connection[i].usSocket);
+                    }
+                }
 
                 int bytesSent = send(socket, (void *) userInfo, sizeof(FullUserInfo), 0);
                 if (bytesSent < 0)
@@ -113,13 +168,22 @@ void clientRequestReceiving(void *clientSocket) {
                     // error
                     break;
                 }
-
+                sender.request = FRIEND_REQUEST_ACCEPTED;
                 // TODO - Proceed with logic from .txt file
 
                 // temporary send to user, who answered the request
                 int bytesSent = send(socket, (void *) &sender, sizeof(FullUserInfo), 0);
                 if (bytesSent < 0)
                     g_warning("Thread %3d : Socket sent < 0 bytes", socket);
+
+                for (int i = 0; i < connectionSize; i++){
+                    if (sender.ID == connection[i].usID){
+                        int bytesSent = send(connection[i].usSocket, (void *) userInfo, sizeof(FullUserInfo), 0);
+                        if (bytesSent < 0)
+                            g_warning("Thread %3d : Socket sent < 0 bytes", connection[i].usSocket);
+                    }
+                }
+
                 break;
             }
             case FRIEND_REQUEST_DECLINED: {
@@ -177,8 +241,6 @@ void clientRequestReceiving(void *clientSocket) {
 
                 sqlLoadMessages(sqliteConn, dialogInfo, &msgPackage);
 
-                // TODO - Send &msgPackage to all users in didalogInfo->userList
-
                 msgPackage.request = LOAD_MESSAGES;
                 int bytesSent = send(socket, (void *) &msgPackage, sizeof(MessagesPackage), 0);
                 if (bytesSent < 0)
@@ -212,6 +274,13 @@ void clientRequestReceiving(void *clientSocket) {
         }
 
         free(userData);
+    }
+
+    for (int i = 0; i < connectionSize; i++) {
+        if (connection[i].usSocket == (SOCKET) clientSocket) {
+            connection[i].usSocket = 0;
+            break;
+        }
     }
 
     sqlResult = sqlite3_close_v2(sqliteConn);

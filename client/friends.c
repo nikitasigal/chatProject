@@ -59,6 +59,7 @@ void acceptFriendRequest(GtkWidget *button, GList *additionalInfo) {
 
     // Delete request on interface
     GtkWidget *requestBox = gtk_widget_get_parent(gtk_widget_get_parent(button));
+    strcpy(currentUser->additionalInfo, gtk_label_get_text(g_list_nth_data(gtk_container_get_children(GTK_CONTAINER(requestBox)), 0)));
     gtk_widget_destroy(requestBox);
 
     clientRequest_FriendRequestAccepted(*serverDescriptor, *currentUser);
@@ -70,6 +71,7 @@ void declineFriendRequest(GtkWidget *button, GList *additionalInfo) {
 
     // Delete request on interface
     GtkWidget *requestBox = gtk_widget_get_parent(gtk_widget_get_parent(button));
+    strcpy(currentUser->additionalInfo, gtk_label_get_text(g_list_nth_data(gtk_container_get_children(GTK_CONTAINER(requestBox)), 0)));
     gtk_widget_destroy(requestBox);
 
     clientRequest_FriendRequestDeclined(*serverDescriptor, *currentUser);
@@ -141,13 +143,15 @@ void removeFriend(GtkMenuItem *menuitem, GList *additionalInfo) {
 
         temp = temp->next;
     }
-    g_list_free(rows);
-
-    gtk_widget_destroy(GTK_WIDGET(row));
 
     // Отправим запрос на сервер
     SOCKET *serverDescriptor = g_list_nth_data(additionalInfo, SERVER_SOCKET);
     FullUserInfo *user = g_list_nth_data(additionalInfo, CURRENT_USER);
+    strcpy(user->additionalInfo, gtk_label_get_text(GTK_LABEL(gtk_bin_get_child(GTK_BIN(gtk_bin_get_child(GTK_BIN(row)))))));
+
+    g_list_free(rows);
+
+    gtk_widget_destroy(GTK_WIDGET(row));
     clientRequest_RemoveFriend(*serverDescriptor, *user);
 }
 
