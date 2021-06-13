@@ -101,7 +101,7 @@ void clientRequestReceiving(void *clientSocket) {
                 // TODO - Send dialogInfo to all users in dialogInfo->userList >
                 for (int i = 0; i < dialogInfo->userCount; i++) {
                     for (int j = 0; j < connectionSize; j++) {
-                        if (connection[j].usID == dialogInfo[i].ID && connection[j].usSocket != 0) {
+                        if (connection[j].usID == dialogInfo->userList[i].ID && connection[j].usSocket != 0) {
                             int bytesSent = send(connection[j].usSocket, (void *) dialogInfo, sizeof(FullDialogInfo), 0);
                             if (bytesSent < 0)
                                 g_warning("Thread %3d : Socket sent < 0 bytes", socket);
@@ -171,7 +171,7 @@ void clientRequestReceiving(void *clientSocket) {
                     // error
                     break;
                 }
-
+                sender.request = FRIEND_REQUEST_ACCEPTED;
                 // TODO - Proceed with logic from .txt file >
 
                 // temporary send to user, who answered the request

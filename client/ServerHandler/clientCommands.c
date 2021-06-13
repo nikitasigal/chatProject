@@ -44,6 +44,7 @@ void clientRequest_SendFriendRequest(SOCKET serverSocket, FullUserInfo userInfo)
 
 void clientRequest_FriendRequestAccepted(SOCKET serverSocket, FullUserInfo userInfo) {
     userInfo.request = FRIEND_REQUEST_ACCEPTED;
+    int k = sizeof(FullUserInfo);
     int bytes = send(serverSocket, (void *) &userInfo, sizeof(FullUserInfo), 0);
     if (bytes < 0)
         printf("ERROR, file - 'clientCommands.c', foo - 'clientRequest_FriendRequestAccepted': Can't accept a friend request. Sent 0 bytes of information\n");
