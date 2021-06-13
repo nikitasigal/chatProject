@@ -500,7 +500,7 @@ void sqlLoadMessages(sqlite3 *conn, FullDialogInfo *dialog, MessagesPackage *pac
                    "FROM messages\n"
                    "JOIN users u on u.id == messages.user_id\n"
                    "WHERE chat_id == '%d'\n"
-                   "ORDER BY messages.id DESC\n"
+                   "ORDER BY messages.id ASC\n"
                    "LIMIT 500", dialog->ID);
     sqlite3_prepare_v2(conn, query, (int) strlen(query), &stmt, NULL);
     package->messagesCount = 0;
