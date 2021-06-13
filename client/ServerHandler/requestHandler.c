@@ -96,6 +96,7 @@ gboolean serverRequest_CreateDialog(void *data[2]) {
     // Распакуем нужную дополнительную информацию
     GtkListBox *dialogsListBox = g_list_nth_data(additionalInfo, DIALOGS_LIST_BOX);
     GtkMenu *dialogMenu = g_list_nth_data(additionalInfo, DIALOG_MENU);
+    FullUserInfo *currentUser = g_list_nth_data(additionalInfo, CURRENT_USER);
 
     // Создадим новый диалог с полученной информацией
     Dialog *newDialog = g_malloc(sizeof(Dialog));
@@ -104,7 +105,18 @@ gboolean serverRequest_CreateDialog(void *data[2]) {
     newDialog->msgList = GTK_LIST_BOX(gtk_list_box_new());
     newDialog->isOpened = FALSE;
     newDialog->isGroup = dialogInfo->isGroup;
-    strcpy(newDialog->name, dialogInfo->name);
+
+    char dialogName[DIALOG_SIZE] = {0};
+    if (dialogInfo->isGroup)
+        strcpy(dialogName, dialogInfo->name);
+    else
+        if (!strcmp(dialogInfo->userList[0].username, currentUser->username))
+            sprintf(dialogName, "%s %s (%s)", dialogInfo->userList[1].firstName, dialogInfo->userList[1].lastName,
+                    dialogInfo->userList[1].username);
+        else
+            sprintf(dialogName, "%s %s (%s)", dialogInfo->userList[0].firstName, dialogInfo->userList[0].lastName,
+                    dialogInfo->userList[0].username);
+    strcpy(newDialog->name, dialogName);
 
     // Установим виджет-заполнитель, который будет показываться, если список не содержит сообщений
     GtkWidget *msgListLabelNoMessages = gtk_label_new("Нет сообщений. Будь первым, напиши какую-нибудь чушь!");
@@ -124,7 +136,7 @@ gboolean serverRequest_CreateDialog(void *data[2]) {
         gtk_list_box_insert(newDialog->userList, gtk_label_new(dialogInfo->userList[i].username), -1);
 
     // Создаём окно с кнопкой беседы и ссылку на чат
-    GtkWidget *dialogButton = gtk_button_new_with_label(dialogInfo->name);
+    GtkWidget *dialogButton = gtk_button_new_with_label(dialogName);
     gtk_widget_set_size_request(dialogButton, -1, 50);
     GtkWidget *dialogEventBox = gtk_event_box_new();
     gtk_container_add(GTK_CONTAINER(dialogEventBox), dialogButton);
