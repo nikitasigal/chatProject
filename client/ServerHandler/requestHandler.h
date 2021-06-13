@@ -17,6 +17,10 @@ gboolean serverRequest_RemoveFriend(void *data[2]);
 
 gboolean serverRequest_LeaveDialog(void *data[2]);
 
+gboolean serverRequest_loadMessages(void *data[2]);
+
+gboolean serverRequest_DialogAddUser(void *data[2]);
+
 void serverRequest_FriendIsOnline(FullUserInfo userInfo, GList *additionalInfo);
 
 void serverRequest_FriendDisconnect(FullUserInfo userInfo, GList *additionalInfo);

@@ -30,12 +30,7 @@ void serverRequestProcess(GList *additionalServerData) {
                     g_free(data);
                     authorizationButtonClicked(NULL, additionalServerData);
                     break;
-                } /*else {
-                    if (tempI < 10) {
-                        authorizationButtonClicked(NULL, additionalServerData);
-                        break;
-                    }
-                }*/
+                }
 
                 gdk_threads_add_idle(G_SOURCE_FUNC(serverRequest_Authorization), list);
                 break;
@@ -44,42 +39,54 @@ void serverRequestProcess(GList *additionalServerData) {
                 gdk_threads_add_idle(G_SOURCE_FUNC(serverRequest_CreateDialog), list);
 
                 FullDialogInfo *dialogInfo = data;
-                g_message("File - 'serverLoop.c', foo - 'serverRequestProcess': Creating a dialog with ID '%d'\n", dialogInfo->ID);
+                g_message("File - 'serverLoop.c', foo - 'serverRequestProcess': Creating a dialog with ID '%d'", dialogInfo->ID);
                 break;
             }
             case SEND_MESSAGE: {
                 gdk_threads_add_idle(G_SOURCE_FUNC(serverRequest_SendMessage), list);
 
                 FullMessageInfo *messageInfo = data;
-                g_message("File - 'serverLoop.c', foo - 'serverRequestProcess': Receiving a message in dialog with ID '%d'\n", messageInfo->ID);
+                g_message("File - 'serverLoop.c', foo - 'serverRequestProcess': Receiving a message in dialog with ID '%d'", messageInfo->ID);
                 break;
             }
             case SEND_FRIEND_REQUEST: {
                 gdk_threads_add_idle(G_SOURCE_FUNC(serverRequest_SendFriendRequest), list);
 
                 FullUserInfo *userInfo = data;
-                g_message("File - 'serverLoop.c', foo - 'serverRequestProcess': Receiving a friend request from '%s'\n", userInfo->username);
+                g_message("File - 'serverLoop.c', foo - 'serverRequestProcess': Receiving a friend request from '%s'", userInfo->username);
                 break;
             }
             case FRIEND_REQUEST_ACCEPTED: {
                 gdk_threads_add_idle(G_SOURCE_FUNC(addFriend), list);
 
                 FullUserInfo *userInfo = data;
-                g_message("File - 'serverLoop.c', foo - 'serverRequestProcess': Accepted a friend request with username '%s'\n", userInfo->username);
+                g_message("File - 'serverLoop.c', foo - 'serverRequestProcess': Accepted a friend request with username '%s'", userInfo->username);
                 break;
             }
             case REMOVE_FRIEND: {
                 gdk_threads_add_idle(G_SOURCE_FUNC(serverRequest_RemoveFriend), list);
 
                 FullUserInfo *userInfo = data;
-                g_message("File - 'serverLoop.c', foo - 'serverRequestProcess': You was removed from friend-list of '%s'\n", userInfo->username);
+                g_message("File - 'serverLoop.c', foo - 'serverRequestProcess': You was removed from friend-list of '%s'", userInfo->username);
                 break;
             }
             case LEAVE_DIALOG: {
                 gdk_threads_add_idle(G_SOURCE_FUNC(serverRequest_LeaveDialog), list);
 
                 FullUserInfo *userInfo = data;
-                printf("File - 'serverLoop.c', foo - 'serverRequestProcess': User '%s' leave dialog with ID '%s'\n", userInfo->username, userInfo->additionalInfo);
+                g_message("File - 'serverLoop.c', foo - 'serverRequestProcess': User '%s' leave dialog with ID '%s'", userInfo->username, userInfo->additionalInfo);
+                break;
+            }
+            case LOAD_MESSAGES: {
+                gdk_threads_add_idle(G_SOURCE_FUNC(serverRequest_loadMessages), list);
+
+                g_message("File - 'serverLoop.c', foo - 'serverRequestProcess': Loading messages");
+                break;
+            }
+            case DIALOG_ADD_USER: {
+                gdk_threads_add_idle(G_SOURCE_FUNC(serverRequest_DialogAddUser), list);
+
+                g_message("File - 'serverLoop.c', foo - 'serverRequestProcess': Adding user to chat");
                 break;
             }
             default: {

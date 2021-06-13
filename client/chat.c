@@ -1,4 +1,5 @@
 #include "chat.h"
+#include "login.h"
 #include "ServerHandler/clientCommands.h"
 
 gdouble lastAdj = 0;
@@ -88,4 +89,65 @@ void sendMessage(GtkWidget *button, GList *data) {
     strcpy(messageInfo.text, message);
 
     clientRequest_SendMessage(*serverDescriptor, messageInfo);
+}
+
+void dialogAddUser(GtkEntry *entry, GList *additionalInfo) {
+    // Распакуем информацию
+    SOCKET *serverDescriptor = g_list_nth_data(additionalInfo, SERVER_SOCKET);
+    FullUserInfo *currentUser = g_list_nth_data(additionalInfo, CURRENT_USER);
+    int *currentDialogID = g_list_nth_data(additionalInfo, CURRENT_DIALOG_ID);
+    GList *dialogsList = g_list_nth_data(additionalInfo, DIALOGS_LIST);
+    GtkWidget *dialogUserViewport = g_list_nth_data(additionalInfo, DIALOG_USERS_VIEWPORT);
+    GtkListBox *friendsListBox = g_list_nth_data(additionalInfo, FRIENDS_LIST_BOX);
+    GList *friendsList = gtk_container_get_children(GTK_CONTAINER(friendsListBox));
+
+    // Достанем текст из ввода
+    char login[NAME_SIZE] = {0};
+    strcpy(login, gtk_entry_get_text(entry));
+
+    // Проверим корректность ввода
+    if (strlen(login) == 0)
+        return;
+
+    if (!strcmp(currentUser->username, login)) {
+        popupNotification("You are already in this chat", NULL);
+        return;
+    }
+
+    // Найдём этот логин среди друзей
+    GList *temp = friendsList;
+    while (temp != NULL) {
+        // Нашли
+        GtkWidget *label = gtk_bin_get_child(GTK_BIN(gtk_bin_get_child(GTK_BIN(temp->data))));
+        FullUserInfo *currentFriend = g_object_get_data(G_OBJECT(label), "Data");
+        if (!strcmp(currentFriend->username, login))
+            break;
+
+        temp = temp->next;
+    }
+
+    // Не нашли такого друга
+    if (temp == NULL) {
+        popupNotification("This user isn't your friend", NULL);
+        return;
+    }
+
+    // Поищем среди участников диалога
+    GtkWidget *listBox = gtk_bin_get_child(GTK_BIN(dialogUserViewport));
+    GList *users = gtk_container_get_children(GTK_CONTAINER(listBox));
+    GList *temp2 = users;
+    while (temp2 != NULL) {
+        if (!strcmp(gtk_label_get_text(GTK_LABEL(gtk_bin_get_child(GTK_BIN(temp2->data)))), login)) {
+            popupNotification("This user already in the chat", NULL);
+            return;
+        }
+
+        temp2 = temp2->next;
+    }
+
+    FullUserInfo user;
+    strcpy(user.username, login);
+    user.ID = *currentDialogID;
+
+    clientRequest_DialogAddUser(*serverDescriptor, user);
 }

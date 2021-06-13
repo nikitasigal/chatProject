@@ -25,4 +25,6 @@ void clientRequest_RemoveFriend(SOCKET serverSocket, FullUserInfo userInfo);
 
 void clientRequest_LeaveDialog(SOCKET serverSocket, FullUserInfo userInfo);
 
+void clientRequest_DialogAddUser(SOCKET serverSocket, FullUserInfo userInfo);
+
 #endif //CHATPROJECT_CLIENTCOMMANDS_H

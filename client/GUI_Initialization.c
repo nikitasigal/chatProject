@@ -41,6 +41,14 @@ void GUIInit(SOCKET *serverSocket) {
     GtkWidget *dialogMenuLeaveDialog = GTK_WIDGET(gtk_builder_get_object(builder, "dialogMenuLeaveDialog"));
     GtkWidget *dialogNameLabel = GTK_WIDGET(gtk_builder_get_object(builder, "dialogNameLabel"));
     GtkWidget *timeLabel = GTK_WIDGET(gtk_builder_get_object(builder, "time"));
+    GtkWidget *menuButton = GTK_WIDGET(gtk_builder_get_object(builder, "menuButton"));
+    GtkWidget *dialogTaskBar = GTK_WIDGET(gtk_builder_get_object(builder, "dialogTaskBar"));
+    GtkWidget *dialogAdditionalLabel = GTK_WIDGET(gtk_builder_get_object(builder, "dialogAdditionalLabel"));
+    GtkWidget *dialogAddUserEntry = GTK_WIDGET(gtk_builder_get_object(builder, "dialogAddUserEntry"));
+
+    // Dialog menu button
+    GtkWidget *menuButtonLabel = gtk_label_new("пригласить");
+    gtk_container_add(GTK_CONTAINER(menuButton), menuButtonLabel);
 
     // Dialog menu
     GtkWidget *dialogMenu = GTK_WIDGET(gtk_builder_get_object(builder, "dialogMenu"));
@@ -123,6 +131,9 @@ void GUIInit(SOCKET *serverSocket) {
     additionalInfo = g_list_append(additionalInfo, dialogMenu);
     additionalInfo = g_list_append(additionalInfo, selectedRow);
     additionalInfo = g_list_append(additionalInfo, dialogNameLabel);
+    additionalInfo = g_list_append(additionalInfo, dialogTaskBar);
+    additionalInfo = g_list_append(additionalInfo, menuButton);
+    additionalInfo = g_list_append(additionalInfo, dialogAdditionalLabel);
 
     // CSS
     GdkScreen *screen = gdk_screen_get_default();
@@ -143,6 +154,7 @@ void GUIInit(SOCKET *serverSocket) {
     g_signal_connect(friendMenuOpenDialog, "activate", (GCallback) openPersonalDialog, additionalInfo);
     g_signal_connect(dialogMenuLeaveDialog, "activate", (GCallback) leaveDialog, additionalInfo);
     g_signal_connect(chatEntry, "activate", (GCallback) enterChatClicked, additionalInfo);
+    g_signal_connect(dialogAddUserEntry, "activate", (GCallback) dialogAddUser, additionalInfo);
     g_signal_connect(createDialogEntry, "activate", (GCallback) createDialog, additionalInfo);
     g_signal_connect(gtk_builder_get_object(builder, "passwordAuthWindow"), "activate", (GCallback) authorizationButtonClicked, authList);
     g_signal_connect(gtk_builder_get_object(builder, "passwordRepeatEntry"), "activate", (GCallback) registrationButtonClicked, regList);
@@ -158,6 +170,7 @@ void GUIInit(SOCKET *serverSocket) {
     gtk_widget_show_all(window);
     gtk_widget_hide(chatEntry);
     gtk_widget_hide(chatButton);
+    gtk_widget_hide(dialogTaskBar);
     gtk_widget_hide(dialogUsersScrolledWindow);
     gtk_widget_hide(dialogNameLabel);
 }

@@ -19,7 +19,9 @@ void clientRequestReceiving(void *clientSocket) {
     SOCKET socket = (SOCKET) clientSocket;
     GDateTime *time;
     int testDialogID = 0;
+    int test = 0;
     while (TRUE) {
+        test++;
         time = g_date_time_new_now_local();
         gchar *temp = g_date_time_format(time, "%H:%M:%S, %d %b %Y, %a");
         void *userData = malloc(MAX_PACKAGE_SIZE);
@@ -125,6 +127,41 @@ void clientRequestReceiving(void *clientSocket) {
                     printf("<WARNING> clientRequestReceiving()//%d : Socket sent < 0 bytes\n", socket);
 
                 break;
+            }
+            case LOAD_MESSAGES: {
+                printf("<LOG> clientRequestReceiving()//%d : Sending dialog messages ...\n", socket);
+                FullDialogInfo *dialogInfo = userData;
+
+                // Test
+                FullMessageInfo messageInfo;
+                messageInfo.ID = dialogInfo->ID;
+                strcpy(messageInfo.firstName, "Lol");
+                strcpy(messageInfo.lastName, "Lol");
+                strcpy(messageInfo.login, "Lol");
+                strcpy(messageInfo.date, "12 мая 22:01");
+                strcpy(messageInfo.text, "Test message!!");
+
+                MessagesPackage messagesPackage = {LOAD_MESSAGES, 5,
+                                                   {messageInfo, messageInfo, messageInfo, messageInfo, messageInfo}};
+
+                int bytesSent = send(socket, (void *) &messagesPackage, sizeof(MessagesPackage), 0);
+                if (bytesSent < 0)
+                    printf("<WARNING> clientRequestReceiving()//%d : Socket sent < 0 bytes\n", socket);
+
+                break;
+            }
+            case DIALOG_ADD_USER: {
+                printf("Adding new user to chat...\n");
+
+                FullUserInfo user1 = {0, 1, "Lol", "Kek", "Check", "additionalInfo1"};
+                FullUserInfo user2 = {0, 1, "Aba", "baba", "abababa", "additionalInfo2"};
+
+                // Test
+                FullDialogInfo dialogInfo = {DIALOG_ADD_USER, 4, "abc", {user1, user2}, 2, TRUE, -1};
+
+                int bytesSent = send(socket, (void *) &dialogInfo, sizeof(FullDialogInfo), 0);
+                if (bytesSent < 0)
+                    printf("<WARNING> clientRequestReceiving()//%d : Socket sent < 0 bytes\n", socket);
             }
             default:
                 printf("<ERROR> clientRequestReceiving()//%d : Request '%d' is not defined\n", socket, *request);

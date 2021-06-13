@@ -142,7 +142,7 @@ gboolean serverRequest_CreateDialog(void *data[2]) {
     gtk_widget_show_all(dialogEventBox);
 
     // Надо ли нам его сейчас открыть?
-    if (dialogInfo->isSupposeToOpen) {
+    if (dialogInfo->isSupposeToOpen == TRUE) {
         GList *tempList = NULL;
         tempList = g_list_append(tempList, newDialog);
         tempList = g_list_append(tempList, additionalInfo);
@@ -156,38 +156,8 @@ gboolean serverRequest_CreateDialog(void *data[2]) {
     return FALSE;
 }
 
-gboolean serverRequest_SendMessage(void *data[2]) {
-    // Распакуем полученную информацию
-    FullMessageInfo *messageInfo = data[0];
-    GList *additionalInfo = data[1];
-
-    // Распакуем данные
-    GList *dialogsList = g_list_nth_data(additionalInfo, DIALOGS_LIST);
-    int *currentDialogID = g_list_nth_data(additionalInfo, CURRENT_DIALOG_ID);
-
-    // Ищем диалог
-    GList *temp = dialogsList;
-    Dialog *currentDialog = NULL;
-    while (temp != NULL) {
-        currentDialog = temp->data;
-        if (messageInfo->ID == currentDialog->ID)
-            break;
-
-        temp = temp->next;
-    }
-
-    // Диалог не найден
-    if (currentDialog == NULL) {
-        printf("WARNING, file - 'requestHandler.c', foo - 'serverRequest_SendMessage': Dialog with ID '%d' was not found\n", messageInfo->ID);
-        return FALSE;
-    }
-
-    // Если диалог ещё не был открыт, то не будем загружать сообщение
-    if (!currentDialog->isOpened) {
-        printf("LOG INFO: received message, but dialog wasn't opened\n");
-        return FALSE;
-    }
-
+void createMessage(const FullMessageInfo *messageInfo, GList *additionalInfo, const int *currentDialogID,
+                   Dialog *currentDialog) {
     // Вставим новое сообщение
     // Creating main message box
     GtkWidget *msgMainBox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 3);
@@ -241,9 +211,45 @@ gboolean serverRequest_SendMessage(void *data[2]) {
 
     // Подсоединяем сигналы: выбор сообщения, открытие меню по ПКМ
     g_signal_connect(eventBox, "button-press-event", (GCallback) processMsgSelecting, currentDialog->msgList);
-    g_signal_connect(eventBox, "button-release-event", (GCallback) processMsgMenu, g_list_nth_data(additionalInfo, MSG_MENU));
+    g_signal_connect(eventBox, "button-release-event", (GCallback) processMsgMenu,
+                     g_list_nth_data(additionalInfo, MSG_MENU));
 
     gtk_widget_show_all(eventBox);
+}
+
+gboolean serverRequest_SendMessage(void *data[2]) {
+    // Распакуем полученную информацию
+    FullMessageInfo *messageInfo = data[0];
+    GList *additionalInfo = data[1];
+
+    // Распакуем данные
+    GList *dialogsList = g_list_nth_data(additionalInfo, DIALOGS_LIST);
+    int *currentDialogID = g_list_nth_data(additionalInfo, CURRENT_DIALOG_ID);
+
+    // Ищем диалог
+    GList *temp = dialogsList;
+    Dialog *currentDialog = NULL;
+    while (temp != NULL) {
+        currentDialog = temp->data;
+        if (messageInfo->ID == currentDialog->ID)
+            break;
+
+        temp = temp->next;
+    }
+
+    // Диалог не найден
+    if (currentDialog == NULL) {
+        printf("WARNING, file - 'requestHandler.c', foo - 'serverRequest_SendMessage': Dialog with ID '%d' was not found\n", messageInfo->ID);
+        return FALSE;
+    }
+
+    // Если диалог ещё не был открыт, то не будем загружать сообщение
+    if (!currentDialog->isOpened) {
+        printf("LOG INFO: received message, but dialog wasn't opened\n");
+        return FALSE;
+    }
+
+    createMessage(messageInfo, additionalInfo, currentDialogID, currentDialog);
 
     // Освобождаем память, если был запрос на отправку сообщения
     if (messageInfo->request == SEND_MESSAGE)
@@ -381,6 +387,92 @@ gboolean serverRequest_LeaveDialog(void *data[2]) {
     // Освободим память, если был запрос выход из диалога
     if (userInfo->request == LEAVE_DIALOG)
         g_free(userInfo);
+
+    return FALSE;
+}
+
+gboolean serverRequest_loadMessages(void *data[2]) {
+    // Распакуем информацию
+    MessagesPackage *messagesPackage = data[0];
+    GList *additionalInfo = data[1];
+
+    // Проверяем, не пустой ли массив сообщений
+    if (messagesPackage->messagesCount == 0)
+        return FALSE;
+
+    // Догрузим информацию
+    GList *dialogsList = g_list_nth_data(additionalInfo, DIALOGS_LIST);
+    int *currentDialogID = g_list_nth_data(additionalInfo, CURRENT_DIALOG_ID);
+
+    // Ищем диалог
+    GList *temp = dialogsList;
+    Dialog *currentDialog = NULL;
+    while (temp != NULL) {
+        currentDialog = temp->data;
+        if (messagesPackage->messagesList[0].ID == currentDialog->ID)
+            break;
+
+        temp = temp->next;
+    }
+
+    // Диалог не найден
+    if (currentDialog == NULL) {
+        printf("WARNING, file - 'requestHandler.c', foo - 'serverRequest_SendMessage': Dialog with ID '%d' was not found\n", messagesPackage->messagesList[0].ID);
+        return FALSE;
+    }
+
+    // Выведем сообщения на экран
+    for (int i = 0; i < messagesPackage->messagesCount; ++i)
+        createMessage(&messagesPackage->messagesList[i], additionalInfo, currentDialogID, currentDialog);
+
+    // Освободим память, если был запрос выход из диалога
+    if (messagesPackage->request == LOAD_MESSAGES)
+        g_free(messagesPackage);
+
+    return FALSE;
+}
+
+gboolean serverRequest_DialogAddUser(void *data[2]) {
+    // Распакуем информацию
+    FullDialogInfo *dialogInfo = data[0];
+    GList *additionalInfo = data[1];
+
+    GList *dialogsList = g_list_nth_data(additionalInfo, DIALOGS_LIST);
+    FullUserInfo *currentUser = g_list_nth_data(additionalInfo, CURRENT_USER);
+
+    // Добавляют нас?
+    if (dialogInfo->isSupposeToOpen == -1) {
+        void *createDialogData[2] = {dialogInfo, additionalInfo};
+        dialogInfo->users[dialogInfo->usersNumber - 1].ID = currentUser->ID;
+        strcpy(dialogInfo->users[dialogInfo->usersNumber].firstName, currentUser->firstName);
+        strcpy(dialogInfo->users[dialogInfo->usersNumber].secondName, currentUser->secondName);
+        strcpy(dialogInfo->users[dialogInfo->usersNumber].username, currentUser->username);
+        dialogInfo->usersNumber++;
+        serverRequest_CreateDialog(createDialogData);
+        return FALSE;
+    }
+
+    // Кого-то (dialogName) добавили в чат (ID)
+    GList *temp = dialogsList;
+    while (temp != NULL) {
+        Dialog *currentDialog = temp->data;
+        if (currentDialog->ID == dialogInfo->ID) {
+            gtk_list_box_insert(currentDialog->userList, gtk_label_new(dialogInfo->dialogName), -1);
+            break;
+        }
+
+        temp = temp->next;
+    }
+
+    // Проверка
+    if (temp == NULL) {
+        g_warning("Dialog with ID '%d' wasn't found", dialogInfo->ID);
+        return FALSE;
+    }
+
+    // Освободим память, если был запрос на добавление юзера в чат
+    if (dialogInfo->request == DIALOG_ADD_USER)
+        g_free(dialogInfo);
 
     return FALSE;
 }

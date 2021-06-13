@@ -10,6 +10,7 @@
 #define DIALOG_SIZE 96
 #define MAX_NUMBER_OF_USERS 30
 #define MAX_PACKAGE_SIZE 614400 // 600 КБ
+#define LOAD_MESSAGE_COUNT 500
 
 #define DEFAULT_SERVER_IP "127.0.0.1"
 #define DEFAULT_PORT "27015"
@@ -24,7 +25,8 @@ typedef enum {
     FRIEND_REQUEST_DECLINED,
     REMOVE_FRIEND,
     LOAD_MESSAGES,
-    LEAVE_DIALOG
+    LEAVE_DIALOG,
+    DIALOG_ADD_USER
 } Request;
 
 typedef enum {
@@ -55,12 +57,15 @@ typedef enum {
     POPUP_LABEL,
     DIALOG_MENU,
     SELECTED_ROW,
-    DIALOG_NAME_LABEL
+    DIALOG_NAME_LABEL,
+    DIALOG_TASK_BAR,
+    MENU_BUTTON,
+    DIALOG_ADDITIONAL_LABEL
 } AddServerDataType;
 
 typedef struct {
     int ID;
-    char name[NAME_SIZE];
+    char name[DIALOG_SIZE];
     GtkListBox *userList;
     GtkListBox *msgList;
     char isOpened;
@@ -107,5 +112,11 @@ typedef struct {
     short requestCount;
     FullUserInfo requests[100];
 } AuthorizationPackage;
+
+typedef struct {
+    Request request;
+    short messagesCount;
+    FullMessageInfo messagesList[LOAD_MESSAGE_COUNT];
+} MessagesPackage;
 
 #endif //CHATPROJECT_DEFINITIONS_H
