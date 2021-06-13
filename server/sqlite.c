@@ -428,8 +428,8 @@ void sqlLeaveDialog(sqlite3 *conn, FullUserInfo *leaveRequest, FullDialogInfo *d
     // Query 1 - Leave dialog
     sprintf(query, "DELETE\n"
                    "FROM chats_to_users\n"
-                   "WHERE chat_id == '%d'\n"
-                   "  AND user_id == '%s'", leaveRequest->ID, leaveRequest->additionalInfo);
+                   "WHERE chat_id == '%s'\n"
+                   "  AND user_id == '%d'", leaveRequest->additionalInfo, leaveRequest->ID);
     sqlite3_prepare_v2(conn, query, (int) strlen(query), &stmt, NULL);
     if (sqlite3_step(stmt) != SQLITE_DONE) {
         g_warning("sqlLeaveDialog(): User '%s' could not leave dialog '%d'", leaveRequest->username, leaveRequest->ID);
