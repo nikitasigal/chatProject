@@ -11,7 +11,7 @@ typedef struct {
     SOCKET usSocket;
 } ID_Socket;
 
-ID_Socket connection [MAX_NUMBER_OF_USERS];
+ID_Socket connection[MAX_NUMBER_OF_USERS];
 int connectionSize = 0;
 
 void clientRequestReceiving(void *clientSocket) {
@@ -59,8 +59,8 @@ void clientRequestReceiving(void *clientSocket) {
                 AuthorizationPackage authPackage;
                 sqlAuthorize(sqliteConn, userInfo, &authPackage);
                 short int exist = 0;
-                for (int i = 0; i < connectionSize; i++){
-                    if (connection[i].usID == authPackage.authorizedUser.ID){
+                for (int i = 0; i < connectionSize; i++) {
+                    if (connection[i].usID == authPackage.authorizedUser.ID) {
 
                         if (connection[i].usSocket != 0) {
                             //отказ
@@ -101,7 +101,8 @@ void clientRequestReceiving(void *clientSocket) {
                 for (int i = 0; i < dialogInfo->userCount; i++) {
                     for (int j = 0; j < connectionSize; j++) {
                         if (connection[j].usID == dialogInfo->userList[i].ID && connection[j].usSocket != 0) {
-                            int bytesSent = send(connection[j].usSocket, (void *) dialogInfo, sizeof(FullDialogInfo), 0);
+                            int bytesSent = send(connection[j].usSocket, (void *) dialogInfo, sizeof(FullDialogInfo),
+                                                 0);
                             if (bytesSent < 0)
                                 g_warning("Thread %3d : Socket sent < 0 bytes", socket);
                         }
@@ -122,11 +123,12 @@ void clientRequestReceiving(void *clientSocket) {
 
                 // TODO - Send messageInfo to all users in membersList
                 for (int i = 0; i < dialogInfo.userCount; i++) {
-                    for (int j = 0; j < connectionSize; j++){
+                    for (int j = 0; j < connectionSize; j++) {
                         if (dialogInfo.userList[i].ID == connection[j].usID && connection[j].usSocket != 0) {
-                            int bytesSent = send(connection[j].usSocket, (void *) messageInfo, sizeof(FullMessageInfo), 0);
+                            int bytesSent = send(connection[j].usSocket, (void *) messageInfo, sizeof(FullMessageInfo),
+                                                 0);
                             if (bytesSent < 0)
-                                g_warning("Thread %3d : Socket '%d' sent < 0 bytes",(int) connection[j].usSocket);
+                                g_warning("Thread %3d : Socket '%d' sent < 0 bytes", socket);
                         }
                     }
                 }
@@ -145,8 +147,8 @@ void clientRequestReceiving(void *clientSocket) {
                 if (userInfo->ID >= 0)
                     userInfo->ID = -3;
 
-                for (int i = 0; i < connectionSize; i++){
-                    if (requestID == connection[i].usID){
+                for (int i = 0; i < connectionSize; i++) {
+                    if (requestID == connection[i].usID) {
                         int bytesSent = send(connection[i].usSocket, (void *) userInfo, sizeof(FullUserInfo), 0);
                         if (bytesSent < 0)
                             g_warning("Thread %3d : Socket sent < 0 bytes", connection[i].usSocket);
@@ -176,8 +178,8 @@ void clientRequestReceiving(void *clientSocket) {
                 if (bytesSent < 0)
                     g_warning("Thread %3d : Socket sent < 0 bytes", socket);
 
-                for (int i = 0; i < connectionSize; i++){
-                    if (sender.ID == connection[i].usID){
+                for (int i = 0; i < connectionSize; i++) {
+                    if (sender.ID == connection[i].usID) {
                         int bytesSent = send(connection[i].usSocket, (void *) userInfo, sizeof(FullUserInfo), 0);
                         if (bytesSent < 0)
                             g_warning("Thread %3d : Socket sent < 0 bytes", connection[i].usSocket);
@@ -247,13 +249,13 @@ void clientRequestReceiving(void *clientSocket) {
                     g_warning("Thread %3d : Socket sent < 0 bytes", socket);
                 break;
             }
-            case DIALOG_ADD_USER:{
+            case DIALOG_ADD_USER: {
                 g_message("Thread %3d : Adding user to dialog ...", socket);
                 FullUserInfo *userInfo = userData;
 
                 FullDialogInfo result;
                 sqlJoinDialog(sqliteConn, userInfo, &result);
-                if(userInfo->ID < 0){
+                if (userInfo->ID < 0) {
                     // error
                     break;
                 }
