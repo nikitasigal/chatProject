@@ -2,6 +2,29 @@
 #include "requestHandler.h"
 #include "../login.h"
 #include "../friends.h"
+#include "clientCommands.h"
+
+gboolean repeatLoadMessageRequest(GList *additionalServerData) {
+    int *currentDialogID = g_list_nth_data(additionalServerData, CURRENT_DIALOG_ID);
+    GtkListBox *dialogsListBox = g_list_nth_data(additionalServerData, DIALOGS_LIST_BOX);
+    GList *dialogsListBoxRows = gtk_container_get_children(GTK_CONTAINER(dialogsListBox));
+    GList *temp = dialogsListBoxRows;
+    while (temp != NULL) {
+        GtkWidget *button = gtk_bin_get_child(GTK_BIN(gtk_bin_get_child(GTK_BIN(temp->data))));
+        Dialog *dialog = g_object_get_data(G_OBJECT(button), "Data");
+        if (dialog->ID == *currentDialogID) {
+            FullDialogInfo dialogInfo;
+            dialogInfo.ID = dialog->ID;
+            SOCKET *serverDescriptor = g_list_nth_data(additionalServerData, SERVER_SOCKET);
+            clientRequest_LoadMessages(*serverDescriptor, dialogInfo);
+            return FALSE;
+        }
+
+        temp = temp->next;
+    }
+
+    return FALSE;
+}
 
 void serverRequestProcess(GList *additionalServerData) {
     SOCKET *serverSocket = g_list_nth_data(additionalServerData, SERVER_SOCKET);
@@ -78,8 +101,14 @@ void serverRequestProcess(GList *additionalServerData) {
                 break;
             }
             case LOAD_MESSAGES: {
-                gdk_threads_add_idle(G_SOURCE_FUNC(serverRequest_loadMessages), list);
+                if (bytesReceived != sizeof(MessagesPackage)) {
+                    g_warning("Client received corrupted data (MessagesPackage). Trying to repeat request...");
+                    g_free(data);
+                    gdk_threads_add_idle(G_SOURCE_FUNC(repeatLoadMessageRequest), additionalServerData);
+                    break;
+                }
 
+                gdk_threads_add_idle(G_SOURCE_FUNC(serverRequest_loadMessages), list);
                 g_message("File - 'serverLoop.c', foo - 'serverRequestProcess': Loading messages");
                 break;
             }

@@ -110,7 +110,7 @@ void dialogAddUser(GtkEntry *entry, GList *additionalInfo) {
         return;
 
     if (!strcmp(currentUser->username, login)) {
-        popupNotification("You are already in this chat", NULL);
+        popupNotification("You are already in this chat");
         return;
     }
 
@@ -128,7 +128,7 @@ void dialogAddUser(GtkEntry *entry, GList *additionalInfo) {
 
     // Не нашли такого друга
     if (temp == NULL) {
-        popupNotification("This user isn't your friend", NULL);
+        popupNotification("This user isn't your friend");
         return;
     }
 
@@ -138,7 +138,7 @@ void dialogAddUser(GtkEntry *entry, GList *additionalInfo) {
     GList *temp2 = users;
     while (temp2 != NULL) {
         if (!strcmp(gtk_label_get_text(GTK_LABEL(gtk_bin_get_child(GTK_BIN(temp2->data)))), login)) {
-            popupNotification("This user already in the chat", NULL);
+            popupNotification("This user already in the chat");
             return;
         }
 

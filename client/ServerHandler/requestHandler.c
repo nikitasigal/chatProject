@@ -40,12 +40,12 @@ gboolean serverRequest_Authorization(void **specialAdditionalServerData) {
     strcpy(userInfo->firstName, startPackage->authorizedUser.firstName);
 
     if (userInfo->ID == -1) {
-        popupNotification("User doesn't exist", g_list_nth_data(additionalServerData, POPUP_LABEL));
+        popupNotification("User doesn't exist");
         g_free(userInfo);
         return FALSE;
     }
     if (userInfo->ID == -2) {
-        popupNotification("Incorrect password", g_list_nth_data(additionalServerData, POPUP_LABEL));
+        popupNotification("Incorrect password");
         g_free(userInfo);
         return FALSE;
     }
@@ -267,17 +267,17 @@ gboolean serverRequest_SendFriendRequest(void *data[2]) {
 
     // Если пришёл запрос с user ID == -1, то запрос уже существует. Если ID == -2 -> пользователь не существует
     if (userInfo->ID == -1) {
-        popupNotification("Request already exists", g_list_nth_data(additionalInfo, POPUP_LABEL));
+        popupNotification("Request already exists");
         return FALSE;
     }
     if (userInfo->ID == -2) {
-        popupNotification("User with this username doesn't exist", g_list_nth_data(additionalInfo, POPUP_LABEL));
+        popupNotification("User with this username doesn't exist");
         return FALSE;
     }
 
     // I'm a messenger of this request. All is alright
     if (userInfo->ID == -3) {
-        popupNotification("Request has been sent", g_list_nth_data(additionalInfo, POPUP_LABEL));
+        popupNotification("Request has been sent");
         return FALSE;
     }
 
@@ -308,7 +308,7 @@ gboolean serverRequest_SendFriendRequest(void *data[2]) {
     gtk_list_box_unselect_all(friendRequestListBox);
 
     // Output notification
-    popupNotification("Friend request received", g_list_nth_data(additionalInfo, POPUP_LABEL));
+    popupNotification("Friend request received");
 
     // Signals
     g_signal_connect(acceptButton, "clicked", (GCallback) acceptFriendRequest, additionalInfo);
@@ -425,6 +425,9 @@ gboolean serverRequest_loadMessages(void *data[2]) {
     for (int i = 0; i < messagesPackage->messagesCount; ++i)
         createMessage(&messagesPackage->messagesList[i], additionalInfo, currentDialogID, currentDialog);
 
+    // Пометим диалог как открытый
+    currentDialog->isOpened = TRUE;
+
     // Освободим память, если был запрос выход из диалога
     if (messagesPackage->request == LOAD_MESSAGES)
         g_free(messagesPackage);
@@ -449,6 +452,11 @@ gboolean serverRequest_DialogAddUser(void *data[2]) {
         strcpy(dialogInfo->users[dialogInfo->usersNumber].username, currentUser->username);
         dialogInfo->usersNumber++;
         serverRequest_CreateDialog(createDialogData);
+
+        // Уведомление
+        char notificationString[50] = {0};
+        sprintf(notificationString, "You were added to dialog '%s'", dialogInfo->dialogName);
+        popupNotification(notificationString);
         return FALSE;
     }
 

@@ -51,7 +51,7 @@ void createDialog(GtkButton *button, GList *additionalInfo) {
     // Проверим, не пустое ли поле имени диалога
     if (strlen(gtk_entry_get_text(createDialogEntry)) == 0) {
         printf("WARNING, file - 'messages.c', foo - 'createDialog': Dialog entry is empty.\n");
-        popupNotification("Dialog name can't be empty.", g_list_nth_data(additionalInfo, POPUP_LABEL));
+        popupNotification("Dialog name can't be empty.");
         return;
     }
 
@@ -167,7 +167,7 @@ void openDialog(GtkWidget *button, GList *data) {
 
     // Отправим запрос на подгрузку сообщений
     if (!newDialog->isOpened) {
-        newDialog->isOpened = TRUE;
+        //newDialog->isOpened = TRUE;
         FullDialogInfo dialogInfo;
         dialogInfo.ID = newDialog->ID;
         SOCKET *serverDescriptor = g_list_nth_data(additionalInfo, SERVER_SOCKET);
