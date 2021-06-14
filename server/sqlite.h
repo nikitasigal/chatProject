@@ -6,6 +6,8 @@
 
 #define QUERY_SIZE 200
 
+void sqlGetFriendsList(sqlite3 *conn, int friendsList[MAX_NUMBER_OF_USERS], short *friendsCount, FullUserInfo *user);
+
 void sqlRegister(sqlite3 *conn, FullUserInfo *user);
 
 void sqlAuthorize(sqlite3 *conn, FullUserInfo *user, AuthorizationPackage *package);

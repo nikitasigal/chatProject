@@ -61,14 +61,12 @@ void clientRequestReceiving(void *clientSocket) {
                 short int exist = 0;
                 for (int i = 0; i < connectionSize; i++) {
                     if (connection[i].usID == authPackage.authorizedUser.ID) {
-
                         if (connection[i].usSocket != 0) {
-                            //отказ
-                            //но может быть мусор - подумать
-                            printf("Yup, he sure sucks");
-                        } else {
+                            g_warning("Thread %3d : User '%d' is already authorized ...", socket,
+                                      authPackage.authorizedUser.ID);
+                            authPackage.authorizedUser.ID = -3; // User is already online on a different client
+                        } else
                             connection[i].usSocket = socket;
-                        }
 
                         exist = 1;
                         break;
@@ -85,6 +83,18 @@ void clientRequestReceiving(void *clientSocket) {
                 int bytesSent = send(socket, (void *) &authPackage, sizeof(AuthorizationPackage), 0);
                 if (bytesSent < 0)
                     g_warning("Thread %3d : Socket sent < 0 bytes", socket);
+
+                for (int i = 0; i < authPackage.friendCount; i++) {
+                    for (int j = 0; j < connectionSize; j++) {
+                        if (connection[j].usID == authPackage.friends[i].ID && connection[j].usSocket != 0) {
+                            authPackage.friends[i].request = FRIEND_IS_ONLINE;
+                            bytesSent = send(connection[j].usSocket, (void *) &(authPackage.friends[i]),
+                                             sizeof(FullUserInfo), 0);
+                            if (bytesSent < 0)
+                                g_warning("Thread %3d : Socket sent < 0 bytes", socket);
+                        }
+                    }
+                }
                 break;
             }
             case CREATE_DIALOG: {
@@ -105,8 +115,8 @@ void clientRequestReceiving(void *clientSocket) {
                                 dialogInfo->isSupposedToOpen = TRUE;
                             else
                                 dialogInfo->isSupposedToOpen = FALSE;
-                            int bytesSent = send(connection[j].usSocket, (void *) dialogInfo, sizeof(FullDialogInfo),0);
-
+                            int bytesSent = send(connection[j].usSocket, (void *) dialogInfo, sizeof(FullDialogInfo),
+                                                 0);
                             if (bytesSent < 0)
                                 g_warning("Thread %3d : Socket sent < 0 bytes", socket);
                         }
@@ -125,7 +135,6 @@ void clientRequestReceiving(void *clientSocket) {
                     break;
                 }
 
-                // TODO - Send messageInfo to all users in membersList
                 for (int i = 0; i < dialogInfo.userCount; i++) {
                     for (int j = 0; j < connectionSize; j++) {
                         if (dialogInfo.userList[i].ID == connection[j].usID && connection[j].usSocket != 0) {
@@ -149,7 +158,6 @@ void clientRequestReceiving(void *clientSocket) {
                     int bytesSent = send(socket, (void *) userInfo, sizeof(FullUserInfo), 0);
                     if (bytesSent < 0)
                         g_warning("Thread %3d : Socket sent < 0 bytes", socket);
-
                     break;
                 }
 
@@ -157,7 +165,7 @@ void clientRequestReceiving(void *clientSocket) {
                     if (requestID == connection[i].usID) {
                         int bytesSent = send(connection[i].usSocket, (void *) userInfo, sizeof(FullUserInfo), 0);
                         if (bytesSent < 0)
-                            g_warning("Thread %3d : Socket sent < 0 bytes", connection[i].usSocket);
+                            g_warning("Thread %3d : Socket sent < 0 bytes", socket);
                     }
                 }
 
@@ -191,7 +199,7 @@ void clientRequestReceiving(void *clientSocket) {
                     if (sender.ID == connection[i].usID) {
                         int bytesSent = send(connection[i].usSocket, (void *) userInfo, sizeof(FullUserInfo), 0);
                         if (bytesSent < 0)
-                            g_warning("Thread %3d : Socket sent < 0 bytes", connection[i].usSocket);
+                            g_warning("Thread %3d : Socket sent < 0 bytes", socket);
                     }
                 }
 
@@ -248,7 +256,7 @@ void clientRequestReceiving(void *clientSocket) {
                         if (dialogInfo.userList[i].ID == connection[j].usID && connection[j].usSocket != 0) {
                             int bytesSent = send(connection[j].usSocket, (void *) userInfo, sizeof(FullUserInfo), 0);
                             if (bytesSent < 0)
-                                g_warning("Thread %3d : Socket sent < 0 bytes", connection[j].usSocket);
+                                g_warning("Thread %3d : Socket sent < 0 bytes", socket);
                         }
                     }
                 }
@@ -289,7 +297,7 @@ void clientRequestReceiving(void *clientSocket) {
                         current = connection[i].usSocket;
                         int bytesSent = send(connection[i].usSocket, (void *) &result, sizeof(FullDialogInfo), 0);
                         if (bytesSent < 0)
-                            g_warning("Thread %3d : Socket sent < 0 bytes", connection[i].usSocket);
+                            g_warning("Thread %3d : Socket sent < 0 bytes", socket);
                         break;
                     }
                 }
@@ -298,10 +306,11 @@ void clientRequestReceiving(void *clientSocket) {
 
                 for (int i = 0; i < result.userCount; i++) {
                     for (int j = 0; j < connectionSize; j++) {
-                        if (result.userList[i].ID == connection[j].usID && connection[j].usSocket != 0 && connection[j].usSocket != current) {
+                        if (result.userList[i].ID == connection[j].usID && connection[j].usSocket != 0 &&
+                            connection[j].usSocket != current) {
                             int bytesSent = send(connection[j].usSocket, (void *) &result, sizeof(FullDialogInfo), 0);
                             if (bytesSent < 0)
-                                g_warning("Thread %3d : Socket sent < 0 bytes", connection[j].usSocket);
+                                g_warning("Thread %3d : Socket sent < 0 bytes", socket);
                         }
                     }
                 }
@@ -317,6 +326,25 @@ void clientRequestReceiving(void *clientSocket) {
     for (int i = 0; i < connectionSize; i++) {
         if (connection[i].usSocket == (SOCKET) clientSocket) {
             connection[i].usSocket = 0;
+
+            // Send FRIEND_IS_OFFLINE notification to all friends
+            FullUserInfo user;
+            user.request = FRIEND_IS_OFFLINE;
+            user.ID = connection[i].usID;
+            int friendList[MAX_NUMBER_OF_USERS];
+            short friendCount;
+            sqlGetFriendsList(sqliteConn, friendList, &friendCount, &user);
+
+            for (int j = 0; j < friendCount; j++) {
+                for (int k = 0; k < connectionSize; k++) {
+                    if (connection[k].usID == friendList[j] && connection[k].usSocket != 0) {
+                        int bytesSent = send(connection[k].usSocket, (void *) &user, sizeof(FullUserInfo), 0);
+                        if (bytesSent < 0)
+                            g_warning("Thread %3d : Socket sent < 0 bytes", socket);
+                    }
+                }
+            }
+
             break;
         }
     }

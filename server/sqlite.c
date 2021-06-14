@@ -2,7 +2,7 @@
 #include <gtk/gtk.h>
 #include "sqlite.h"
 
-void getChatMembers(sqlite3 *conn, FullUserInfo memberList[MAX_NUMBER_OF_USERS], short *memberCount, int chatID) {
+void sqlGetChatMembers(sqlite3 *conn, FullUserInfo *memberList, short *memberCount, int chatID) {
     char query[QUERY_SIZE] = {0};
     sqlite3_stmt *stmt;
 
@@ -23,6 +23,41 @@ void getChatMembers(sqlite3 *conn, FullUserInfo memberList[MAX_NUMBER_OF_USERS],
         (*memberCount)++;
     }
     sqlite3_finalize(stmt);
+}
+
+void sqlGetFriendsList(sqlite3 *conn, int friendsList[MAX_NUMBER_OF_USERS], short *friendsCount, FullUserInfo *user) {
+    char query[QUERY_SIZE] = {0};
+    sqlite3_stmt *stmt;
+
+    // Query 1 - Get user's credentials
+    sprintf(query, "SELECT username, first_name, second_name\n"
+                   "FROM users\n"
+                   "WHERE id == '%d'", user->ID);
+    sqlite3_prepare_v2(conn, query, (int) strlen(query), &stmt, NULL);
+    if (sqlite3_step(stmt) != SQLITE_ROW) {
+        g_message("sqlGetFriendsList(): User '%d' not found", user->ID);
+        user->ID = -1;
+        sqlite3_finalize(stmt);
+        return;
+    }
+    strcpy(user->username, (const char *) sqlite3_column_text(stmt, 0));
+    strcpy(user->firstName, (const char *) sqlite3_column_text(stmt, 1));
+    strcpy(user->lastName, (const char *) sqlite3_column_text(stmt, 2));
+    sqlite3_finalize(stmt);
+    memset(query, 0, QUERY_SIZE);
+
+    // Query 2 - Get user's friend list
+    sprintf(query, "SELECT u.id\n"
+                   "FROM users u\n"
+                   "JOIN friend_list fl on u.id = fl.user_id\n"
+                   "WHERE fl.friend_id = '%d'", user->ID);
+    sqlite3_prepare_v2(conn, query, (int) strlen(query), &stmt, NULL);
+    *friendsCount = 0;
+    while (sqlite3_step(stmt) == SQLITE_ROW) {
+        friendsList[(*friendsCount)++] = sqlite3_column_int(stmt, 0);
+    }
+    sqlite3_finalize(stmt);
+    memset(query, 0, QUERY_SIZE);
 }
 
 void sqlRegister(sqlite3 *conn, FullUserInfo *user) {
@@ -62,7 +97,7 @@ void sqlAuthorize(sqlite3 *conn, FullUserInfo *user, AuthorizationPackage *packa
     char query[QUERY_SIZE] = {0};
     sqlite3_stmt *stmt;
 
-    //Query 1 - Check user credentials
+    // Query 1 - Check user credentials
     sprintf(query, "SELECT id, username, password, first_name, second_name\n"
                    "FROM users\n"
                    "WHERE username == '%s'", user->username);
@@ -101,10 +136,10 @@ void sqlAuthorize(sqlite3 *conn, FullUserInfo *user, AuthorizationPackage *packa
         strcpy(package->dialogList[package->dialogCount].name, (const char *) sqlite3_column_text(stmt, 1));
         package->dialogList[package->dialogCount].isGroup = (char) sqlite3_column_int(stmt, 2);
 
-        getChatMembers(conn,
-                       package->dialogList[package->dialogCount].userList,
-                       &(package->dialogList[package->dialogCount].userCount),
-                       package->dialogList[package->dialogCount].ID);
+        sqlGetChatMembers(conn,
+                          package->dialogList[package->dialogCount].userList,
+                          &(package->dialogList[package->dialogCount].userCount),
+                          package->dialogList[package->dialogCount].ID);
 
         package->dialogCount++;
     }
@@ -244,7 +279,7 @@ void sqlSendMessage(sqlite3 *conn, FullMessageInfo *message, FullDialogInfo *dia
     memset(query, 0, QUERY_SIZE);
 
     //Query 3 - Get ID's of chat members
-    getChatMembers(conn, dialog->userList, &(dialog->userCount), message->chatID);
+    sqlGetChatMembers(conn, dialog->userList, &(dialog->userCount), message->chatID);
 }
 
 void sqlSendFriendRequest(sqlite3 *conn, FullUserInfo *user, int *friendID) {
@@ -462,7 +497,7 @@ void sqlLeaveDialog(sqlite3 *conn, FullUserInfo *leaveRequest, FullDialogInfo *d
 
     // Query 2 - Get ID's of chat members
     int chatID = strtol(leaveRequest->additionalInfo, NULL, 10);
-    getChatMembers(conn, dialog->userList, &(dialog->userCount), chatID);
+    sqlGetChatMembers(conn, dialog->userList, &(dialog->userCount), chatID);
 }
 
 void sqlJoinDialog(sqlite3 *conn, FullUserInfo *addRequest, FullDialogInfo *dialog) {
@@ -501,7 +536,7 @@ void sqlJoinDialog(sqlite3 *conn, FullUserInfo *addRequest, FullDialogInfo *dial
     dialog->isSupposedToOpen = (char) sqlite3_column_int(stmt, 1);
     sqlite3_finalize(stmt);
     memset(query, 0, QUERY_SIZE);
-    getChatMembers(conn, dialog->userList, &(dialog->userCount), dialog->ID);
+    sqlGetChatMembers(conn, dialog->userList, &(dialog->userCount), dialog->ID);
 
     // Query 3 - Add addRequest to dialog
     sprintf(query, "INSERT INTO chats_to_users\n"
