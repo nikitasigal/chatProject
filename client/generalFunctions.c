@@ -26,9 +26,9 @@ gboolean fadeOutAnimation(short *i) {
     return TRUE;
 }
 
-void popupNotification(char *string) {
+gboolean popupNotification(char *string) {
     if (notificationCount == 5)
-        return;
+        return FALSE;
 
     notificationCount++;
 
@@ -60,6 +60,8 @@ void popupNotification(char *string) {
     gtk_widget_show_all(popupWindow);
 
     gdk_threads_add_timeout(20, G_SOURCE_FUNC(fadeOutAnimation), i);
+
+    return FALSE;
 }
 
 G_MODULE_EXPORT void windowClose() {

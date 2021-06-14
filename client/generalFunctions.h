@@ -7,6 +7,6 @@ G_MODULE_EXPORT void windowClose();
 
 void timer(GtkLabel *timeLabel);
 
-void popupNotification(char *string);
+gboolean popupNotification(char *string);
 
 #endif //TESTGTK_GENERALFUNCTIONS_H

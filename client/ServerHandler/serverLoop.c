@@ -34,7 +34,8 @@ void serverRequestProcess(GList *additionalServerData) {
         int bytesReceived = recv(*serverSocket, data, MAX_PACKAGE_SIZE, 0);
         if (bytesReceived < 0) {
             g_critical("Server is offline");
-            popupNotification("Server is offline");
+            gdk_threads_add_idle(G_SOURCE_FUNC(popupNotification), "Server is offline");
+
             return;
         }
         g_message("File - 'serverLoop.c', foo - 'serverRequestProcess': Received request number %d", requestCount++);
