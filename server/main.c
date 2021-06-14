@@ -84,11 +84,11 @@ void clientRequestReceiving(void *clientSocket) {
                 if (bytesSent < 0)
                     g_warning("Thread %3d : Socket sent < 0 bytes", (int) socket);
 
+                authPackage.authorizedUser.request = FRIEND_IS_ONLINE;
                 for (int i = 0; i < authPackage.friendCount; i++) {
                     for (int j = 0; j < connectionSize; j++) {
-                        if (connection[j].usID == authPackage.friendList[i].ID && connection[j].usSocket != 0) {
-                            authPackage.friendList[i].request = FRIEND_IS_ONLINE;
-                            bytesSent = send(connection[j].usSocket, (void *) &(authPackage.friendList[i]),
+                        if (connection[j].usID == authPackage.authorizedUser.ID && connection[j].usSocket != 0) {
+                            bytesSent = send(connection[j].usSocket, (void *) &(authPackage.authorizedUser),
                                              sizeof(FullUserInfo), 0);
                             if (bytesSent < 0)
                                 g_warning("Thread %3d : Socket '%d' sent < 0 bytes", (int) socket,

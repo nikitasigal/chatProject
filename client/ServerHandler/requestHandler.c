@@ -57,6 +57,11 @@ gboolean serverRequest_Authorization(void **specialAdditionalServerData) {
         g_free(userInfo);
         return FALSE;
     }
+    if (userInfo->ID == -3) {
+        popupNotification("User already authorized");
+        g_free(userInfo);
+        return FALSE;
+    }
 
     // Обновим информацию о текущем пользователе в глобальном списке
     g_list_nth(additionalServerData, CURRENT_USER)->data = userInfo;
