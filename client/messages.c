@@ -18,6 +18,10 @@ void leaveDialog(GtkMenuItem *menuitem, GList *additionalInfo) {
     while(temp != NULL) {
         Dialog *currentDialog = temp->data;
         if (selectedDialog->ID == currentDialog->ID) {
+            if (!currentDialog->isGroup) {
+                popupNotification("You can't leave personal dialog");
+                return;
+            }
             g_list_nth(additionalInfo, DIALOGS_LIST)->data = g_list_delete_link(dialogsList, temp);
             break;
         }
