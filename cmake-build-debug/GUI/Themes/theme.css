@@ -175,6 +175,7 @@ headerbar separator {
     text-shadow: none;
 }
 
+/* Selected rows */
 *:selected {
     background: darkslategrey;
     border-radius: 5px;

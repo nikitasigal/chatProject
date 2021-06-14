@@ -29,7 +29,9 @@ typedef enum {
     REMOVE_FRIEND,
     LOAD_MESSAGES,
     LEAVE_DIALOG,
-    DIALOG_ADD_USER
+    DIALOG_ADD_USER,
+    FRIEND_IS_ONLINE,
+    FRIEND_IS_OFFLINE
 } Request;
 
 typedef enum {
@@ -57,7 +59,6 @@ typedef enum {
     DIALOG_IS_JUST_OPENED,
     FRIEND_MENU,
     MSG_MENU,
-    POPUP_LABEL,
     DIALOG_MENU,
     SELECTED_ROW,
     DIALOG_NAME_LABEL,
