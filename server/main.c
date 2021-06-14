@@ -108,7 +108,6 @@ void clientRequestReceiving(void *clientSocket) {
                     break;
                 }
 
-                // TODO - Send dialogInfo to all users in dialogInfo->userList
                 for (int i = 0; i < dialogInfo->userCount; i++) {
                     for (int j = 0; j < connectionSize; j++) {
                         if (connection[j].usID == dialogInfo->userList[i].ID && connection[j].usSocket != 0) {
@@ -190,7 +189,6 @@ void clientRequestReceiving(void *clientSocket) {
                     break;
                 }
                 sender.request = FRIEND_REQUEST_ACCEPTED;
-                // TODO - Proceed with logic from .txt file
 
                 // temporary send to user, who answered the request
                 int bytesSent = send(socket, (void *) &sender, sizeof(FullUserInfo), 0);
@@ -252,7 +250,6 @@ void clientRequestReceiving(void *clientSocket) {
                     break;
                 }
 
-                // TODO - Proceed with logic from .txt file
                 // Send back to all users in dialogInfo->userList
 
                 for (int i = 0; i < dialogInfo.userCount; i++) {

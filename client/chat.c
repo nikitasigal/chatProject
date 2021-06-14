@@ -80,7 +80,7 @@ void sendMessage(GtkWidget *button, GList *data) {
         return;
     gtk_entry_set_text(GTK_ENTRY(dialogEntry), "");
 
-    // Соберём инфу о сообщении TODO инфа о пользователе
+    // Соберём инфу о сообщении
     FullMessageInfo messageInfo;
     messageInfo.chatID = currentDialog->ID;
     strcpy(messageInfo.firstName, currentUser->firstName);
