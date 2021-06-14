@@ -130,7 +130,7 @@ void openDialog(GtkWidget *button, GList *data) {
     g_list_nth(additionalInfo, CURRENT_DIALOG_ID)->data = &(newDialog->ID);
 
     // Step 2
-    if (button != NULL && newDialog->isGroup)
+    if (/*button != NULL &&*/ newDialog->isGroup)
         gtk_container_add(GTK_CONTAINER(dialogUsersViewport), GTK_WIDGET(newDialog->userList));
 
     // Step 3
@@ -150,7 +150,7 @@ void openDialog(GtkWidget *button, GList *data) {
     gtk_widget_show(chatEntry);
     gtk_widget_show(chatButton);
     gtk_widget_show_all(dialogTaskBar);
-    if (button != NULL && newDialog->isGroup) {
+    if (/*button != NULL &&*/ newDialog->isGroup) {
         gtk_widget_set_margin_start(dialogNameLabel, 95);
         gtk_widget_show_all(dialogUsersScrolledWindow);
         gtk_widget_show_all(menuButton);
