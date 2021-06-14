@@ -158,6 +158,7 @@ void GUIInit(SOCKET *serverSocket) {
     g_signal_connect(chatEntry, "activate", (GCallback) enterChatClicked, additionalInfo);
     g_signal_connect(dialogAddUserEntry, "activate", (GCallback) dialogAddUser, additionalInfo);
     g_signal_connect(createDialogEntry, "activate", (GCallback) createDialog, additionalInfo);
+    g_signal_connect(friendSendRequestEntry, "activate", (GCallback) sendFriendRequest, additionalInfo);
     g_signal_connect(gtk_builder_get_object(builder, "passwordAuthWindow"), "activate", (GCallback) authorizationButtonClicked, authList);
     g_signal_connect(gtk_builder_get_object(builder, "passwordRepeatEntry"), "activate", (GCallback) registrationButtonClicked, regList);
 

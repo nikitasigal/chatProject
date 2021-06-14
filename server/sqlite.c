@@ -440,7 +440,8 @@ void sqlLeaveDialog(sqlite3 *conn, FullUserInfo *leaveRequest, FullDialogInfo *d
     memset(query, 0, QUERY_SIZE);
 
     // Query 2 - Get ID's of chat members
-    getChatMembers(conn, dialog->userList, &(dialog->userCount), leaveRequest->ID);
+    int chatID = strtol(leaveRequest->additionalInfo, NULL, 10);
+    getChatMembers(conn, dialog->userList, &(dialog->userCount), chatID);
 }
 
 void sqlJoinDialog(sqlite3 *conn, FullUserInfo *addRequest, FullDialogInfo *dialog) {

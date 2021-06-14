@@ -101,8 +101,12 @@ void clientRequestReceiving(void *clientSocket) {
                 for (int i = 0; i < dialogInfo->userCount; i++) {
                     for (int j = 0; j < connectionSize; j++) {
                         if (connection[j].usID == dialogInfo->userList[i].ID && connection[j].usSocket != 0) {
-                            int bytesSent = send(connection[j].usSocket, (void *) dialogInfo, sizeof(FullDialogInfo),
-                                                 0);
+                            if (socket == connection[j].usSocket)
+                                dialogInfo->isSupposedToOpen = TRUE;
+                            else
+                                dialogInfo->isSupposedToOpen = FALSE;
+                            int bytesSent = send(connection[j].usSocket, (void *) dialogInfo, sizeof(FullDialogInfo),0);
+
                             if (bytesSent < 0)
                                 g_warning("Thread %3d : Socket sent < 0 bytes", socket);
                         }
@@ -141,11 +145,13 @@ void clientRequestReceiving(void *clientSocket) {
                 int requestID;
                 sqlSendFriendRequest(sqliteConn, userInfo, &requestID);
 
-                // TODO - Proceed with logic from .txt file - requestID contains ID of user, to whom the request is supposed to be sent
+                if (userInfo->ID == -1 || userInfo->ID == -2) {
+                    int bytesSent = send(socket, (void *) userInfo, sizeof(FullUserInfo), 0);
+                    if (bytesSent < 0)
+                        g_warning("Thread %3d : Socket sent < 0 bytes", socket);
 
-                // temporary
-                if (userInfo->ID >= 0)
-                    userInfo->ID = -3;
+                    break;
+                }
 
                 for (int i = 0; i < connectionSize; i++) {
                     if (requestID == connection[i].usID) {
@@ -154,6 +160,9 @@ void clientRequestReceiving(void *clientSocket) {
                             g_warning("Thread %3d : Socket sent < 0 bytes", connection[i].usSocket);
                     }
                 }
+
+                if (userInfo->ID >= 0)
+                    userInfo->ID = -3;
 
                 int bytesSent = send(socket, (void *) userInfo, sizeof(FullUserInfo), 0);
                 if (bytesSent < 0)
@@ -210,11 +219,14 @@ void clientRequestReceiving(void *clientSocket) {
                     break;
                 }
 
-                // TODO - Proceed with logic from .txt file
+                for (int i = 0; i < connectionSize; i++)
+                    if (connection[i].usID == friendID) {
+                        int bytesSent = send(connection[i].usSocket, (void *) userInfo, sizeof(FullUserInfo), 0);
+                        if (bytesSent < 0)
+                            g_warning("Thread %3d : Socket sent < 0 bytes", socket);
+                        break;
+                    }
 
-                int bytesSent = send(socket, (void *) userInfo, sizeof(FullUserInfo), 0);
-                if (bytesSent < 0)
-                    g_warning("Thread %3d : Socket sent < 0 bytes", socket);
                 break;
             }
             case LEAVE_DIALOG: {

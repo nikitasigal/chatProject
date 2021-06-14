@@ -96,7 +96,6 @@ gboolean addFriend(void *data[2]) {
     gtk_list_box_insert(friendsListBox, friendsEventBox, -1);
     gtk_container_add(GTK_CONTAINER(friendsEventBox), friendLabel);
 
-    //
     FullUserInfo *tempUser = malloc(sizeof(FullUserInfo));
     tempUser->ID = user->ID;
     strcpy(tempUser->username, user->username);
