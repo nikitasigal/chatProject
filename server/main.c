@@ -4,7 +4,7 @@
 #include <gtk/gtk.h>
 #include "sqlite.h"
 
-#define DEFAULT_PORT "27015"
+#define DEFAULT_PORT "30000"
 
 typedef struct {
     int usID;
@@ -87,7 +87,7 @@ void clientRequestReceiving(void *clientSocket) {
                 authPackage.authorizedUser.request = FRIEND_IS_ONLINE;
                 for (int i = 0; i < authPackage.friendCount; i++) {
                     for (int j = 0; j < connectionSize; j++) {
-                        if (connection[j].usID == authPackage.authorizedUser.ID && connection[j].usSocket != 0) {
+                        if (connection[j].usID == authPackage.friendList[i].ID && connection[j].usSocket != 0) {
                             bytesSent = send(connection[j].usSocket, (void *) &(authPackage.authorizedUser),
                                              sizeof(FullUserInfo), 0);
                             if (bytesSent < 0)
