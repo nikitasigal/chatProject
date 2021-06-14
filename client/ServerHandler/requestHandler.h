@@ -21,8 +21,8 @@ gboolean serverRequest_loadMessages(void *data[2]);
 
 gboolean serverRequest_DialogAddUser(void *data[2]);
 
-void serverRequest_FriendIsOnline(FullUserInfo userInfo, GList *additionalInfo);
+void serverRequest_FriendIsOnline(void *data[2]);
 
-void serverRequest_FriendDisconnect(FullUserInfo userInfo, GList *additionalInfo);
+void serverRequest_FriendIsOffline(void **data);
 
 #endif //CHATPROJECT_REQUESTHANDLER_H

@@ -37,7 +37,6 @@ void GUIInit(SOCKET *serverSocket) {
     GtkWidget *createDialogEntry = GTK_WIDGET(gtk_builder_get_object(builder, "createDialogEntry"));
     GtkWidget *friendMenuRemoveFriend = GTK_WIDGET(gtk_builder_get_object(builder, "friendMenuRemoveFriend"));
     GtkWidget *friendMenuOpenDialog = GTK_WIDGET(gtk_builder_get_object(builder, "friendMenuOpenDialog"));
-    GtkWidget *popupLabel = GTK_WIDGET(gtk_builder_get_object(builder, "popupLabel"));
     GtkWidget *dialogMenuLeaveDialog = GTK_WIDGET(gtk_builder_get_object(builder, "dialogMenuLeaveDialog"));
     GtkWidget *dialogNameLabel = GTK_WIDGET(gtk_builder_get_object(builder, "dialogNameLabel"));
     GtkWidget *timeLabel = GTK_WIDGET(gtk_builder_get_object(builder, "time"));
@@ -83,13 +82,11 @@ void GUIInit(SOCKET *serverSocket) {
     regList = g_list_append(regList, gtk_builder_get_object(builder, "passwordEntry"));
     regList = g_list_append(regList, gtk_builder_get_object(builder, "passwordRepeatEntry"));
     regList = g_list_append(regList, serverSocket);
-    regList = g_list_append(regList, popupLabel);
 
     GList *authList = NULL;
     authList = g_list_append(authList, loginEntry);
     authList = g_list_append(authList, passwordEntry);
     authList = g_list_append(authList, serverSocket);
-    authList = g_list_append(authList, popupLabel);
 
     int *currentDialogID = malloc(sizeof(int));
     *currentDialogID = -1;
@@ -128,7 +125,6 @@ void GUIInit(SOCKET *serverSocket) {
     additionalInfo = g_list_append(additionalInfo, dialogIsJustOpened);
     additionalInfo = g_list_append(additionalInfo, friendMenu);
     additionalInfo = g_list_append(additionalInfo, msgMenu);
-    additionalInfo = g_list_append(additionalInfo, popupLabel);
     additionalInfo = g_list_append(additionalInfo, dialogMenu);
     additionalInfo = g_list_append(additionalInfo, selectedRow);
     additionalInfo = g_list_append(additionalInfo, dialogNameLabel);

@@ -29,13 +29,12 @@ gboolean repeatLoadMessageRequest(GList *additionalServerData) {
 void serverRequestProcess(GList *additionalServerData) {
     SOCKET *serverSocket = g_list_nth_data(additionalServerData, SERVER_SOCKET);
     int requestCount = 1;
-    int tempI = 0;
     while (TRUE) {
         void *data = malloc(MAX_PACKAGE_SIZE);
         int bytesReceived = recv(*serverSocket, data, MAX_PACKAGE_SIZE, 0);
-        tempI++;
         if (bytesReceived < 0) {
             g_critical("Server is offline");
+            popupNotification("Server is offline");
             return;
         }
         g_message("File - 'serverLoop.c', foo - 'serverRequestProcess': Received request number %d", requestCount++);
@@ -116,6 +115,18 @@ void serverRequestProcess(GList *additionalServerData) {
                 gdk_threads_add_idle(G_SOURCE_FUNC(serverRequest_DialogAddUser), list);
 
                 g_message("File - 'serverLoop.c', foo - 'serverRequestProcess': Adding user to chat");
+                break;
+            }
+            case FRIEND_IS_ONLINE: {
+                gdk_threads_add_idle(G_SOURCE_FUNC(serverRequest_FriendIsOnline), list);
+
+                g_message("File - 'serverLoop.c', foo - 'serverRequestProcess': Friend is online");
+                break;
+            }
+            case FRIEND_IS_OFFLINE: {
+                gdk_threads_add_idle(G_SOURCE_FUNC(serverRequest_FriendIsOffline), list);
+
+                g_message("File - 'serverLoop.c', foo - 'serverRequestProcess': Friend disconnected");
                 break;
             }
             default: {
