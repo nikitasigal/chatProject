@@ -23,6 +23,7 @@
     <property name="window-position">center</property>
     <property name="default-width">1200</property>
     <property name="default-height">900</property>
+    <property name="icon">..\Images\app-icon.png</property>
     <signal name="destroy" handler="windowClose" swapped="no"/>
     <child>
       <object class="GtkBox" id="testWindowBox">
@@ -942,6 +943,7 @@
     <property name="window-position">center</property>
     <property name="default-width">280</property>
     <property name="default-height">320</property>
+    <property name="icon">..\Images\app-icon.png</property>
     <child>
       <object class="GtkBox" id="registrationWindowBox">
         <property name="visible">True</property>

@@ -3,8 +3,6 @@
 
 #include "../../shared/definitions.h"
 
-void clientRequest_CreatePersonalDialog(SOCKET serverSocket, FullDialogInfo dialogInfo);
-
 void clientRequest_LoadMessages(SOCKET serverSocket, FullDialogInfo dialogInfo);
 
 void clientRequest_CreateDialog(SOCKET serverSocket, FullDialogInfo dialogInfo);
