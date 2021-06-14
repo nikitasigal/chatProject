@@ -448,7 +448,7 @@ void sqlRemoveFriend(sqlite3 *conn, FullUserInfo *user, int *friendID) {
     sqlite3_prepare_v2(conn, query, (int) strlen(query), &stmt, NULL);
     if (sqlite3_step(stmt) != SQLITE_ROW) {
         g_warning("sqlRemoveFriend: User '%s' not found", user->additionalInfo);
-        user->ID = -2;
+        user->ID = -1;
         sqlite3_finalize(stmt);
         return;
     }
@@ -559,7 +559,7 @@ void sqlLoadMessages(sqlite3 *conn, FullDialogInfo *dialog, MessagesPackage *pac
                    "JOIN users u on u.id == m.user_id\n"
                    "WHERE chat_id == '%d'\n"
                    "ORDER BY m.id\n"
-                   "LIMIT 500", dialog->ID);
+                   "LIMIT '%d'", dialog->ID, LOAD_MESSAGE_COUNT);
     sqlite3_prepare_v2(conn, query, (int) strlen(query), &stmt, NULL);
     package->messagesCount = 0;
     while (sqlite3_step(stmt) == SQLITE_ROW) {

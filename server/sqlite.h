@@ -4,7 +4,7 @@
 #include <sqlite3.h>
 #include "../shared/definitions.h"
 
-#define QUERY_SIZE 200
+#define QUERY_SIZE 1500
 
 void sqlGetFriendsList(sqlite3 *conn, int *friendList, short *friendCount, FullUserInfo *user);
 

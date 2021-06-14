@@ -4,8 +4,6 @@
 #include <gtk/gtk.h>
 #include "sqlite.h"
 
-#define DEFAULT_PORT "30000"
-
 typedef struct {
     int usID;
     SOCKET usSocket;
@@ -229,7 +227,7 @@ void clientRequestReceiving(void *clientSocket) {
                 }
 
                 for (int i = 0; i < connectionSize; i++)
-                    if (connection[i].usID == friendID) {
+                    if (connection[i].usID == friendID && connection[i].usSocket != 0) {
                         int bytesSent = send(connection[i].usSocket, (void *) userInfo, sizeof(FullUserInfo), 0);
                         if (bytesSent < 0)
                             g_warning("Thread %3d : Socket '%d' sent < 0 bytes", (int) socket,
