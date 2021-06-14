@@ -7,7 +7,7 @@
 #define TEXT_SIZE 1000
 #define DATE_SIZE 32
 #define NAME_SIZE 32
-#define DIALOG_SIZE 96
+#define DIALOG_NAME_SIZE 96
 #define MAX_NUMBER_OF_USERS 30
 #define MAX_PACKAGE_SIZE 614400 // 600 КБ
 #define LOAD_MESSAGE_COUNT 500
@@ -71,7 +71,7 @@ typedef enum {
 
 typedef struct {
     int ID;
-    char name[DIALOG_SIZE];
+    char name[DIALOG_NAME_SIZE];
     GtkListBox *userList;
     GtkListBox *msgList;
     char isOpened;
@@ -107,7 +107,7 @@ typedef struct {
 typedef struct {
     Request request;
     int ID;
-    char name[DIALOG_SIZE];
+    char name[DIALOG_NAME_SIZE];
     short userCount;
     FullUserInfo userList[MAX_NUMBER_OF_USERS];
     char isGroup;
@@ -120,9 +120,9 @@ typedef struct {
     short dialogCount;
     FullDialogInfo dialogList[AUTH_MAX_DIALOGS];
     short friendCount;
-    FullUserInfo friends[AUTH_MAX_FRIENDS];
-    short requestCount;
-    FullUserInfo requests[AUTH_MAX_REQUESTS];
+    FullUserInfo friendList[AUTH_MAX_FRIENDS];
+    short friendRequestCount;
+    FullUserInfo friendRequestList[AUTH_MAX_REQUESTS];
 } AuthorizationPackage;
 
 #endif //CHATPROJECT_DEFINITIONS_H

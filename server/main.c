@@ -18,17 +18,17 @@ void clientRequestReceiving(void *clientSocket) {
     sqlite3 *sqliteConn;
     int sqlResult = sqlite3_open_v2("database.sqlite", &sqliteConn, SQLITE_OPEN_READWRITE, NULL);
     if (sqlResult != SQLITE_OK) {
-        g_critical("Thread %3d : Error while opening database - shutting thread down", clientSocket);
+        g_critical("Thread %3d : Error while opening database - shutting thread down", (int) ((SOCKET) clientSocket));
         return;
     } else
-        g_message("Thread %3d : Database connection established", clientSocket);
+        g_message("Thread %3d : Database connection established", (int) ((SOCKET) clientSocket));
 
     SOCKET socket = (SOCKET) clientSocket;
     while (TRUE) {
         void *userData = malloc(MAX_PACKAGE_SIZE);
         int bytesReceived = recv(socket, userData, MAX_PACKAGE_SIZE, 0);
         if (bytesReceived < 0) {
-            g_message("Thread %3d : Client disconnected", socket);
+            g_message("Thread %3d : Client disconnected", (int) socket);
             free(userData);
             break;
         }
@@ -36,7 +36,7 @@ void clientRequestReceiving(void *clientSocket) {
         Request *request = userData;
         switch (*request) {
             case REGISTRATION: {
-                g_message("Thread %3d : Registration of new user ...", socket);
+                g_message("Thread %3d : Registration of new user ...", (int) socket);
                 FullUserInfo *userInfo = userData;
 
                 sqlRegister(sqliteConn, userInfo);
@@ -48,12 +48,12 @@ void clientRequestReceiving(void *clientSocket) {
 
                 int bytesSent = send(socket, (void *) userInfo, sizeof(FullUserInfo), 0);
                 if (bytesSent < 0)
-                    g_warning("Tread %3d : Socket sent < 0 bytes", socket);
+                    g_warning("Tread %3d : Socket sent < 0 bytes", (int) socket);
 
                 break;
             }
             case AUTHORIZATION: {
-                g_message("Thread %3d : Authorizing user ...", socket);
+                g_message("Thread %3d : Authorizing user ...", (int) socket);
                 FullUserInfo *userInfo = userData;
 
                 AuthorizationPackage authPackage;
@@ -62,7 +62,7 @@ void clientRequestReceiving(void *clientSocket) {
                 for (int i = 0; i < connectionSize; i++) {
                     if (connection[i].usID == authPackage.authorizedUser.ID) {
                         if (connection[i].usSocket != 0) {
-                            g_warning("Thread %3d : User '%d' is already authorized ...", socket,
+                            g_warning("Thread %3d : User '%d' is already authorized ...", (int) socket,
                                       authPackage.authorizedUser.ID);
                             authPackage.authorizedUser.ID = -3; // User is already online on a different client
                         } else
@@ -82,23 +82,24 @@ void clientRequestReceiving(void *clientSocket) {
                 authPackage.request = AUTHORIZATION;
                 int bytesSent = send(socket, (void *) &authPackage, sizeof(AuthorizationPackage), 0);
                 if (bytesSent < 0)
-                    g_warning("Thread %3d : Socket sent < 0 bytes", socket);
+                    g_warning("Thread %3d : Socket sent < 0 bytes", (int) socket);
 
                 for (int i = 0; i < authPackage.friendCount; i++) {
                     for (int j = 0; j < connectionSize; j++) {
-                        if (connection[j].usID == authPackage.friends[i].ID && connection[j].usSocket != 0) {
-                            authPackage.friends[i].request = FRIEND_IS_ONLINE;
-                            bytesSent = send(connection[j].usSocket, (void *) &(authPackage.friends[i]),
+                        if (connection[j].usID == authPackage.friendList[i].ID && connection[j].usSocket != 0) {
+                            authPackage.friendList[i].request = FRIEND_IS_ONLINE;
+                            bytesSent = send(connection[j].usSocket, (void *) &(authPackage.friendList[i]),
                                              sizeof(FullUserInfo), 0);
                             if (bytesSent < 0)
-                                g_warning("Thread %3d : Socket sent < 0 bytes", socket);
+                                g_warning("Thread %3d : Socket '%d' sent < 0 bytes", (int) socket,
+                                          (int) connection[j].usSocket);
                         }
                     }
                 }
                 break;
             }
             case CREATE_DIALOG: {
-                g_message("Thread %3d : Creating new dialog ...", socket);
+                g_message("Thread %3d : Creating new dialog ...", (int) socket);
                 FullDialogInfo *dialogInfo = userData;
 
                 sqlCreateDialog(sqliteConn, dialogInfo);
@@ -118,14 +119,15 @@ void clientRequestReceiving(void *clientSocket) {
                             int bytesSent = send(connection[j].usSocket, (void *) dialogInfo, sizeof(FullDialogInfo),
                                                  0);
                             if (bytesSent < 0)
-                                g_warning("Thread %3d : Socket sent < 0 bytes", socket);
+                                g_warning("Thread %3d : Socket '%d' sent < 0 bytes", (int) socket,
+                                          (int) connection[j].usSocket);
                         }
                     }
                 }
                 break;
             }
             case SEND_MESSAGE: {
-                g_message("Thread %3d : Processing new message ...", socket);
+                g_message("Thread %3d : Processing new message ...", (int) socket);
                 FullMessageInfo *messageInfo = userData;
 
                 FullDialogInfo dialogInfo;
@@ -141,23 +143,24 @@ void clientRequestReceiving(void *clientSocket) {
                             int bytesSent = send(connection[j].usSocket, (void *) messageInfo, sizeof(FullMessageInfo),
                                                  0);
                             if (bytesSent < 0)
-                                g_warning("Thread %3d : Socket '%d' sent < 0 bytes", socket);
+                                g_warning("Thread %3d : Socket '%d' sent < 0 bytes", (int) socket,
+                                          (int) connection[j].usSocket);
                         }
                     }
                 }
                 break;
             }
             case SEND_FRIEND_REQUEST: {
-                g_message("Thread %3d : Processing new friend request ...", socket);
+                g_message("Thread %3d : Processing new friend request ...", (int) socket);
                 FullUserInfo *userInfo = userData;
 
                 int requestID;
                 sqlSendFriendRequest(sqliteConn, userInfo, &requestID);
 
-                if (userInfo->ID == -1 || userInfo->ID == -2) {
+                if (userInfo->ID < 0) {
                     int bytesSent = send(socket, (void *) userInfo, sizeof(FullUserInfo), 0);
                     if (bytesSent < 0)
-                        g_warning("Thread %3d : Socket sent < 0 bytes", socket);
+                        g_warning("Thread %3d : Socket sent < 0 bytes", (int) socket);
                     break;
                 }
 
@@ -165,20 +168,19 @@ void clientRequestReceiving(void *clientSocket) {
                     if (requestID == connection[i].usID) {
                         int bytesSent = send(connection[i].usSocket, (void *) userInfo, sizeof(FullUserInfo), 0);
                         if (bytesSent < 0)
-                            g_warning("Thread %3d : Socket sent < 0 bytes", socket);
+                            g_warning("Thread %3d : Socket '%d' sent < 0 bytes", (int) socket,
+                                      (int) connection[i].usSocket);
                     }
                 }
 
-                if (userInfo->ID >= 0)
-                    userInfo->ID = -3;
-
+                userInfo->ID = -3;
                 int bytesSent = send(socket, (void *) userInfo, sizeof(FullUserInfo), 0);
                 if (bytesSent < 0)
-                    g_warning("Thread %3d : Socket sent < 0 bytes", socket);
+                    g_warning("Thread %3d : Socket sent < 0 bytes", (int) socket);
                 break;
             }
             case FRIEND_REQUEST_ACCEPTED: {
-                g_message("Thread %3d : Processing accepted friend request ...", socket);
+                g_message("Thread %3d : Processing accepted friend request ...", (int) socket);
                 FullUserInfo *userInfo = userData;
 
                 FullUserInfo sender;
@@ -193,20 +195,21 @@ void clientRequestReceiving(void *clientSocket) {
                 // temporary send to user, who answered the request
                 int bytesSent = send(socket, (void *) &sender, sizeof(FullUserInfo), 0);
                 if (bytesSent < 0)
-                    g_warning("Thread %3d : Socket sent < 0 bytes", socket);
+                    g_warning("Thread %3d : Socket sent < 0 bytes", (int) socket);
 
                 for (int i = 0; i < connectionSize; i++) {
                     if (sender.ID == connection[i].usID) {
-                        int bytesSent = send(connection[i].usSocket, (void *) userInfo, sizeof(FullUserInfo), 0);
+                        bytesSent = send(connection[i].usSocket, (void *) userInfo, sizeof(FullUserInfo), 0);
                         if (bytesSent < 0)
-                            g_warning("Thread %3d : Socket sent < 0 bytes", socket);
+                            g_warning("Thread %3d : Socket '%d' sent < 0 bytes", (int) socket,
+                                      (int) connection[i].usSocket);
                     }
                 }
 
                 break;
             }
             case FRIEND_REQUEST_DECLINED: {
-                g_message("Thread %3d : Processing declined friend request ...", socket);
+                g_message("Thread %3d : Processing declined friend request ...", (int) socket);
                 FullUserInfo *userInfo = userData;
 
                 sqlDeclineFriendRequest(sqliteConn, userInfo);
@@ -217,7 +220,7 @@ void clientRequestReceiving(void *clientSocket) {
                 break;
             }
             case REMOVE_FRIEND: {
-                g_message("Thread %3d : Deleting friend ...", socket);
+                g_message("Thread %3d : Deleting friend ...", (int) socket);
                 FullUserInfo *userInfo = userData;
 
                 int friendID;
@@ -231,14 +234,15 @@ void clientRequestReceiving(void *clientSocket) {
                     if (connection[i].usID == friendID) {
                         int bytesSent = send(connection[i].usSocket, (void *) userInfo, sizeof(FullUserInfo), 0);
                         if (bytesSent < 0)
-                            g_warning("Thread %3d : Socket sent < 0 bytes", socket);
+                            g_warning("Thread %3d : Socket '%d' sent < 0 bytes", (int) socket,
+                                      (int) connection[i].usSocket);
                         break;
                     }
 
                 break;
             }
             case LEAVE_DIALOG: {
-                g_message("Thread %3d : Leaving dialog ...", socket);
+                g_message("Thread %3d : Leaving dialog ...", (int) socket);
                 FullUserInfo *userInfo = userData;
 
                 FullDialogInfo dialogInfo;
@@ -256,7 +260,8 @@ void clientRequestReceiving(void *clientSocket) {
                         if (dialogInfo.userList[i].ID == connection[j].usID && connection[j].usSocket != 0) {
                             int bytesSent = send(connection[j].usSocket, (void *) userInfo, sizeof(FullUserInfo), 0);
                             if (bytesSent < 0)
-                                g_warning("Thread %3d : Socket sent < 0 bytes", socket);
+                                g_warning("Thread %3d : Socket '%d' sent < 0 bytes", (int) socket,
+                                          (int) connection[j].usSocket);
                         }
                     }
                 }
@@ -264,7 +269,7 @@ void clientRequestReceiving(void *clientSocket) {
                 break;
             }
             case LOAD_MESSAGES: {
-                g_message("Thread %3d : Loading messages ...", socket);
+                g_message("Thread %3d : Loading messages ...", (int) socket);
                 FullDialogInfo *dialogInfo = userData;
                 MessagesPackage msgPackage;
 
@@ -273,11 +278,11 @@ void clientRequestReceiving(void *clientSocket) {
                 msgPackage.request = LOAD_MESSAGES;
                 int bytesSent = send(socket, (void *) &msgPackage, sizeof(MessagesPackage), 0);
                 if (bytesSent < 0)
-                    g_warning("Thread %3d : Socket sent < 0 bytes", socket);
+                    g_warning("Thread %3d : Socket sent < 0 bytes", (int) socket);
                 break;
             }
             case DIALOG_ADD_USER: {
-                g_message("Thread %3d : Adding user to dialog ...", socket);
+                g_message("Thread %3d : Adding user to dialog ...", (int) socket);
                 FullUserInfo *userInfo = userData;
 
                 FullDialogInfo result;
@@ -297,7 +302,8 @@ void clientRequestReceiving(void *clientSocket) {
                         current = connection[i].usSocket;
                         int bytesSent = send(connection[i].usSocket, (void *) &result, sizeof(FullDialogInfo), 0);
                         if (bytesSent < 0)
-                            g_warning("Thread %3d : Socket sent < 0 bytes", socket);
+                            g_warning("Thread %3d : Socket '%d' sent < 0 bytes", (int) socket,
+                                      (int) connection[i].usSocket);
                         break;
                     }
                 }
@@ -310,14 +316,15 @@ void clientRequestReceiving(void *clientSocket) {
                             connection[j].usSocket != current) {
                             int bytesSent = send(connection[j].usSocket, (void *) &result, sizeof(FullDialogInfo), 0);
                             if (bytesSent < 0)
-                                g_warning("Thread %3d : Socket sent < 0 bytes", socket);
+                                g_warning("Thread %3d : Socket '%d' sent < 0 bytes", (int) socket,
+                                          (int) connection[j].usSocket);
                         }
                     }
                 }
                 break;
             }
             default:
-                g_critical("Thread %3d : Request '%d' is not defined", socket, *request);
+                g_critical("Thread %3d : Request '%d' is not defined", (int) socket, *request);
         }
 
         free(userData);
@@ -327,7 +334,7 @@ void clientRequestReceiving(void *clientSocket) {
         if (connection[i].usSocket == (SOCKET) clientSocket) {
             connection[i].usSocket = 0;
 
-            // Send FRIEND_IS_OFFLINE notification to all friends
+            // Send FRIEND_IS_OFFLINE notification to all friendList
             FullUserInfo user;
             user.request = FRIEND_IS_OFFLINE;
             user.ID = connection[i].usID;
@@ -340,7 +347,8 @@ void clientRequestReceiving(void *clientSocket) {
                     if (connection[k].usID == friendList[j] && connection[k].usSocket != 0) {
                         int bytesSent = send(connection[k].usSocket, (void *) &user, sizeof(FullUserInfo), 0);
                         if (bytesSent < 0)
-                            g_warning("Thread %3d : Socket sent < 0 bytes", socket);
+                            g_warning("Thread %3d : Socket '%d' sent < 0 bytes", (int) socket,
+                                      (int) connection[k].usSocket);
                     }
                 }
             }
@@ -351,10 +359,10 @@ void clientRequestReceiving(void *clientSocket) {
 
     sqlResult = sqlite3_close_v2(sqliteConn);
     if (sqlResult != SQLITE_OK)
-        g_critical("Thread %3d : Error while closing the database", socket);
+        g_critical("Thread %3d : Error while closing the database", (int) socket);
     else
-        g_message("Thread %3d : Database connection closed", socket);
-    g_message("Thread %3d : Thread shutting down", socket);
+        g_message("Thread %3d : Database connection closed", (int) socket);
+    g_message("Thread %3d : Thread shutting down", (int) socket);
 }
 
 int main() {
@@ -415,9 +423,9 @@ int main() {
             return -5;
         }
 
-        g_message("main(): Created thread for client '%3d'", clientSocket);
+        g_message("main(): Created thread for client '%3d'", (int) clientSocket);
         char thread_name[30] = {0};
-        sprintf(thread_name, "client_thread_%3d", clientSocket);
+        sprintf(thread_name, "client_thread_%3d", (int) clientSocket);
         g_thread_new(thread_name, (GThreadFunc) clientRequestReceiving, (void *) clientSocket);
     }
 

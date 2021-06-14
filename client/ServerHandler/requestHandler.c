@@ -68,12 +68,12 @@ gboolean serverRequest_Authorization(void **specialAdditionalServerData) {
         g_message("Authorization package: createDialog %d", i + 1);
     }
     for (int i = 0; i < startPackage->friendCount; ++i) {
-        void *nextData[2] = {&startPackage->friends[i], additionalServerData};
+        void *nextData[2] = {&startPackage->friendList[i], additionalServerData};
         addFriend(nextData);
         g_message("Authorization package: addFriend %d", i + 1);
     }
-    for (int i = 0; i < startPackage->requestCount; ++i) {
-        void *nextData[2] = {&startPackage->requests[i], additionalServerData};
+    for (int i = 0; i < startPackage->friendRequestCount; ++i) {
+        void *nextData[2] = {&startPackage->friendRequestList[i], additionalServerData};
         serverRequest_SendFriendRequest(nextData);
         g_message("Authorization package: friendRequest %d", i + 1);
     }
@@ -106,7 +106,7 @@ gboolean serverRequest_CreateDialog(void *data[2]) {
     newDialog->isOpened = FALSE;
     newDialog->isGroup = dialogInfo->isGroup;
 
-    char dialogName[DIALOG_SIZE] = {0};
+    char dialogName[DIALOG_NAME_SIZE] = {0};
     if (dialogInfo->isGroup)
         strcpy(dialogName, dialogInfo->name);
     else

@@ -6,7 +6,7 @@
 
 #define QUERY_SIZE 200
 
-void sqlGetFriendsList(sqlite3 *conn, int friendsList[MAX_NUMBER_OF_USERS], short *friendsCount, FullUserInfo *user);
+void sqlGetFriendsList(sqlite3 *conn, int *friendList, short *friendCount, FullUserInfo *user);
 
 void sqlRegister(sqlite3 *conn, FullUserInfo *user);
 
@@ -16,17 +16,17 @@ void sqlCreateDialog(sqlite3 *conn, FullDialogInfo *dialog);
 
 void sqlSendMessage(sqlite3 *conn, FullMessageInfo *message, FullDialogInfo *dialog);
 
-void sqlSendFriendRequest(sqlite3 *conn, FullUserInfo *user, int *friendID);
+void sqlSendFriendRequest(sqlite3 *conn, FullUserInfo *sender, int *recipientID);
 
-void sqlAcceptFriendRequest(sqlite3 *conn, FullUserInfo *user, FullUserInfo *sender);
+void sqlAcceptFriendRequest(sqlite3 *conn, FullUserInfo *recipient, FullUserInfo *sender);
 
-void sqlDeclineFriendRequest(sqlite3 *conn, FullUserInfo *user);
+void sqlDeclineFriendRequest(sqlite3 *conn, FullUserInfo *recipient);
 
 void sqlRemoveFriend(sqlite3 *conn, FullUserInfo *user, int *friendID);
 
 void sqlLeaveDialog(sqlite3 *conn, FullUserInfo *leaveRequest, FullDialogInfo *dialog);
 
-void sqlJoinDialog(sqlite3 *conn, FullUserInfo *addRequest, FullDialogInfo* dialog);
+void sqlJoinDialog(sqlite3 *conn, FullUserInfo *joinRequest, FullDialogInfo *dialog);
 
 void sqlLoadMessages(sqlite3 *conn, FullDialogInfo *dialog, MessagesPackage *package);
 
