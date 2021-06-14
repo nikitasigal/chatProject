@@ -506,20 +506,22 @@ gboolean serverRequest_DialogAddUser(void *data[2]) {
     return FALSE;
 }
 
-void serverRequest_FriendIsOnline(void *data[2]) {
+gboolean serverRequest_FriendIsOnline(void *data[2]) {
     FullUserInfo *userInfo = data[0];
-    char notification[48] = {0};
+    char notification[100] = {0};
     sprintf(notification, "%s is online", userInfo->username);
     popupNotification(notification);
 
     g_free(userInfo);
+    return FALSE;
 }
 
-void serverRequest_FriendIsOffline(void **data) {
+gboolean serverRequest_FriendIsOffline(void *data[2]) {
     FullUserInfo *userInfo = data[0];
-    char notification[48] = {0};
+    char notification[100] = {0};
     sprintf(notification, "%s disconnected", userInfo->username);
     popupNotification(notification);
 
     g_free(userInfo);
+    return FALSE;
 }
