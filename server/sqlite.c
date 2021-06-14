@@ -7,11 +7,11 @@ void sqlGetChatMembers(sqlite3 *conn, FullUserInfo *memberList, short *memberCou
     sqlite3_stmt *stmt;
 
     //Select all users that are in this chat
-    sprintf(query, "SELECT users.id, username, first_name, second_name\n"
-                   "FROM users\n"
-                   "JOIN chats_to_users ctu on users.id == ctu.user_id\n"
-                   "JOIN chats c on c.id == ctu.chat_id\n"
-                   "WHERE c.id == '%d'", chatID);
+    sprintf(query, "SELECT u.id, username, first_name, second_name\n"
+                   "FROM users u\n"
+                   "JOIN chats_to_users ctu on u.id = ctu.user_id\n"
+                   "JOIN chats c on c.id = ctu.chat_id\n"
+                   "WHERE c.id = '%d'", chatID);
     sqlite3_prepare_v2(conn, query, (int) strlen(query), &stmt, NULL);
     *memberCount = 0;
     while (sqlite3_step(stmt) == SQLITE_ROW) {
@@ -25,14 +25,14 @@ void sqlGetChatMembers(sqlite3 *conn, FullUserInfo *memberList, short *memberCou
     sqlite3_finalize(stmt);
 }
 
-void sqlGetFriendsList(sqlite3 *conn, int friendsList[MAX_NUMBER_OF_USERS], short *friendsCount, FullUserInfo *user) {
+void sqlGetFriendsList(sqlite3 *conn, int *friendList, short *friendCount, FullUserInfo *user) {
     char query[QUERY_SIZE] = {0};
     sqlite3_stmt *stmt;
 
     // Query 1 - Get user's credentials
     sprintf(query, "SELECT username, first_name, second_name\n"
                    "FROM users\n"
-                   "WHERE id == '%d'", user->ID);
+                   "WHERE id = '%d'", user->ID);
     sqlite3_prepare_v2(conn, query, (int) strlen(query), &stmt, NULL);
     if (sqlite3_step(stmt) != SQLITE_ROW) {
         g_message("sqlGetFriendsList(): User '%d' not found", user->ID);
@@ -52,9 +52,9 @@ void sqlGetFriendsList(sqlite3 *conn, int friendsList[MAX_NUMBER_OF_USERS], shor
                    "JOIN friend_list fl on u.id = fl.user_id\n"
                    "WHERE fl.friend_id = '%d'", user->ID);
     sqlite3_prepare_v2(conn, query, (int) strlen(query), &stmt, NULL);
-    *friendsCount = 0;
+    *friendCount = 0;
     while (sqlite3_step(stmt) == SQLITE_ROW) {
-        friendsList[(*friendsCount)++] = sqlite3_column_int(stmt, 0);
+        friendList[(*friendCount)++] = sqlite3_column_int(stmt, 0);
     }
     sqlite3_finalize(stmt);
     memset(query, 0, QUERY_SIZE);
@@ -80,7 +80,7 @@ void sqlRegister(sqlite3 *conn, FullUserInfo *user) {
     //Query 2 - Return ID of this user
     sprintf(query, "SELECT id\n"
                    "FROM users\n"
-                   "WHERE username == '%s'", user->username);
+                   "WHERE username = '%s'", user->username);
     sqlite3_prepare_v2(conn, query, (int) strlen(query), &stmt, NULL);
     if (sqlite3_step(stmt) != SQLITE_ROW) {
         g_critical("sqlRegister(): User '%s' not found", user->username);
@@ -98,9 +98,9 @@ void sqlAuthorize(sqlite3 *conn, FullUserInfo *user, AuthorizationPackage *packa
     sqlite3_stmt *stmt;
 
     // Query 1 - Check user credentials
-    sprintf(query, "SELECT id, username, password, first_name, second_name\n"
+    sprintf(query, "SELECT id, password, first_name, second_name\n"
                    "FROM users\n"
-                   "WHERE username == '%s'", user->username);
+                   "WHERE username = '%s'", user->username);
     sqlite3_prepare_v2(conn, query, (int) strlen(query), &stmt, NULL);
     if (sqlite3_step(stmt) != SQLITE_ROW) {
         g_message("sqlAuthorize(): User '%s' not found", user->username);
@@ -108,27 +108,26 @@ void sqlAuthorize(sqlite3 *conn, FullUserInfo *user, AuthorizationPackage *packa
         sqlite3_finalize(stmt);
         return;
     }
-    if (strcmp((const char *) sqlite3_column_text(stmt, 2), user->password) != 0) {
+    if (strcmp((const char *) sqlite3_column_text(stmt, 1), user->password) != 0) {
         g_message("sqlAuthorize(): Received password for user '%s' is incorrect", user->username);
         package->authorizedUser.ID = -2;
         sqlite3_finalize(stmt);
         return;
     }
-
     package->authorizedUser.ID = sqlite3_column_int(stmt, 0);
-    strcpy(package->authorizedUser.username, (const char *) sqlite3_column_text(stmt, 1));
+    strcpy(package->authorizedUser.username, user->username);
     strcpy(package->authorizedUser.password, "***");
-    strcpy(package->authorizedUser.firstName, (const char *) sqlite3_column_text(stmt, 3));
-    strcpy(package->authorizedUser.lastName, (const char *) sqlite3_column_text(stmt, 4));
+    strcpy(package->authorizedUser.firstName, (const char *) sqlite3_column_text(stmt, 2));
+    strcpy(package->authorizedUser.lastName, (const char *) sqlite3_column_text(stmt, 3));
     sqlite3_finalize(stmt);
     memset(query, 0, QUERY_SIZE);
 
     //Query 2 - extract dialogs
-    sprintf(query, "SELECT chats.id, name, is_group\n"
-                   "FROM chats\n"
-                   "JOIN chats_to_users ctu on chats.id == ctu.chat_id\n"
-                   "JOIN users u on ctu.user_id == u.id\n"
-                   "WHERE u.id == '%d'", package->authorizedUser.ID);
+    sprintf(query, "SELECT c.id, name, is_group\n"
+                   "FROM chats c\n"
+                   "JOIN chats_to_users ctu on c.id = ctu.chat_id\n"
+                   "JOIN users u on ctu.user_id = u.id\n"
+                   "WHERE u.id = '%d'", package->authorizedUser.ID);
     sqlite3_prepare_v2(conn, query, (int) strlen(query), &stmt, NULL);
     package->dialogCount = 0;
     while (sqlite3_step(stmt) == SQLITE_ROW) {
@@ -146,42 +145,41 @@ void sqlAuthorize(sqlite3 *conn, FullUserInfo *user, AuthorizationPackage *packa
     sqlite3_finalize(stmt);
     memset(query, 0, QUERY_SIZE);
 
-
-
-    //Query 3 - extract friends
+    //Query 3 - extract friendList
     sprintf(query, "SELECT id, username, first_name, second_name\n"
-                   "FROM users\n"
-                   "JOIN friend_list fl on users.id == fl.user_id\n"
+                   "FROM users u\n"
+                   "JOIN friend_list fl on u.id == fl.user_id\n"
                    "WHERE fl.friend_id == '%d'", package->authorizedUser.ID);
     sqlite3_prepare_v2(conn, query, (int) strlen(query), &stmt, NULL);
     package->friendCount = 0;
     while (sqlite3_step(stmt) == SQLITE_ROW) {
-        package->friends[package->friendCount].ID = sqlite3_column_int(stmt, 0);
-        strcpy(package->friends[package->friendCount].username, (const char *) sqlite3_column_text(stmt, 1));
-        strcpy(package->friends[package->friendCount].password, "***");
-        strcpy(package->friends[package->friendCount].firstName, (const char *) sqlite3_column_text(stmt, 2));
-        strcpy(package->friends[package->friendCount].lastName, (const char *) sqlite3_column_text(stmt, 3));
+        package->friendList[package->friendCount].ID = sqlite3_column_int(stmt, 0);
+        strcpy(package->friendList[package->friendCount].username, (const char *) sqlite3_column_text(stmt, 1));
+        strcpy(package->friendList[package->friendCount].password, "***");
+        strcpy(package->friendList[package->friendCount].firstName, (const char *) sqlite3_column_text(stmt, 2));
+        strcpy(package->friendList[package->friendCount].lastName, (const char *) sqlite3_column_text(stmt, 3));
         package->friendCount++;
     }
     sqlite3_finalize(stmt);
     memset(query, 0, QUERY_SIZE);
 
-
-
-    //Query 4 - extract friend requests
+    //Query 4 - extract friend friendRequestList
     sprintf(query, "SELECT id, username, first_name, second_name\n"
-                   "FROM users\n"
-                   "JOIN friend_requests fr on users.id == fr.user_id\n"
+                   "FROM users u\n"
+                   "JOIN friend_requests fr on u.id == fr.user_id\n"
                    "WHERE fr.requested_id == '%d'", package->authorizedUser.ID);
     sqlite3_prepare_v2(conn, query, (int) strlen(query), &stmt, NULL);
-    package->requestCount = 0;
+    package->friendRequestCount = 0;
     while (sqlite3_step(stmt) == SQLITE_ROW) {
-        package->requests[package->requestCount].ID = sqlite3_column_int(stmt, 0);
-        strcpy(package->requests[package->requestCount].username, (const char *) sqlite3_column_text(stmt, 1));
-        strcpy(package->requests[package->requestCount].password, "***");
-        strcpy(package->requests[package->requestCount].firstName, (const char *) sqlite3_column_text(stmt, 2));
-        strcpy(package->requests[package->requestCount].lastName, (const char *) sqlite3_column_text(stmt, 3));
-        package->requestCount++;
+        package->friendRequestList[package->friendRequestCount].ID = sqlite3_column_int(stmt, 0);
+        strcpy(package->friendRequestList[package->friendRequestCount].username,
+               (const char *) sqlite3_column_text(stmt, 1));
+        strcpy(package->friendRequestList[package->friendRequestCount].password, "***");
+        strcpy(package->friendRequestList[package->friendRequestCount].firstName,
+               (const char *) sqlite3_column_text(stmt, 2));
+        strcpy(package->friendRequestList[package->friendRequestCount].lastName,
+               (const char *) sqlite3_column_text(stmt, 3));
+        package->friendRequestCount++;
     }
     sqlite3_finalize(stmt);
     memset(query, 0, QUERY_SIZE);
@@ -252,7 +250,7 @@ void sqlSendMessage(sqlite3 *conn, FullMessageInfo *message, FullDialogInfo *dia
     //Query 1 - Find sender's chatID in 'userList' table
     sprintf(query, "SELECT id\n"
                    "FROM users\n"
-                   "WHERE username == '%s'", message->username);
+                   "WHERE username = '%s'", message->username);
     sqlite3_prepare_v2(conn, query, (int) strlen(query), &stmt, NULL);
     if (sqlite3_step(stmt) != SQLITE_ROW) {
         g_critical("sqlSendMessage(): User '%s' does not exist", message->username);
@@ -282,35 +280,35 @@ void sqlSendMessage(sqlite3 *conn, FullMessageInfo *message, FullDialogInfo *dia
     sqlGetChatMembers(conn, dialog->userList, &(dialog->userCount), message->chatID);
 }
 
-void sqlSendFriendRequest(sqlite3 *conn, FullUserInfo *user, int *friendID) {
+void sqlSendFriendRequest(sqlite3 *conn, FullUserInfo *sender, int *recipientID) {
     char query[QUERY_SIZE] = {0};
     sqlite3_stmt *stmt;
 
-    // Query 1 - Get requested user's ID
+    // Query 1 - Get requested sender's ID
     sprintf(query, "SELECT id\n"
                    "FROM users\n"
-                   "WHERE username == '%s'", user->additionalInfo);
+                   "WHERE username = '%s'", sender->additionalInfo);
     sqlite3_prepare_v2(conn, query, (int) strlen(query), &stmt, NULL);
     if (sqlite3_step(stmt) != SQLITE_ROW) {
-        g_warning("sqlSendFriendRequest(): User '%s' not found", user->additionalInfo);
-        user->ID = -2;
+        g_warning("sqlSendFriendRequest(): User '%s' not found", sender->additionalInfo);
+        sender->ID = -2;
         sqlite3_finalize(stmt);
         return;
     }
-    *friendID = sqlite3_column_int(stmt, 0);
+    *recipientID = sqlite3_column_int(stmt, 0);
     sqlite3_finalize(stmt);
     memset(query, 0, QUERY_SIZE);
 
-    // Query 2 - Check user existence
+    // Query 2 - Check sender existence
     sprintf(query, "SELECT *\n"
                    "FROM friend_requests\n"
-                   "WHERE (user_id == '%d' AND requested_id == '%d')\n"
-                   "   OR (user_id == '%d' AND requested_id == '%d')",
-            user->ID, *friendID, *friendID, user->ID);
+                   "WHERE (user_id = '%d' AND requested_id = '%d')\n"
+                   "   OR (user_id = '%d' AND requested_id = '%d')",
+            sender->ID, *recipientID, *recipientID, sender->ID);
     sqlite3_prepare_v2(conn, query, (int) strlen(query), &stmt, NULL);
     if (sqlite3_step(stmt) != SQLITE_DONE) {
-        g_message("sqlSendFriendRequest(): Request between '%d' and '%d' already exists", user->ID, *friendID);
-        user->ID = -1;
+        g_message("sqlSendFriendRequest(): Request between '%d' and '%d' already exists", sender->ID, *recipientID);
+        sender->ID = -1;
         sqlite3_finalize(stmt);
         return;
     }
@@ -320,26 +318,26 @@ void sqlSendFriendRequest(sqlite3 *conn, FullUserInfo *user, int *friendID) {
     // Query 3 - Check friendship existence
     sprintf(query, "SELECT *\n"
                    "FROM friend_list\n"
-                   "WHERE (user_id == '%d' AND friend_id == '%d')\n"
-                   "   OR (user_id == '%d' AND friend_id == '%d')",
-            user->ID, *friendID, *friendID, user->ID);
+                   "WHERE (user_id = '%d' AND friend_id = '%d')\n"
+                   "   OR (user_id = '%d' AND friend_id = '%d')",
+            sender->ID, *recipientID, *recipientID, sender->ID);
     sqlite3_prepare_v2(conn, query, (int) strlen(query), &stmt, NULL);
     if (sqlite3_step(stmt) != SQLITE_DONE) {
-        g_message("sqlSendFriendRequest(): Friendship between '%d' and '%d' already exists", user->ID, *friendID);
-        user->ID = -1;
+        g_message("sqlSendFriendRequest(): Friendship between '%d' and '%d' already exists", sender->ID, *recipientID);
+        sender->ID = -1;
         sqlite3_finalize(stmt);
         return;
     }
     sqlite3_finalize(stmt);
     memset(query, 0, QUERY_SIZE);
 
-    // Query 4 - Insert user into 'friend_requests' table
+    // Query 4 - Insert sender into 'friend_requests' table
     sprintf(query, "INSERT INTO friend_requests\n"
-                   "VALUES ('%d', '%d')", user->ID, *friendID);
+                   "VALUES ('%d', '%d')", sender->ID, *recipientID);
     sqlite3_prepare_v2(conn, query, (int) strlen(query), &stmt, NULL);
     if (sqlite3_step(stmt) != SQLITE_DONE) {
-        g_message("sqlSendFriendRequest(): Request between '%d' and '%d' failed to insert", user->ID, *friendID);
-        user->ID = -1;
+        g_message("sqlSendFriendRequest(): Request between '%d' and '%d' failed to insert", sender->ID, *recipientID);
+        sender->ID = -1;
         sqlite3_finalize(stmt);
         return;
     }
@@ -347,18 +345,18 @@ void sqlSendFriendRequest(sqlite3 *conn, FullUserInfo *user, int *friendID) {
     memset(query, 0, QUERY_SIZE);
 }
 
-void sqlAcceptFriendRequest(sqlite3 *conn, FullUserInfo *user, FullUserInfo *sender) {
+void sqlAcceptFriendRequest(sqlite3 *conn, FullUserInfo *recipient, FullUserInfo *sender) {
     char query[QUERY_SIZE] = {0};
     sqlite3_stmt *stmt;
 
     // Query 1 - Get information about sender
     sprintf(query, "SELECT id, username, first_name, second_name\n"
                    "FROM users\n"
-                   "WHERE username == '%s'", user->additionalInfo);
+                   "WHERE username = '%s'", recipient->additionalInfo);
     sqlite3_prepare_v2(conn, query, (int) strlen(query), &stmt, NULL);
     if (sqlite3_step(stmt) != SQLITE_ROW) {
-        g_warning("sqlAcceptFriendRequest(): User '%s' not found", user->additionalInfo);
-        user->ID = -1;
+        g_warning("sqlAcceptFriendRequest(): User '%s' not found", recipient->additionalInfo);
+        recipient->ID = -1;
         sqlite3_finalize(stmt);
         return;
     }
@@ -370,31 +368,31 @@ void sqlAcceptFriendRequest(sqlite3 *conn, FullUserInfo *user, FullUserInfo *sen
     sqlite3_finalize(stmt);
     memset(query, 0, QUERY_SIZE);
 
-    // Query 2 - Delete user entry from 'friend_requests' table
+    // Query 2 - Delete recipient entry from 'friend_requests' table
     sprintf(query, "DELETE FROM friend_requests\n"
-                   "WHERE user_id == '%d' AND requested_id == '%d'", sender->ID, user->ID);
+                   "WHERE user_id = '%d' AND requested_id = '%d'", sender->ID, recipient->ID);
     sqlite3_prepare_v2(conn, query, (int) strlen(query), &stmt, NULL);
     if (sqlite3_step(stmt) != SQLITE_DONE) {
-        g_warning("sqlAcceptFriendRequest(): Request between '%s'(%d) and '%s'(%d) could not be deleted",
-                  user->username, user->ID,
-                  sender->username, sender->ID);
-        user->ID = -1;
+        g_warning("sqlAcceptFriendRequest(): Request from '%s'(%d) to '%s'(%d) could not be deleted",
+                  sender->username, sender->ID,
+                  recipient->username, recipient->ID);
+        recipient->ID = -1;
         sqlite3_finalize(stmt);
         return;
     }
     sqlite3_finalize(stmt);
     memset(query, 0, QUERY_SIZE);
 
-    // Query 3 - Add new entries to 'friends' table
+    // Query 3 - Add new entries to 'friendList' table
     sprintf(query, "INSERT INTO friend_list\n"
                    "VALUES ('%d', '%d'),\n"
-                   "       ('%d', '%d');", sender->ID, user->ID, user->ID, sender->ID);
+                   "       ('%d', '%d');", sender->ID, recipient->ID, recipient->ID, sender->ID);
     sqlite3_prepare_v2(conn, query, (int) strlen(query), &stmt, NULL);
     if (sqlite3_step(stmt) != SQLITE_DONE) {
         g_warning("sqlAcceptFriendRequest(): Friendship between '%s'(%d) and '%s'(%d) could not be inserted",
-                  user->username, user->ID,
+                  recipient->username, recipient->ID,
                   sender->username, sender->ID);
-        user->ID = -1;
+        recipient->ID = -1;
         sqlite3_finalize(stmt);
         return;
     }
@@ -402,18 +400,18 @@ void sqlAcceptFriendRequest(sqlite3 *conn, FullUserInfo *user, FullUserInfo *sen
     memset(query, 0, QUERY_SIZE);
 }
 
-void sqlDeclineFriendRequest(sqlite3 *conn, FullUserInfo *user) {
+void sqlDeclineFriendRequest(sqlite3 *conn, FullUserInfo *recipient) {
     char query[QUERY_SIZE] = {0};
     sqlite3_stmt *stmt;
 
     // Query 1 - Get sender's ID
     sprintf(query, "SELECT id, username\n"
                    "FROM users\n"
-                   "WHERE username == '%s'", user->additionalInfo);
+                   "WHERE username = '%s'", recipient->additionalInfo);
     sqlite3_prepare_v2(conn, query, (int) strlen(query), &stmt, NULL);
     if (sqlite3_step(stmt) != SQLITE_ROW) {
-        g_warning("sqlAcceptFriendRequest(): User '%s' not found", user->additionalInfo);
-        user->ID = -2;
+        g_warning("sqlAcceptFriendRequest(): User '%s' not found", recipient->additionalInfo);
+        recipient->ID = -2;
         sqlite3_finalize(stmt);
         return;
     }
@@ -423,15 +421,15 @@ void sqlDeclineFriendRequest(sqlite3 *conn, FullUserInfo *user) {
     sqlite3_finalize(stmt);
     memset(query, 0, QUERY_SIZE);
 
-    // Query 2 - Delete user entry from 'friend_requests' table
+    // Query 2 - Delete recipient entry from 'friend_requests' table
     sprintf(query, "DELETE FROM friend_requests\n"
-                   "WHERE user_id == '%d' AND requested_id == '%d'", sender.ID, user->ID);
+                   "WHERE user_id = '%d' AND requested_id == '%d'", sender.ID, recipient->ID);
     sqlite3_prepare_v2(conn, query, (int) strlen(query), &stmt, NULL);
     if (sqlite3_step(stmt) != SQLITE_DONE) {
         g_warning("sqlAcceptFriendRequest(): Request between '%s'(%d) and '%s'(%d) could not be deleted",
-                  user->username, user->ID,
+                  recipient->username, recipient->ID,
                   sender.username, sender.ID);
-        user->ID = -1;
+        recipient->ID = -1;
         sqlite3_finalize(stmt);
         return;
     }
@@ -446,7 +444,7 @@ void sqlRemoveFriend(sqlite3 *conn, FullUserInfo *user, int *friendID) {
     // Query 1 - Get sender's ID
     sprintf(query, "SELECT id\n"
                    "FROM users\n"
-                   "WHERE username == '%s'", user->additionalInfo);
+                   "WHERE username = '%s'", user->additionalInfo);
     sqlite3_prepare_v2(conn, query, (int) strlen(query), &stmt, NULL);
     if (sqlite3_step(stmt) != SQLITE_ROW) {
         g_warning("sqlRemoveFriend: User '%s' not found", user->additionalInfo);
@@ -459,10 +457,10 @@ void sqlRemoveFriend(sqlite3 *conn, FullUserInfo *user, int *friendID) {
     memset(query, 0, QUERY_SIZE);
 
     // Query 2 - Delete entries from 'friend_list' table
-    sprintf(query, "                                                                                DELETE\n"
+    sprintf(query, "DELETE\n"
                    "FROM friend_list\n"
-                   "WHERE (user_id == '%d' AND friend_id == '%d')\n"
-                   "   OR (user_id == '%d' AND friend_id == '%d')", *friendID,
+                   "WHERE (user_id = '%d' AND friend_id = '%d')\n"
+                   "   OR (user_id = '%d' AND friend_id = '%d')", *friendID,
             user->ID, user->ID, *friendID);
     sqlite3_prepare_v2(conn, query, (int) strlen(query), &stmt, NULL);
     if (sqlite3_step(stmt) != SQLITE_DONE) {
@@ -483,8 +481,8 @@ void sqlLeaveDialog(sqlite3 *conn, FullUserInfo *leaveRequest, FullDialogInfo *d
     // Query 1 - Leave dialog
     sprintf(query, "DELETE\n"
                    "FROM chats_to_users\n"
-                   "WHERE chat_id == '%s'\n"
-                   "  AND user_id == '%d'", leaveRequest->additionalInfo, leaveRequest->ID);
+                   "WHERE chat_id = '%s'\n"
+                   "  AND user_id = '%d'", leaveRequest->additionalInfo, leaveRequest->ID);
     sqlite3_prepare_v2(conn, query, (int) strlen(query), &stmt, NULL);
     if (sqlite3_step(stmt) != SQLITE_DONE) {
         g_warning("sqlLeaveDialog(): User '%s' could not leave dialog '%d'", leaveRequest->username, leaveRequest->ID);
@@ -500,18 +498,18 @@ void sqlLeaveDialog(sqlite3 *conn, FullUserInfo *leaveRequest, FullDialogInfo *d
     sqlGetChatMembers(conn, dialog->userList, &(dialog->userCount), chatID);
 }
 
-void sqlJoinDialog(sqlite3 *conn, FullUserInfo *addRequest, FullDialogInfo *dialog) {
+void sqlJoinDialog(sqlite3 *conn, FullUserInfo *joinRequest, FullDialogInfo *dialog) {
     char query[QUERY_SIZE] = {0};
     sqlite3_stmt *stmt;
 
     // Query 1 - Get sender's ID
     sprintf(query, "SELECT id\n"
                    "FROM users\n"
-                   "WHERE username == '%s'", addRequest->username);
+                   "WHERE username = '%s'", joinRequest->username);
     sqlite3_prepare_v2(conn, query, (int) strlen(query), &stmt, NULL);
     if (sqlite3_step(stmt) != SQLITE_ROW) {
-        g_warning("sqlJoinDialog(): User '%s' not found", addRequest->username);
-        addRequest->ID = -1;
+        g_warning("sqlJoinDialog(): User '%s' not found", joinRequest->username);
+        joinRequest->ID = -1;
         sqlite3_finalize(stmt);
         return;
     }
@@ -520,15 +518,15 @@ void sqlJoinDialog(sqlite3 *conn, FullUserInfo *addRequest, FullDialogInfo *dial
     memset(query, 0, QUERY_SIZE);
 
     // Query 2 - Get information about a dialog
-    dialog->ID = addRequest->ID;
-    addRequest->ID = addedID;   // Now addRequest->ID contains ID of added user
+    dialog->ID = joinRequest->ID;
+    joinRequest->ID = addedID;   // Now joinRequest->ID contains ID of added user
     sprintf(query, "SELECT name, is_group\n"
                    "FROM chats\n"
-                   "WHERE id == '%d'", dialog->ID);
+                   "WHERE id = '%d'", dialog->ID);
     sqlite3_prepare_v2(conn, query, (int) strlen(query), &stmt, NULL);
     if (sqlite3_step(stmt) != SQLITE_ROW) {
         g_warning("sqlJoinDialog(): Dialog '%d' not found", dialog->ID);
-        addRequest->ID = -1;
+        joinRequest->ID = -1;
         sqlite3_finalize(stmt);
         return;
     }
@@ -538,13 +536,13 @@ void sqlJoinDialog(sqlite3 *conn, FullUserInfo *addRequest, FullDialogInfo *dial
     memset(query, 0, QUERY_SIZE);
     sqlGetChatMembers(conn, dialog->userList, &(dialog->userCount), dialog->ID);
 
-    // Query 3 - Add addRequest to dialog
+    // Query 3 - Add joinRequest to dialog
     sprintf(query, "INSERT INTO chats_to_users\n"
                    "VALUES ('%d', '%d')", dialog->ID, addedID);
     sqlite3_prepare_v2(conn, query, (int) strlen(query), &stmt, NULL);
     if (sqlite3_step(stmt) != SQLITE_DONE) {
         g_warning("sqlJoinDialog(): Insertion failed");
-        addRequest->ID = -1;
+        joinRequest->ID = -1;
         sqlite3_finalize(stmt);
         return;
     }
@@ -557,10 +555,10 @@ void sqlLoadMessages(sqlite3 *conn, FullDialogInfo *dialog, MessagesPackage *pac
     sqlite3_stmt *stmt;
 
     sprintf(query, "SELECT username, first_name, second_name, time, text\n"
-                   "FROM messages\n"
-                   "JOIN users u on u.id == messages.user_id\n"
+                   "FROM messages m\n"
+                   "JOIN users u on u.id == m.user_id\n"
                    "WHERE chat_id == '%d'\n"
-                   "ORDER BY messages.id ASC\n"
+                   "ORDER BY m.id\n"
                    "LIMIT 500", dialog->ID);
     sqlite3_prepare_v2(conn, query, (int) strlen(query), &stmt, NULL);
     package->messagesCount = 0;
