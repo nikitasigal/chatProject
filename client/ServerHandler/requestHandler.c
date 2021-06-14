@@ -474,7 +474,7 @@ gboolean serverRequest_DialogAddUser(void *data[2]) {
         serverRequest_CreateDialog(createDialogData);
 
         // Уведомление
-        char notificationString[50] = {0};
+        char notificationString[NOTIFICATION_SIZE] = {0};
         sprintf(notificationString, "You were added to dialog '%s'", dialogInfo->name);
         popupNotification(notificationString);
         return FALSE;
@@ -508,7 +508,7 @@ gboolean serverRequest_DialogAddUser(void *data[2]) {
 
 gboolean serverRequest_FriendIsOnline(void *data[2]) {
     FullUserInfo *userInfo = data[0];
-    char notification[100] = {0};
+    char notification[NOTIFICATION_SIZE] = {0};
     sprintf(notification, "%s is online", userInfo->username);
     popupNotification(notification);
 
@@ -518,7 +518,7 @@ gboolean serverRequest_FriendIsOnline(void *data[2]) {
 
 gboolean serverRequest_FriendIsOffline(void *data[2]) {
     FullUserInfo *userInfo = data[0];
-    char notification[100] = {0};
+    char notification[NOTIFICATION_SIZE] = {0};
     sprintf(notification, "%s disconnected", userInfo->username);
     popupNotification(notification);
 
