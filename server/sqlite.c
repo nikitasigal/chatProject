@@ -36,6 +36,7 @@ void sqlRegister(sqlite3 *conn, FullUserInfo *user) {
     if (sqlite3_step(stmt) != SQLITE_DONE) {
         g_message("sqlRegister(): User '%s' already exists", user->username);
         user->ID = -1;
+        sqlite3_finalize(stmt);
         return;
     }
     sqlite3_finalize(stmt);
@@ -49,6 +50,7 @@ void sqlRegister(sqlite3 *conn, FullUserInfo *user) {
     if (sqlite3_step(stmt) != SQLITE_ROW) {
         g_critical("sqlRegister(): User '%s' not found", user->username);
         user->ID = -1;
+        sqlite3_finalize(stmt);
         return;
     }
     user->ID = sqlite3_column_int(stmt, 0);
@@ -68,11 +70,13 @@ void sqlAuthorize(sqlite3 *conn, FullUserInfo *user, AuthorizationPackage *packa
     if (sqlite3_step(stmt) != SQLITE_ROW) {
         g_message("sqlAuthorize(): User '%s' not found", user->username);
         package->authorizedUser.ID = -1;
+        sqlite3_finalize(stmt);
         return;
     }
-    if (strcmp((const char *) sqlite3_column_text(stmt, 2), user->password)) {
+    if (strcmp((const char *) sqlite3_column_text(stmt, 2), user->password) != 0) {
         g_message("sqlAuthorize(): Received password for user '%s' is incorrect", user->username);
         package->authorizedUser.ID = -2;
+        sqlite3_finalize(stmt);
         return;
     }
 
@@ -161,6 +165,7 @@ void sqlCreateDialog(sqlite3 *conn, FullDialogInfo *dialog) {
     if (result != SQLITE_DONE) {
         g_critical("sqlCreateDialog(): Dialog '%s' could not be created", dialog->name);
         dialog->ID = -1;
+        sqlite3_finalize(stmt);
         return;
     }
     sqlite3_finalize(stmt);
@@ -177,6 +182,7 @@ void sqlCreateDialog(sqlite3 *conn, FullDialogInfo *dialog) {
     if (result != SQLITE_ROW) {
         g_critical("sqlCreateDialog(): Table 'chats' is empty");
         dialog->ID = -1;
+        sqlite3_finalize(stmt);
         return;
     }
     dialog->ID = sqlite3_column_int(stmt, 0);
@@ -195,6 +201,7 @@ void sqlCreateDialog(sqlite3 *conn, FullDialogInfo *dialog) {
             g_critical("sqlCreateDialog(): User '%s' could not be added to dialog '%s'",
                        dialog->userList[i].username, dialog->name);
             dialog->ID = -1;
+            sqlite3_finalize(stmt);
             return;
         }
         sqlite3_finalize(stmt);
@@ -215,6 +222,7 @@ void sqlSendMessage(sqlite3 *conn, FullMessageInfo *message, FullDialogInfo *dia
     if (sqlite3_step(stmt) != SQLITE_ROW) {
         g_critical("sqlSendMessage(): User '%s' does not exist", message->username);
         message->chatID = -1;
+        sqlite3_finalize(stmt);
         return;
     }
     int senderID = sqlite3_column_int(stmt, 0);
@@ -229,6 +237,7 @@ void sqlSendMessage(sqlite3 *conn, FullMessageInfo *message, FullDialogInfo *dia
     if (sqlite3_step(stmt) != SQLITE_DONE) {
         g_critical("sqlSendMessage(): Insertion failed");
         message->chatID = -1;
+        sqlite3_finalize(stmt);
         return;
     }
     sqlite3_finalize(stmt);
@@ -250,6 +259,7 @@ void sqlSendFriendRequest(sqlite3 *conn, FullUserInfo *user, int *friendID) {
     if (sqlite3_step(stmt) != SQLITE_ROW) {
         g_warning("sqlSendFriendRequest(): User '%s' not found", user->additionalInfo);
         user->ID = -2;
+        sqlite3_finalize(stmt);
         return;
     }
     *friendID = sqlite3_column_int(stmt, 0);
@@ -266,6 +276,7 @@ void sqlSendFriendRequest(sqlite3 *conn, FullUserInfo *user, int *friendID) {
     if (sqlite3_step(stmt) != SQLITE_DONE) {
         g_message("sqlSendFriendRequest(): Request between '%d' and '%d' already exists", user->ID, *friendID);
         user->ID = -1;
+        sqlite3_finalize(stmt);
         return;
     }
     sqlite3_finalize(stmt);
@@ -281,6 +292,7 @@ void sqlSendFriendRequest(sqlite3 *conn, FullUserInfo *user, int *friendID) {
     if (sqlite3_step(stmt) != SQLITE_DONE) {
         g_message("sqlSendFriendRequest(): Friendship between '%d' and '%d' already exists", user->ID, *friendID);
         user->ID = -1;
+        sqlite3_finalize(stmt);
         return;
     }
     sqlite3_finalize(stmt);
@@ -293,6 +305,7 @@ void sqlSendFriendRequest(sqlite3 *conn, FullUserInfo *user, int *friendID) {
     if (sqlite3_step(stmt) != SQLITE_DONE) {
         g_message("sqlSendFriendRequest(): Request between '%d' and '%d' failed to insert", user->ID, *friendID);
         user->ID = -1;
+        sqlite3_finalize(stmt);
         return;
     }
     sqlite3_finalize(stmt);
@@ -311,6 +324,7 @@ void sqlAcceptFriendRequest(sqlite3 *conn, FullUserInfo *user, FullUserInfo *sen
     if (sqlite3_step(stmt) != SQLITE_ROW) {
         g_warning("sqlAcceptFriendRequest(): User '%s' not found", user->additionalInfo);
         user->ID = -1;
+        sqlite3_finalize(stmt);
         return;
     }
     sender->ID = sqlite3_column_int(stmt, 0);
@@ -330,6 +344,7 @@ void sqlAcceptFriendRequest(sqlite3 *conn, FullUserInfo *user, FullUserInfo *sen
                   user->username, user->ID,
                   sender->username, sender->ID);
         user->ID = -1;
+        sqlite3_finalize(stmt);
         return;
     }
     sqlite3_finalize(stmt);
@@ -345,6 +360,7 @@ void sqlAcceptFriendRequest(sqlite3 *conn, FullUserInfo *user, FullUserInfo *sen
                   user->username, user->ID,
                   sender->username, sender->ID);
         user->ID = -1;
+        sqlite3_finalize(stmt);
         return;
     }
     sqlite3_finalize(stmt);
@@ -363,6 +379,7 @@ void sqlDeclineFriendRequest(sqlite3 *conn, FullUserInfo *user) {
     if (sqlite3_step(stmt) != SQLITE_ROW) {
         g_warning("sqlAcceptFriendRequest(): User '%s' not found", user->additionalInfo);
         user->ID = -2;
+        sqlite3_finalize(stmt);
         return;
     }
     FullUserInfo sender;
@@ -380,6 +397,7 @@ void sqlDeclineFriendRequest(sqlite3 *conn, FullUserInfo *user) {
                   user->username, user->ID,
                   sender.username, sender.ID);
         user->ID = -1;
+        sqlite3_finalize(stmt);
         return;
     }
     sqlite3_finalize(stmt);
@@ -398,6 +416,7 @@ void sqlRemoveFriend(sqlite3 *conn, FullUserInfo *user, int *friendID) {
     if (sqlite3_step(stmt) != SQLITE_ROW) {
         g_warning("sqlRemoveFriend: User '%s' not found", user->additionalInfo);
         user->ID = -2;
+        sqlite3_finalize(stmt);
         return;
     }
     *friendID = sqlite3_column_int(stmt, 0);
@@ -415,6 +434,7 @@ void sqlRemoveFriend(sqlite3 *conn, FullUserInfo *user, int *friendID) {
         g_warning("sqlRemoveFriend(): Friendship between '%d' and '%d' could not be deleted", user->ID,
                   *friendID);
         user->ID = -1;
+        sqlite3_finalize(stmt);
         return;
     }
     sqlite3_finalize(stmt);
@@ -434,6 +454,7 @@ void sqlLeaveDialog(sqlite3 *conn, FullUserInfo *leaveRequest, FullDialogInfo *d
     if (sqlite3_step(stmt) != SQLITE_DONE) {
         g_warning("sqlLeaveDialog(): User '%s' could not leave dialog '%d'", leaveRequest->username, leaveRequest->ID);
         leaveRequest->ID = -1;
+        sqlite3_finalize(stmt);
         return;
     }
     sqlite3_finalize(stmt);
@@ -456,6 +477,7 @@ void sqlJoinDialog(sqlite3 *conn, FullUserInfo *addRequest, FullDialogInfo *dial
     if (sqlite3_step(stmt) != SQLITE_ROW) {
         g_warning("sqlJoinDialog(): User '%s' not found", addRequest->username);
         addRequest->ID = -1;
+        sqlite3_finalize(stmt);
         return;
     }
     int addedID = sqlite3_column_int(stmt, 0);
@@ -472,6 +494,7 @@ void sqlJoinDialog(sqlite3 *conn, FullUserInfo *addRequest, FullDialogInfo *dial
     if (sqlite3_step(stmt) != SQLITE_ROW) {
         g_warning("sqlJoinDialog(): Dialog '%d' not found", dialog->ID);
         addRequest->ID = -1;
+        sqlite3_finalize(stmt);
         return;
     }
     strcpy(dialog->name, (const char *) sqlite3_column_text(stmt, 0));
@@ -487,6 +510,7 @@ void sqlJoinDialog(sqlite3 *conn, FullUserInfo *addRequest, FullDialogInfo *dial
     if (sqlite3_step(stmt) != SQLITE_DONE) {
         g_warning("sqlJoinDialog(): Insertion failed");
         addRequest->ID = -1;
+        sqlite3_finalize(stmt);
         return;
     }
     sqlite3_finalize(stmt);
