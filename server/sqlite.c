@@ -115,6 +115,7 @@ void sqlAuthorize(sqlite3 *conn, FullUserInfo *user, AuthorizationPackage *packa
         return;
     }
     package->authorizedUser.ID = sqlite3_column_int(stmt, 0);
+    strcpy(package->authorizedUser.username, user->username);
     strcpy(package->authorizedUser.password, "***");
     strcpy(package->authorizedUser.firstName, (const char *) sqlite3_column_text(stmt, 2));
     strcpy(package->authorizedUser.lastName, (const char *) sqlite3_column_text(stmt, 3));
