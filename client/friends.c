@@ -149,6 +149,10 @@ void removeFriend(GtkMenuItem *menuitem, GList *additionalInfo) {
     g_list_free(rows);
 
     gtk_widget_destroy(GTK_WIDGET(row));
+
+    if (menuitem == NULL)
+        return;
+
     clientRequest_RemoveFriend(*serverDescriptor, *user);
 }
 
